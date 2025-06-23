@@ -1,5 +1,5 @@
 // server/utils/db.ts
-import { Database } from 'better-sqlite3';
+import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
@@ -91,4 +91,4 @@ try {
   console.error("Error initializing database:", error);
 }
 
-export { db };
+export { db, initDb };
