@@ -1,5 +1,5 @@
 // composables/useAuth.ts
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export interface User {
   id: number;
