@@ -49,6 +49,13 @@
                 rows="3"
               ></v-textarea>
 
+              <v-switch
+                v-model="plant.isFavorite"
+                color="warning"
+                label="Add to favorites"
+                prepend-icon="mdi-star"
+              ></v-switch>
+
               <v-dialog
                 ref="dialog"
                 v-model="datePickerModal"
@@ -174,6 +181,7 @@
     light_needs: "Medium Light",
     watering_interval: 7,
     fertilizing_interval: 30,
+    isFavorite: false,
   });
 
   // Form options

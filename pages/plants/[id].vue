@@ -27,6 +27,12 @@
           Back to Plants
         </v-btn>
         <div>
+          <v-btn color="warning" class="me-2" @click="toggleFavorite">
+            <v-icon>{{
+              plant.is_favorite ? "mdi-star" : "mdi-star-outline"
+            }}</v-icon>
+            {{ plant.is_favorite ? "Favorite" : "Add to Favorites" }}
+          </v-btn>
           <v-btn color="primary" class="me-2" :to="`/plants/${plant.id}/edit`">
             <v-icon>mdi-pencil</v-icon>
             Edit
@@ -385,6 +391,29 @@
       alert("Failed to delete plant. Please try again.");
     } finally {
       deleteLoading.value = false;
+    }
+  }
+
+  // Toggle favorite status
+  async function toggleFavorite() {
+    try {
+      // Update the plant's favorite status
+      const updatedPlant = {
+        ...plant.value,
+        is_favorite: !plant.value.is_favorite,
+      };
+
+      // Save to server
+      await $fetch(`/api/plants/${plantId}`, {
+        method: "PUT",
+        body: updatedPlant,
+      });
+
+      // Update local state
+      plant.value.is_favorite = !plant.value.is_favorite;
+    } catch (e) {
+      console.error("Error updating favorite status:", e);
+      alert("Failed to update favorite status. Please try again.");
     }
   }
 

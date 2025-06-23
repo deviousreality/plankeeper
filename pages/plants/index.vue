@@ -58,6 +58,16 @@
                       label="Fertilizing Status"
                     ></v-select>
                   </v-col>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-select
+                      v-model="filters.favorite"
+                      :items="[
+                        { title: 'All Plants', value: null },
+                        { title: 'Favorites Only', value: true },
+                      ]"
+                      label="Favorite Status"
+                    ></v-select>
+                  </v-col>
                 </v-row>
               </template>
             </v-expansion-panel>
@@ -102,7 +112,12 @@
                 </div>
               </template>
               <v-card-title class="text-white bg-black bg-opacity-50">
-                {{ plant.name }}
+                <div class="d-flex align-center">
+                  <v-icon v-if="plant.is_favorite" color="amber" class="me-2"
+                    >mdi-star</v-icon
+                  >
+                  {{ plant.name }}
+                </div>
               </v-card-title>
             </v-img>
 
@@ -144,6 +159,7 @@
     species: null,
     needsWater: null,
     needsFertilizer: null,
+    favorite: null,
   });
 
   // Computed for filter options
@@ -191,6 +207,11 @@
         if (daysTillFertilize > 3 || isNextTaskWatering(plant)) {
           return false;
         }
+      }
+
+      // Favorite filter
+      if (filters.value.favorite === true && !plant.is_favorite) {
+        return false;
       }
 
       return true;

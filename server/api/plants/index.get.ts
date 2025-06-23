@@ -12,15 +12,15 @@ export default defineEventHandler(async (event) => {
       message: 'User ID is required',
     });
   }
-
   try {
     const plants = db.prepare(`
       SELECT p.*, cs.watering_interval, cs.fertilizing_interval, 
-      cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date
+      cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date,
+      p.is_favorite
       FROM plants p
       LEFT JOIN care_schedules cs ON p.id = cs.plant_id
       WHERE p.user_id = ?
-      ORDER BY p.name
+      ORDER BY p.is_favorite DESC, p.name
     `).all(userId);
     
     return plants;

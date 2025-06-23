@@ -12,11 +12,10 @@ export default defineEventHandler(async (event) => {
     });
   }
   
-  try {
-    // Update plant record
+  try {    // Update plant record
     db.prepare(`
       UPDATE plants 
-      SET name = ?, species = ?, acquired_date = ?, image_url = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, species = ?, acquired_date = ?, image_url = ?, notes = ?, is_favorite = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
     `).run(
       body.name,
@@ -24,6 +23,7 @@ export default defineEventHandler(async (event) => {
       body.acquired_date,
       body.image_url,
       body.notes,
+      body.is_favorite ? 1 : 0,
       plantId,
       body.user_id
     );

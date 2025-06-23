@@ -2,7 +2,7 @@
 import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
-  const { userId, name, species, acquiredDate, imageUrl, notes, wateringInterval, fertilizingInterval, lightNeeds } = await readBody(event);
+  const { userId, name, species, acquiredDate, imageUrl, notes, wateringInterval, fertilizingInterval, lightNeeds, isFavorite } = await readBody(event);
   
   if (!userId || !name) {
     throw createError({
@@ -14,12 +14,11 @@ export default defineEventHandler(async (event) => {
   try {
     // Use transaction to ensure both tables are updated
     db.exec('BEGIN TRANSACTION');
-    
-    // Add plant
+      // Add plant
     const plantResult = db.prepare(`
-      INSERT INTO plants (user_id, name, species, acquired_date, image_url, notes)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(userId, name, species, acquiredDate, imageUrl, notes);
+      INSERT INTO plants (user_id, name, species, acquired_date, image_url, notes, is_favorite)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, name, species, acquiredDate, imageUrl, notes, isFavorite ? 1 : 0);
     
     const plantId = plantResult.lastInsertRowid;
     
@@ -30,11 +29,11 @@ export default defineEventHandler(async (event) => {
     `).run(plantId, wateringInterval, fertilizingInterval, lightNeeds);
     
     db.exec('COMMIT');
-    
-    // Fetch the newly created plant with care schedule
+      // Fetch the newly created plant with care schedule
     const plant = db.prepare(`
       SELECT p.*, cs.watering_interval, cs.fertilizing_interval, 
-      cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date
+      cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date,
+      p.is_favorite
       FROM plants p
       LEFT JOIN care_schedules cs ON p.id = cs.plant_id
       WHERE p.id = ?
