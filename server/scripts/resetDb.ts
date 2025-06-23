@@ -2,6 +2,7 @@
 import { db, initDb } from '../utils/db';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 console.log('Starting database reset...');
 
@@ -10,15 +11,23 @@ initDb();
 console.log('Database schema initialized');
 
 // Add sample data if needed
-function addSampleData() {
+async function addSampleData() {
   try {
-    // Add a sample admin user
+    // Hash a default password for the admin user
+    const defaultPassword = 'admin123';
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
+      // Add a sample admin user (first delete if exists)
+    db.prepare(`DELETE FROM users WHERE username = 'admin'`).run();
+    
+    // Now insert the admin user
     const userResult = db.prepare(`
-      INSERT OR IGNORE INTO users (username, password, email) 
-      VALUES ('admin', '$2a$10$8qx5V8jmLU/2OXmOuVJ7NOiCj09v5o93rjANSO5.7mOgBKzULWpRu', 'admin@example.com')
-    `).run();
+      INSERT INTO users (username, password, email) 
+      VALUES ('admin', ?, 'admin@example.com')
+    `).run(hashedPassword);
     
     console.log(`Added sample admin user: ${userResult.changes} record(s) affected`);
+    console.log(`Default admin credentials: username="admin", password="${defaultPassword}"`);
     
     // Add sample plant species and care tips
     const species = ['Monstera Deliciosa', 'Snake Plant', 'Pothos', 'Peace Lily', 'ZZ Plant'];
@@ -53,6 +62,6 @@ function addSampleData() {
 }
 
 // Call the function to add sample data
-addSampleData();
-
-console.log('Database reset completed successfully!');
+addSampleData().then(() => {
+  console.log('Database reset completed successfully!');
+});

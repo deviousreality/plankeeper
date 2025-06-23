@@ -1,5 +1,6 @@
 // server/api/auth/register.post.ts
 import { db } from '~/server/utils/db';
+import bcrypt from 'bcryptjs';
 
 export default defineEventHandler(async (event) => {
   const { username, password, email } = await readBody(event);
@@ -22,8 +23,11 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // In a production app, you would hash the password before storing
-    const result = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, password, email);
+    // Hash the password before storing
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
+    const result = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hashedPassword, email);
     
     return {
       id: result.lastInsertRowid,
