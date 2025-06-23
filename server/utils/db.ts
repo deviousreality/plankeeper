@@ -10,18 +10,18 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Database table interfaces
+ * Database table types
  */
-export interface User {
+export type User = {
   id: number;
   username: string;
   password: string;
   email: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface Plant {
+export type Plant = {
   id: number;
   user_id: number;
   name: string;
@@ -32,9 +32,9 @@ export interface Plant {
   is_favorite: number; // 0 = false, 1 = true (SQLite doesn't have true boolean)
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface CareSchedule {
+export type CareSchedule = {
   id: number;
   plant_id: number;
   watering_interval: number | null;
@@ -43,23 +43,22 @@ export interface CareSchedule {
   last_fertilized: string | null;
   light_needs: string | null;
   next_task_date: string | null;
-}
+};
 
-export interface CareLog {
-  id: number;
-  plant_id: number;
+export type CareLog = {
+  id: number;  plant_id: number;
   action_type: string;
   action_date: string;
   notes: string | null;
-}
+};
 
-export interface CareTip {
+export type CareTip = {
   id: number;
   species: string;
   tip: string;
   source: string | null;
   created_at: string;
-}
+};
 
 // Configuration
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -189,8 +188,8 @@ const initDb = (): void => {
  * @param {Object} row - Database row with snake_case keys
  * @returns {Object} - Object with camelCase keys
  */
-export const toCamelCase = <T extends Record<string, any>>(row: T): Record<string, any> => {
-  const result: Record<string, any> = {};
+export const toCamelCase = <T extends Record<string, unknown>>(row: T): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
   for (const key in row) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
     result[camelKey] = row[key];

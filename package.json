@@ -8,7 +8,11 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "reset-db": "tsx server/scripts/resetDb.ts"
+    "reset-db": "tsx server/scripts/resetDb.ts",
+    "typecheck": "nuxt typecheck",
+    "update-admin-password": "tsx server/scripts/updateAdminPassword.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -25,8 +29,15 @@
     "@nuxt/devtools": "2.5.0",
     "@nuxt/eslint": "1.4.1",
     "@nuxtjs/color-mode": "^3.5.2",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0", 
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "@types/better-sqlite3": "^7.6.13",
+    "eslint": "^8.57.0",
+    "eslint-plugin-nuxt": "^4.0.0",
+    "eslint-plugin-vue": "^9.24.0",
     "esbuild-register": "^3.6.0",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.3.3"
   }
 }

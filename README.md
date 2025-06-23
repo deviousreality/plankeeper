@@ -30,6 +30,7 @@ A web application for plant enthusiasts to track care schedules, record history,
 - **Database**: [SQLite](https://www.sqlite.org/) via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
 - **Weather API**: [OpenWeatherMap API](https://openweathermap.org/api)
 - **Authentication**: Secure local authentication with [bcryptjs](https://github.com/dcodeIO/bcrypt.js/)
+- **Type Safety**: Strict TypeScript type checking with no `any` types
 
 ## 🚀 Getting Started
 
@@ -82,6 +83,21 @@ A web application for plant enthusiasts to track care schedules, record history,
 2. Open your browser at `http://localhost:3000`
 
 3. Log in with the sample admin account or register a new user
+
+### Type Safety & Code Quality
+
+This project uses strict TypeScript configuration:
+
+```bash
+# Run type checking
+npm run typecheck
+
+# Run ESLint
+npm run lint
+
+# Fix ESLint issues automatically
+npm run lint:fix
+```
 
 ### Security Note
 

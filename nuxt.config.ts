@@ -2,6 +2,16 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
+  typescript: {
+    strict: true,
+    typeCheck: true,
+    shim: false,
+    tsConfig: {
+      compilerOptions: {
+        verbatimModuleSyntax: true
+      }
+    }
+  },
   css: ['vuetify/styles'],
   build: {
     transpile: ['vuetify'],
