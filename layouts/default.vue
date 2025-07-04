@@ -19,6 +19,8 @@
           title="Dashboard"
           prepend-icon="mdi-view-dashboard"
         ></v-list-item>
+
+        <v-list-subheader>Plant Management</v-list-subheader>
         <v-list-item
           to="/plants"
           title="My Plants"
@@ -28,6 +30,28 @@
           to="/plants/add"
           title="Add Plant"
           prepend-icon="mdi-plus"
+        ></v-list-item>
+
+        <v-list-subheader>Features</v-list-subheader>
+        <v-list-item
+          to="/propagation"
+          title="Propagation Manager"
+          prepend-icon="mdi-sprout"
+        ></v-list-item>
+        <v-list-item
+          to="/care-schedules"
+          title="Care Schedules"
+          prepend-icon="mdi-calendar-clock"
+        ></v-list-item>
+        <v-list-item
+          to="/market-prices"
+          title="Market Prices"
+          prepend-icon="mdi-currency-usd"
+        ></v-list-item>
+        <v-list-item
+          to="/taxonomy"
+          title="Plant Taxonomy"
+          prepend-icon="mdi-dna"
         ></v-list-item>
         <v-list-item
           to="/care-tips"

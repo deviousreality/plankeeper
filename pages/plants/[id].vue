@@ -137,6 +137,13 @@
 
         <!-- Care history and actions -->
         <v-col cols="12" md="6">
+          <!-- Propagation widget -->
+          <PropagationWidget
+            :plantId="plant.id"
+            class="mb-4"
+            @propagation-added="refreshPlantData"
+          />
+
           <!-- Action buttons -->
           <v-card class="mb-4">
             <v-card-title>Plant Care</v-card-title>
