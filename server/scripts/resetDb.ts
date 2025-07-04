@@ -1,7 +1,5 @@
 // server/scripts/resetDb.ts
 import { db, initDb } from '../utils/db';
-import fs from 'fs';
-import path from 'path';
 import bcrypt from 'bcryptjs';
 
 console.log('Starting database reset...');

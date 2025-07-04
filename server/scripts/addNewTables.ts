@@ -11,7 +11,6 @@
  * - Updates plants table with new columns
  */
 import { db } from '../utils/db';
-import path from 'path';
 
 console.log('Starting database migration...');
 
