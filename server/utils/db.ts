@@ -32,6 +32,71 @@ export type Plant = {
   is_favorite: number; // 0 = false, 1 = true (SQLite doesn't have true boolean)
   created_at: string;
   updated_at: string;
+  can_sell: number;
+  is_personal: number;
+  common_name: string | null;
+  flower_color: string | null;
+  variety: string | null;
+  light_pref: string | null;
+  water_pref: string | null;
+  soil_type: string | null;
+};
+
+export type PlantSpecies = {
+  id: number;
+  name: string;
+};
+
+export type PlantGenius = {
+  id: number;
+  name: string;
+  species_id: number | null;
+};
+
+export type PlantFamily = {
+  id: number;
+  name: string;
+  genius_id: number | null;
+  species_id: number | null;
+};
+
+export type MarketPrice = {
+  id: number;
+  plant_id: number;
+  date_checked: string;
+  price: number;
+};
+
+export type PlantPropagation = {
+  id: number;
+  plant_id: number;
+  prop_type: number | null;
+  seed_source: string | null;
+  cutting_source: string | null;
+  prop_date: string | null;
+  initial_count: number | null;
+  current_count: number | null;
+  transplant_date: string | null;
+  notes: string | null;
+  zero_cout_notes: string | null;
+};
+
+export type PlantInventory = {
+  id: number;
+  plant_id: number;
+  quantity: number | null;
+  plant_age: number | null;
+  plant_size: number | null;
+  last_watered_date: string | null;
+  last_fertilized_date: string | null;
+  location: string | null;
+  notes: string | null;
+  acquisition_date: string | null;
+  status: string | null;
+  date_death: string | null;
+  cause_of_death: string | null;
+  death_notes: string | null;
+  death_location: string | null;
 };
 
 export type CareSchedule = {
@@ -121,26 +186,129 @@ const initDb = (): void => {
       image_url TEXT,
       notes TEXT,
       is_favorite BOOLEAN DEFAULT 0,
+      can_sell BOOLEAN DEFAULT 0,
+      is_personal BOOLEAN DEFAULT 1,
+      common_name TEXT,
+      flower_color TEXT,
+      variety TEXT,
+      light_pref TEXT,
+      water_pref TEXT,
+      soil_type TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
 
-  // Add the is_favorite column if it doesn't exist
+  // Add columns to plants table if they don't exist
   try {
-    // Check if the column exists
-    const columnExists = db.prepare(`PRAGMA table_info(plants)`).all()
-      .some((col: any) => col.name === 'is_favorite');
+    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as { name: string }[];
+    const existingColumns = new Set(plantsColumns.map(col => col.name));
     
-    if (!columnExists) {
-      db.exec(`ALTER TABLE plants ADD COLUMN is_favorite BOOLEAN DEFAULT 0`);
-      console.log('Added is_favorite column to plants table');
+    // Add each new column if it doesn't exist
+    const newColumns = [
+      { name: 'is_favorite', type: 'BOOLEAN DEFAULT 0' },
+      { name: 'can_sell', type: 'BOOLEAN DEFAULT 0' },
+      { name: 'is_personal', type: 'BOOLEAN DEFAULT 1' },
+      { name: 'common_name', type: 'TEXT' },
+      { name: 'flower_color', type: 'TEXT' },
+      { name: 'variety', type: 'TEXT' },
+      { name: 'light_pref', type: 'TEXT' },
+      { name: 'water_pref', type: 'TEXT' },
+      { name: 'soil_type', type: 'TEXT' }
+    ];
+    
+    for (const column of newColumns) {
+      if (!existingColumns.has(column.name)) {
+        db.exec(`ALTER TABLE plants ADD COLUMN ${column.name} ${column.type}`);
+        console.log(`Added ${column.name} column to plants table`);
+      }
     }
   } catch (error) {
-    console.error(`Error checking/adding is_favorite column: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`Error checking/adding plant columns: ${error instanceof Error ? error.message : String(error)}`);
     // Non-critical error, don't throw
   }
+
+  // Plant Species table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_species (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL
+    )
+  `);
+
+  // Plant Genus table (corrected from "genius")
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_genius (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      species_id INTEGER,
+      FOREIGN KEY (species_id) REFERENCES plant_species(id)
+    )
+  `);
+
+  // Plant Family table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_family (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      genius_id INTEGER,
+      species_id INTEGER,
+      FOREIGN KEY (genius_id) REFERENCES plant_genius(id),
+      FOREIGN KEY (species_id) REFERENCES plant_species(id)
+    )
+  `);
+
+  // Market Price table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS market_price (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      date_checked DATE NOT NULL,
+      price DECIMAL(5,2) NOT NULL,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
+
+  // Plant Propagation table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_propagation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      prop_type INTEGER,
+      seed_source TEXT,
+      cutting_source TEXT,
+      prop_date DATE,
+      initial_count INTEGER,
+      current_count INTEGER,
+      transplant_date DATE,
+      notes TEXT,
+      zero_cout_notes TEXT,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
+
+  // Plant Inventory table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_inventory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      quantity INTEGER,
+      plant_age INTEGER,
+      plant_size DECIMAL(5,2),
+      last_watered_date DATE,
+      last_fertilized_date DATE,
+      location TEXT,
+      notes TEXT,
+      acquisition_date DATE,
+      status TEXT,
+      date_death DATE,
+      cause_of_death TEXT,
+      death_notes TEXT,
+      death_location TEXT,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
 
   // Care schedule table
   db.exec(`
@@ -177,6 +345,87 @@ const initDb = (): void => {
       tip TEXT NOT NULL,
       source TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Species table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS species (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL
+    )
+  `);
+
+  // Genius table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS genius (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      species_id INTEGER,
+      FOREIGN KEY (species_id) REFERENCES species(id)
+    )
+  `);
+
+  // Family table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS family (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      genius_id INTEGER,
+      species_id INTEGER,
+      FOREIGN KEY (genius_id) REFERENCES genius(id),
+      FOREIGN KEY (species_id) REFERENCES species(id)
+    )
+  `);
+
+  // Market prices table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS market_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      date_checked DATE NOT NULL,
+      price REAL NOT NULL,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
+
+  // Propagation table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS propagation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      prop_type INTEGER,
+      seed_source TEXT,
+      cutting_source TEXT,
+      prop_date DATE,
+      initial_count INTEGER,
+      current_count INTEGER,
+      transplant_date DATE,
+      notes TEXT,
+      zero_cout_notes TEXT,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
+
+  // Inventory table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS inventory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      quantity INTEGER,
+      plant_age INTEGER,
+      plant_size INTEGER,
+      last_watered_date DATE,
+      last_fertilized_date DATE,
+      location TEXT,
+      notes TEXT,
+      acquisition_date DATE,
+      status TEXT,
+      date_death DATE,
+      cause_of_death TEXT,
+      death_notes TEXT,
+      death_location TEXT,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
     )
   `);
 

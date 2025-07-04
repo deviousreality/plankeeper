@@ -3,7 +3,11 @@
  * 
  * This file contains common type definitions used throughout the application.
  * Place shared types here to avoid duplication and ensure consistency.
+ * 
+ * For more specialized plant-related types, see plant-models.ts
  */
+
+export * from './plant-models';
 
 /**
  * Common API response types
@@ -56,6 +60,68 @@ export type Forecast = {
 };
 
 /**
+ * Plant and inventory related types
+ */
+export type PlantSpecies = {
+  id: number;
+  name: string;
+};
+
+export type PlantGenius = {
+  id: number;
+  name: string;
+  speciesId?: number;
+};
+
+export type PlantFamily = {
+  id: number;
+  name: string;
+  geniusId?: number;
+  speciesId?: number;
+};
+
+export type MarketPrice = {
+  id: number;
+  plantId: number;
+  dateChecked: string;
+  price: number;
+};
+
+export type PropagationType = 1 | 2 | 3; // 1 = seed, 2 = cutting, 3 = division (or define an enum)
+
+export type PlantPropagation = {
+  id: number;
+  plantId: number;
+  propType?: PropagationType;
+  seedSource?: string;
+  cuttingSource?: string;
+  propDate?: string;
+  initialCount?: number;
+  currentCount?: number;
+  transplantDate?: string;
+  notes?: string;
+  zeroCoutNotes?: string;
+};
+
+export type PlantInventory = {
+  id: number;
+  plantId: number;
+  quantity?: number;
+  plantAge?: number;
+  plantSize?: number;
+  lastWateredDate?: string;
+  lastFertilizedDate?: string;
+  location?: string;
+  notes?: string;
+  acquisitionDate?: string;
+  status?: string;
+  dateDeath?: string;
+  causeOfDeath?: string;
+  deathNotes?: string;
+  deathLocation?: string;
+};
+
+/**
  * Plant care related types
  */
 export type CareAction = 'watering' | 'fertilizing' | 'repotting' | 'pruning' | 'other';
@@ -75,6 +141,14 @@ export type PlantListItem = {
   imageUrl?: string;
   nextCareDate?: string; // Next care action due date
   isFavorite: boolean;
+  canSell?: boolean;
+  isPersonal?: boolean;
+  commonName?: string;
+  flowerColor?: string;
+  variety?: string;
+  lightPref?: string;
+  waterPref?: string;
+  soilType?: string;
 };
 
 /**

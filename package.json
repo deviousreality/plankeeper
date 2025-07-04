@@ -11,6 +11,8 @@
     "reset-db": "tsx server/scripts/resetDb.ts",
     "typecheck": "nuxt typecheck",
     "update-admin-password": "tsx server/scripts/updateAdminPassword.ts",
+    "migrate-db": "tsx server/scripts/addNewTables.ts",
+    "verify-db": "tsx server/scripts/verifyDbSchema.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

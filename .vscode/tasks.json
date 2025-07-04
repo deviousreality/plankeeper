@@ -98,6 +98,28 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Migrate Database",
+      "type": "shell",
+      "command": "npx tsx server/scripts/addNewTables.ts",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify Database Schema",
+      "type": "shell",
+      "command": "npm run verify-db",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
     }
   ]
 }
