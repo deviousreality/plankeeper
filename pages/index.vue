@@ -1,18 +1,29 @@
 <!-- pages/index.vue -->
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Dashboard</h1>
+    <h1 class="text-h3 mb-6">
+      Dashboard
+    </h1>
 
     <v-row>
       <!-- Weather Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="info" class="me-2">mdi-weather-partly-cloudy</v-icon>
+            <v-icon
+              color="info"
+              class="me-2"
+            >
+              mdi-weather-partly-cloudy
+            </v-icon>
             Weather
           </v-card-title>
           <v-card-text v-if="weatherLoading">
-            <v-progress-circular indeterminate></v-progress-circular>
+            <v-progress-circular indeterminate />
           </v-card-text>
           <v-card-text v-else-if="weather">
             <div class="d-flex align-center">
@@ -20,16 +31,21 @@
                 :src="`https://openweathermap.org/img/w/${weather.icon}.png`"
                 :alt="weather.description"
                 height="50"
-              />
+              >
               <div class="ms-2">
-                <div class="text-h5">{{ weather.temperature }}°C</div>
+                <div class="text-h5">
+                  {{ weather.temperature }}°C
+                </div>
                 <div>{{ weather.description }}</div>
                 <div>Humidity: {{ weather.humidity }}%</div>
               </div>
             </div>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="info" variant="tonal">
+            <v-alert
+              type="info"
+              variant="tonal"
+            >
               Weather data not available
             </v-alert>
           </v-card-text>
@@ -37,17 +53,28 @@
       </v-col>
 
       <!-- Plants Overview Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="success" class="me-2">mdi-flower</v-icon>
+            <v-icon
+              color="success"
+              class="me-2"
+            >
+              mdi-flower
+            </v-icon>
             My Plants
           </v-card-title>
           <v-card-text v-if="plantsLoading">
-            <v-progress-circular indeterminate></v-progress-circular>
+            <v-progress-circular indeterminate />
           </v-card-text>
           <v-card-text v-else-if="plants && plants.length">
-            <div class="text-h5 mb-2">{{ plants.length }} Plants</div>
+            <div class="text-h5 mb-2">
+              {{ plants.length }} Plants
+            </div>
             <v-list density="compact">
               <v-list-item
                 v-for="plant in plants.slice(0, 5)"
@@ -55,34 +82,59 @@
                 :title="plant.name"
                 :subtitle="plant.species || 'Unknown species'"
                 :to="`/plants/${plant.id}`"
-              ></v-list-item>
+              />
             </v-list>
-            <div v-if="plants.length > 5" class="text-center mt-2">
-              <v-btn color="secondary" variant="text" to="/plants" size="small">
+            <div
+              v-if="plants.length > 5"
+              class="text-center mt-2"
+            >
+              <v-btn
+                color="secondary"
+                variant="text"
+                to="/plants"
+                size="small"
+              >
                 View all plants
               </v-btn>
             </div>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="info" variant="tonal">
+            <v-alert
+              type="info"
+              variant="tonal"
+            >
               No plants added yet. Add your first plant!
             </v-alert>
             <div class="text-center mt-4">
-              <v-btn color="primary" to="/plants/add"> Add Plant </v-btn>
+              <v-btn
+                color="primary"
+                to="/plants/add"
+              >
+                Add Plant
+              </v-btn>
             </div>
           </v-card-text>
         </v-card>
       </v-col>
 
       <!-- Tasks Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="warning" class="me-2">mdi-calendar-check</v-icon>
+            <v-icon
+              color="warning"
+              class="me-2"
+            >
+              mdi-calendar-check
+            </v-icon>
             Upcoming Tasks
           </v-card-title>
           <v-card-text v-if="plantsLoading">
-            <v-progress-circular indeterminate></v-progress-circular>
+            <v-progress-circular indeterminate />
           </v-card-text>
           <v-card-text v-else-if="upcomingTasks.length">
             <v-list density="compact">
@@ -93,7 +145,7 @@
                 :subtitle="`${task.type} - ${task.dueDate}`"
                 :to="`/plants/${task.plantId}`"
               >
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon
                     :color="task.type === 'Watering' ? 'info' : 'success'"
                   >
@@ -106,7 +158,10 @@
             </v-list>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="success" variant="tonal">
+            <v-alert
+              type="success"
+              variant="tonal"
+            >
               No upcoming tasks! 🎉
             </v-alert>
           </v-card-text>

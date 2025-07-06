@@ -2,15 +2,26 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h3">My Plants</h1>
-      <v-btn color="primary" prepend-icon="mdi-plus" to="/plants/add">
+      <h1 class="text-h3">
+        My Plants
+      </h1>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        to="/plants/add"
+      >
         Add Plant
       </v-btn>
     </div>
 
-    <v-card v-if="loading" class="text-center pa-5">
-      <v-progress-circular indeterminate></v-progress-circular>
-      <div class="mt-3">Loading plants...</div>
+    <v-card
+      v-if="loading"
+      class="text-center pa-5"
+    >
+      <v-progress-circular indeterminate />
+      <div class="mt-3">
+        Loading plants...
+      </div>
     </v-card>
 
     <template v-else>
@@ -24,21 +35,29 @@
             clearable
             hide-details
             class="mb-3"
-          ></v-text-field>
+          />
 
           <v-expansion-panels variant="accordion">
             <v-expansion-panel title="Filters">
-              <template v-slot:text>
+              <template #text>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.species"
                       :items="speciesOptions"
                       label="Species"
                       clearable
-                    ></v-select>
+                    />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.needsWater"
                       :items="[
@@ -46,9 +65,13 @@
                         { title: 'Needs Water Soon', value: true },
                       ]"
                       label="Watering Status"
-                    ></v-select>
+                    />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.needsFertilizer"
                       :items="[
@@ -56,9 +79,13 @@
                         { title: 'Needs Fertilizer Soon', value: true },
                       ]"
                       label="Fertilizing Status"
-                    ></v-select>
+                    />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.favorite"
                       :items="[
@@ -66,7 +93,7 @@
                         { title: 'Favorites Only', value: true },
                       ]"
                       label="Favorite Status"
-                    ></v-select>
+                    />
                   </v-col>
                 </v-row>
               </template>
@@ -76,9 +103,20 @@
       </v-card>
 
       <!-- No plants message -->
-      <v-card v-if="!filteredPlants.length" class="text-center pa-5">
-        <v-icon size="64" color="grey" class="mb-4">mdi-sprout</v-icon>
-        <h2 class="text-h5 mb-2">No Plants Found</h2>
+      <v-card
+        v-if="!filteredPlants.length"
+        class="text-center pa-5"
+      >
+        <v-icon
+          size="64"
+          color="grey"
+          class="mb-4"
+        >
+          mdi-sprout
+        </v-icon>
+        <h2 class="text-h5 mb-2">
+          No Plants Found
+        </h2>
         <p class="mb-4">
           {{
             plants.length
@@ -86,7 +124,12 @@
               : "Start by adding your first plant!"
           }}
         </p>
-        <v-btn color="primary" to="/plants/add">Add Plant</v-btn>
+        <v-btn
+          color="primary"
+          to="/plants/add"
+        >
+          Add Plant
+        </v-btn>
       </v-card>
 
       <!-- Plants grid -->
@@ -99,23 +142,35 @@
           md="4"
           lg="3"
         >
-          <v-card :to="`/plants/${plant.id}`" class="h-100">
+          <v-card
+            :to="`/plants/${plant.id}`"
+            class="h-100"
+          >
             <v-img
               :src="plant.image_url || '/images/default-plant.jpg'"
               height="200"
               cover
               class="align-end"
             >
-              <template v-slot:placeholder>
+              <template #placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-icon size="64" color="grey">mdi-flower</v-icon>
+                  <v-icon
+                    size="64"
+                    color="grey"
+                  >
+                    mdi-flower
+                  </v-icon>
                 </div>
               </template>
               <v-card-title class="text-white bg-black bg-opacity-50">
                 <div class="d-flex align-center">
-                  <v-icon v-if="plant.is_favorite" color="amber" class="me-2"
-                    >mdi-star</v-icon
+                  <v-icon
+                    v-if="plant.is_favorite"
+                    color="amber"
+                    class="me-2"
                   >
+                    mdi-star
+                  </v-icon>
                   {{ plant.name }}
                 </div>
               </v-card-title>
@@ -134,7 +189,9 @@
                   size="small"
                   class="me-2"
                 >
-                  <v-icon start>{{ getTaskIcon(plant) }}</v-icon>
+                  <v-icon start>
+                    {{ getTaskIcon(plant) }}
+                  </v-icon>
                   {{ getTaskText(plant) }}
                 </v-chip>
               </div>

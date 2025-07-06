@@ -2,7 +2,9 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h3">Propagation Manager</h1>
+      <h1 class="text-h3">
+        Propagation Manager
+      </h1>
       <v-btn
         color="primary"
         prepend-icon="mdi-plus"
@@ -12,9 +14,14 @@
       </v-btn>
     </div>
 
-    <v-card v-if="loading" class="text-center pa-5">
-      <v-progress-circular indeterminate></v-progress-circular>
-      <div class="mt-3">Loading propagation records...</div>
+    <v-card
+      v-if="loading"
+      class="text-center pa-5"
+    >
+      <v-progress-circular indeterminate />
+      <div class="mt-3">
+        Loading propagation records...
+      </div>
     </v-card>
 
     <template v-else>
@@ -28,34 +35,46 @@
             clearable
             hide-details
             class="mb-3"
-          ></v-text-field>
+          />
 
           <v-expansion-panels variant="accordion">
             <v-expansion-panel title="Filters">
-              <template v-slot:text>
+              <template #text>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.propType"
                       :items="propTypeOptions"
                       label="Propagation Type"
                       clearable
-                    ></v-select>
+                    />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.dateRange"
                       :items="dateRangeOptions"
                       label="Date Range"
-                    ></v-select>
+                    />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                  >
                     <v-select
                       v-model="filters.plantSpecies"
                       :items="speciesOptions"
                       label="Plant Species"
                       clearable
-                    ></v-select>
+                    />
                   </v-col>
                 </v-row>
               </template>
@@ -65,9 +84,20 @@
       </v-card>
 
       <!-- No propagation records message -->
-      <v-card v-if="!filteredPropagations.length" class="text-center pa-5">
-        <v-icon size="64" color="grey" class="mb-4">mdi-sprout-outline</v-icon>
-        <h2 class="text-h5 mb-2">No Propagation Records Found</h2>
+      <v-card
+        v-if="!filteredPropagations.length"
+        class="text-center pa-5"
+      >
+        <v-icon
+          size="64"
+          color="grey"
+          class="mb-4"
+        >
+          mdi-sprout-outline
+        </v-icon>
+        <h2 class="text-h5 mb-2">
+          No Propagation Records Found
+        </h2>
         <p class="mb-4">
           {{
             propagations.length
@@ -75,9 +105,12 @@
               : "Start by adding your first propagation record!"
           }}
         </p>
-        <v-btn color="primary" @click="openNewPropagationDialog"
-          >New Propagation</v-btn
+        <v-btn
+          color="primary"
+          @click="openNewPropagationDialog"
         >
+          New Propagation
+        </v-btn>
       </v-card>
 
       <!-- Propagation records table -->
@@ -88,21 +121,24 @@
           :search="search"
           class="elevation-1"
         >
-          <template v-slot:item.propType="{ item }">
+          <template #item.propType="{ item }">
             {{ getPropTypeName(item.propType) }}
           </template>
-          <template v-slot:item.propDate="{ item }">
+          <template #item.propDate="{ item }">
             {{ formatDate(item.propDate) }}
           </template>
-          <template v-slot:item.transplantDate="{ item }">
+          <template #item.transplantDate="{ item }">
             {{ item.transplantDate ? formatDate(item.transplantDate) : "N/A" }}
           </template>
-          <template v-slot:item.currentCount="{ item }">
-            <v-chip :color="getCountColor(item)" text-color="white">
+          <template #item.currentCount="{ item }">
+            <v-chip
+              :color="getCountColor(item)"
+              text-color="white"
+            >
               {{ item.currentCount }}
             </v-chip>
           </template>
-          <template v-slot:item.actions="{ item }">
+          <template #item.actions="{ item }">
             <div class="d-flex justify-end">
               <v-btn
                 icon
@@ -119,8 +155,8 @@
                 variant="text"
                 density="compact"
                 color="warning"
-                @click="editPropagation(item)"
                 title="Edit"
+                @click="editPropagation(item)"
               >
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
@@ -129,8 +165,8 @@
                 variant="text"
                 density="compact"
                 color="error"
-                @click="deletePropagation(item)"
                 title="Delete"
+                @click="deletePropagation(item)"
               >
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
@@ -141,7 +177,10 @@
     </template>
 
     <!-- New/Edit Propagation Dialog -->
-    <v-dialog v-model="propagationDialog" max-width="600px">
+    <v-dialog
+      v-model="propagationDialog"
+      max-width="600px"
+    >
       <v-card>
         <v-card-title>
           <span class="text-h5">{{
@@ -149,14 +188,18 @@
           }}</span>
         </v-card-title>
         <v-card-text>
-          <v-form ref="form" v-model="valid" @submit.prevent="savePropagation">
+          <v-form
+            ref="form"
+            v-model="valid"
+            @submit.prevent="savePropagation"
+          >
             <v-select
               v-model="currentPropagation.plantId"
               :items="plantsOptions"
               label="Plant"
               required
               :rules="[(v) => !!v || 'Plant is required']"
-            ></v-select>
+            />
 
             <v-select
               v-model="currentPropagation.propType"
@@ -164,57 +207,57 @@
               label="Propagation Type"
               required
               :rules="[(v) => !!v || 'Propagation type is required']"
-            ></v-select>
+            />
 
             <v-text-field
               v-if="currentPropagation.propType === 1"
               v-model="currentPropagation.seedSource"
               label="Seed Source"
               hint="Where did you get the seeds from?"
-            ></v-text-field>
+            />
 
             <v-text-field
               v-if="currentPropagation.propType === 2"
               v-model="currentPropagation.cuttingSource"
               label="Cutting Source"
               hint="Where did you get the cutting from?"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="date"
               v-model="currentPropagation.propDate"
+              type="date"
               label="Propagation Date"
               required
               :rules="[(v) => !!v || 'Propagation date is required']"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="number"
               v-model.number="currentPropagation.initialCount"
+              type="number"
               label="Initial Count"
               hint="How many plants/seeds did you start with?"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="number"
               v-model.number="currentPropagation.currentCount"
+              type="number"
               label="Current Count"
               hint="How many plants survived/are growing?"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="date"
               v-model="currentPropagation.transplantDate"
+              type="date"
               label="Transplant Date"
               hint="When did you transplant (if applicable)?"
-            ></v-text-field>
+            />
 
             <v-textarea
               v-model="currentPropagation.notes"
               label="Notes"
               hint="Any additional information about this propagation"
               rows="3"
-            ></v-textarea>
+            />
 
             <v-textarea
               v-if="currentPropagation.currentCount === 0"
@@ -222,11 +265,11 @@
               label="Failure Notes"
               hint="What happened to the propagation?"
               rows="3"
-            ></v-textarea>
+            />
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             color="blue-darken-1"
             variant="text"
@@ -237,8 +280,8 @@
           <v-btn
             color="blue-darken-1"
             variant="text"
-            @click="savePropagation"
             :disabled="!valid"
+            @click="savePropagation"
           >
             Save
           </v-btn>
@@ -247,24 +290,34 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500px"
+    >
       <v-card>
-        <v-card-title class="text-h5">Confirm Delete</v-card-title>
+        <v-card-title class="text-h5">
+          Confirm Delete
+        </v-card-title>
         <v-card-text>
           Are you sure you want to delete this propagation record? This action
           cannot be undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             color="blue-darken-1"
             variant="text"
             @click="deleteDialog = false"
-            >Cancel</v-btn
           >
-          <v-btn color="error" variant="text" @click="confirmDelete"
-            >Delete</v-btn
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="text"
+            @click="confirmDelete"
           >
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

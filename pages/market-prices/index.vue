@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Market Price Tracker</h1>
+    <h1 class="text-h3 mb-6">
+      Market Price Tracker
+    </h1>
 
     <v-card class="mb-6">
       <v-card-text>
@@ -11,7 +13,7 @@
           clearable
           hide-details
           class="mb-3"
-        ></v-text-field>
+        />
       </v-card-text>
     </v-card>
 
@@ -22,7 +24,7 @@
       class="elevation-1"
       :search="search"
     >
-      <template v-slot:item.priceHistory="{ item }">
+      <template #item.priceHistory="{ item }">
         <v-btn
           color="primary"
           size="small"
@@ -34,21 +36,25 @@
         </v-btn>
       </template>
 
-      <template v-slot:item.actions="{ item }">
+      <template #item.actions="{ item }">
         <v-btn
           color="primary"
           size="small"
           variant="text"
-          @click="openPriceDialog(item)"
           prepend-icon="mdi-currency-usd"
+          @click="openPriceDialog(item)"
         >
           Add Price
         </v-btn>
       </template>
 
-      <template v-slot:bottom>
+      <template #bottom>
         <div class="text-center pt-2 pb-2">
-          <v-btn color="primary" prepend-icon="mdi-refresh" @click="loadPlants">
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-refresh"
+            @click="loadPlants"
+          >
             Refresh
           </v-btn>
         </div>
@@ -56,14 +62,21 @@
     </v-data-table>
 
     <!-- Add Price Dialog -->
-    <v-dialog v-model="dialog" max-width="500px">
+    <v-dialog
+      v-model="dialog"
+      max-width="500px"
+    >
       <v-card>
-        <v-card-title class="text-h5">Add Price Record</v-card-title>
+        <v-card-title class="text-h5">
+          Add Price Record
+        </v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12">
-                <h3 class="text-h6">{{ selectedPlant?.name }}</h3>
+                <h3 class="text-h6">
+                  {{ selectedPlant?.name }}
+                </h3>
                 <p class="text-subtitle-1">
                   {{ selectedPlant?.species || "Unknown Species" }}
                 </p>
@@ -77,7 +90,7 @@
                   step="0.01"
                   min="0"
                   required
-                ></v-text-field>
+                />
               </v-col>
               <v-col cols="12">
                 <v-text-field
@@ -85,19 +98,27 @@
                   label="Date Checked"
                   type="date"
                   required
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="error" variant="text" @click="closeDialog"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="error"
+            variant="text"
+            @click="closeDialog"
           >
-          <v-btn color="primary" @click="savePriceRecord" :loading="saving"
-            >Save</v-btn
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="saving"
+            @click="savePriceRecord"
           >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

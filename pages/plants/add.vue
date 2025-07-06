@@ -26,20 +26,20 @@
                 label="Plant Name*"
                 required
                 :rules="[(v) => !!v || 'Name is required']"
-              ></v-text-field>
+              />
 
               <v-text-field
                 v-model="plant.species"
                 label="Species"
                 hint="E.g., Monstera deliciosa"
-              ></v-text-field>
+              />
 
               <v-text-field
                 v-model="plant.image_url"
                 label="Image URL"
                 hint="Link to an image of your plant"
                 placeholder="https://example.com/image.jpg"
-              ></v-text-field>
+              />
 
               <v-textarea
                 v-model="plant.notes"
@@ -47,14 +47,14 @@
                 hint="Any additional information about your plant"
                 auto-grow
                 rows="3"
-              ></v-textarea>
+              />
 
               <v-switch
                 v-model="plant.isFavorite"
                 color="warning"
                 label="Add to favorites"
                 prepend-icon="mdi-star"
-              ></v-switch>
+              />
 
               <v-dialog
                 ref="dialog"
@@ -62,7 +62,7 @@
                 :close-on-content-click="false"
                 width="auto"
               >
-                <template v-slot:activator="{ props }">
+                <template #activator="{ props }">
                   <v-text-field
                     v-model="formattedDate"
                     label="Date Acquired"
@@ -71,12 +71,12 @@
                     v-bind="props"
                     clearable
                     @click:clear="plant.acquired_date = null"
-                  ></v-text-field>
+                  />
                 </template>
                 <v-date-picker
                   v-model="plant.acquired_date"
                   @update:model-value="datePickerModal = false"
-                ></v-date-picker>
+                />
               </v-dialog>
             </v-col>
 
@@ -89,7 +89,7 @@
                 :items="lightOptions"
                 label="Light Needs"
                 hint="Select the light requirement for this plant"
-              ></v-select>
+              />
 
               <v-row>
                 <v-col cols="12" md="6">
@@ -99,7 +99,7 @@
                     type="number"
                     min="1"
                     hint="Days between waterings"
-                  ></v-text-field>
+                  />
                 </v-col>
 
                 <v-col cols="12" md="6">
@@ -109,7 +109,7 @@
                     type="number"
                     min="1"
                     hint="Days between fertilizing"
-                  ></v-text-field>
+                  />
                 </v-col>
               </v-row>
 
@@ -118,7 +118,7 @@
                 label="Set initial care dates"
                 hint="Record that you watered/fertilized today"
                 color="primary"
-              ></v-switch>
+              />
 
               <v-expand-transition>
                 <div v-if="setInitialCare">
@@ -127,14 +127,14 @@
                       <v-checkbox
                         v-model="initialWatering"
                         label="Watered today"
-                      ></v-checkbox>
+                      />
                     </v-col>
 
                     <v-col cols="12" md="6">
                       <v-checkbox
                         v-model="initialFertilizing"
                         label="Fertilized today"
-                      ></v-checkbox>
+                      />
                     </v-col>
                   </v-row>
                 </div>
@@ -143,14 +143,16 @@
           </v-row>
         </v-card-text>
 
-        <v-divider></v-divider>
+        <v-divider />
 
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="$router.push('/plants')">Cancel</v-btn>
-          <v-btn color="success" type="submit" :loading="loading"
-            >Save Plant</v-btn
-          >
+          <v-spacer />
+          <v-btn color="primary" @click="$router.push('/plants')">
+            Cancel
+          </v-btn>
+          <v-btn color="success" type="submit" :loading="loading">
+            Save Plant
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -208,13 +210,21 @@
     try {
       // Prepare data for API
       const plantData = {
-        ...plant.value,
-        user_id: auth.user.value.id,
-        last_watered:
+        userId: auth.user.value.id,
+        name: plant.value.name,
+        species: plant.value.species,
+        acquiredDate: plant.value.acquired_date,
+        imageUrl: plant.value.image_url,
+        notes: plant.value.notes,
+        wateringInterval: plant.value.watering_interval,
+        fertilizingInterval: plant.value.fertilizing_interval,
+        lightNeeds: plant.value.light_needs,
+        isFavorite: plant.value.isFavorite,
+        lastWatered:
           initialWatering.value && setInitialCare.value
             ? new Date().toISOString().split("T")[0]
             : null,
-        last_fertilized:
+        lastFertilized:
           initialFertilizing.value && setInitialCare.value
             ? new Date().toISOString().split("T")[0]
             : null,

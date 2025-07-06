@@ -2,7 +2,9 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h3">Edit Plant</h1>
+      <h1 class="text-h3">
+        Edit Plant
+      </h1>
       <v-btn
         color="primary"
         variant="outlined"
@@ -13,45 +15,71 @@
       </v-btn>
     </div>
 
-    <v-card v-if="loading" class="text-center pa-5">
-      <v-progress-circular indeterminate></v-progress-circular>
-      <div class="mt-3">Loading plant data...</div>
+    <v-card
+      v-if="loading"
+      class="text-center pa-5"
+    >
+      <v-progress-circular indeterminate />
+      <div class="mt-3">
+        Loading plant data...
+      </div>
     </v-card>
 
-    <div v-else-if="error" class="text-center pa-5">
-      <v-alert type="error" title="Error Loading Plant">
+    <div
+      v-else-if="error"
+      class="text-center pa-5"
+    >
+      <v-alert
+        type="error"
+        title="Error Loading Plant"
+      >
         {{ error }}
       </v-alert>
-      <v-btn class="mt-4" color="primary" to="/plants"> Back to Plants </v-btn>
+      <v-btn
+        class="mt-4"
+        color="primary"
+        to="/plants"
+      >
+        Back to Plants
+      </v-btn>
     </div>
 
-    <v-form v-else ref="form" @submit.prevent="savePlant">
+    <v-form
+      v-else
+      ref="form"
+      @submit.prevent="savePlant"
+    >
       <v-card>
         <v-card-text>
           <v-row>
             <!-- Left Column - Basic Plant Info -->
-            <v-col cols="12" md="6">
-              <h2 class="text-h5 mb-4">Plant Details</h2>
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <h2 class="text-h5 mb-4">
+                Plant Details
+              </h2>
 
               <v-text-field
                 v-model="plant.name"
                 label="Plant Name*"
                 required
                 :rules="[(v) => !!v || 'Name is required']"
-              ></v-text-field>
+              />
 
               <v-text-field
                 v-model="plant.species"
                 label="Species"
                 hint="E.g., Monstera deliciosa"
-              ></v-text-field>
+              />
 
               <v-text-field
                 v-model="plant.image_url"
                 label="Image URL"
                 hint="Link to an image of your plant"
                 placeholder="https://example.com/image.jpg"
-              ></v-text-field>
+              />
 
               <v-textarea
                 v-model="plant.notes"
@@ -59,7 +87,7 @@
                 hint="Any additional information about your plant"
                 auto-grow
                 rows="3"
-              ></v-textarea>
+              />
 
               <v-dialog
                 ref="dialog"
@@ -67,7 +95,7 @@
                 :close-on-content-click="false"
                 width="auto"
               >
-                <template v-slot:activator="{ props }">
+                <template #activator="{ props }">
                   <v-text-field
                     v-model="formattedDate"
                     label="Date Acquired"
@@ -76,57 +104,71 @@
                     v-bind="props"
                     clearable
                     @click:clear="plant.acquired_date = null"
-                  ></v-text-field>
+                  />
                 </template>
                 <v-date-picker
                   v-model="plant.acquired_date"
                   @update:model-value="datePickerModal = false"
-                ></v-date-picker>
+                />
               </v-dialog>
             </v-col>
 
             <!-- Right Column - Care Details -->
-            <v-col cols="12" md="6">
-              <h2 class="text-h5 mb-4">Care Details</h2>
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <h2 class="text-h5 mb-4">
+                Care Details
+              </h2>
 
               <v-select
                 v-model="plant.light_needs"
                 :items="lightOptions"
                 label="Light Needs"
                 hint="Select the light requirement for this plant"
-              ></v-select>
+              />
 
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model.number="plant.watering_interval"
                     label="Watering Interval (days)"
                     type="number"
                     min="1"
                     hint="Days between waterings"
-                  ></v-text-field>
+                  />
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model.number="plant.fertilizing_interval"
                     label="Fertilizing Interval (days)"
                     type="number"
                     min="1"
                     hint="Days between fertilizing"
-                  ></v-text-field>
+                  />
                 </v-col>
               </v-row>
 
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-dialog
                     ref="wateringDialog"
                     v-model="wateringDateModal"
                     :close-on-content-click="false"
                     width="auto"
                   >
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-text-field
                         v-model="lastWateredFormatted"
                         label="Last Watered"
@@ -135,23 +177,26 @@
                         v-bind="props"
                         clearable
                         @click:clear="plant.last_watered = null"
-                      ></v-text-field>
+                      />
                     </template>
                     <v-date-picker
                       v-model="plant.last_watered"
                       @update:model-value="wateringDateModal = false"
-                    ></v-date-picker>
+                    />
                   </v-dialog>
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-dialog
                     ref="fertilizingDialog"
                     v-model="fertilizingDateModal"
                     :close-on-content-click="false"
                     width="auto"
                   >
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                       <v-text-field
                         v-model="lastFertilizedFormatted"
                         label="Last Fertilized"
@@ -160,12 +205,12 @@
                         v-bind="props"
                         clearable
                         @click:clear="plant.last_fertilized = null"
-                      ></v-text-field>
+                      />
                     </template>
                     <v-date-picker
                       v-model="plant.last_fertilized"
                       @update:model-value="fertilizingDateModal = false"
-                    ></v-date-picker>
+                    />
                   </v-dialog>
                 </v-col>
               </v-row>
@@ -173,14 +218,23 @@
           </v-row>
         </v-card-text>
 
-        <v-divider></v-divider>
+        <v-divider />
 
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" :to="`/plants/${plantId}`">Cancel</v-btn>
-          <v-btn color="success" type="submit" :loading="saving"
-            >Save Changes</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            :to="`/plants/${plantId}`"
           >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            type="submit"
+            :loading="saving"
+          >
+            Save Changes
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>

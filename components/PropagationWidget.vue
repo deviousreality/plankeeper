@@ -2,29 +2,50 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-sprout</v-icon>
+      <v-icon class="mr-2">
+        mdi-sprout
+      </v-icon>
       Propagation History
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-btn
+        v-if="plantId"
         color="primary"
         size="small"
         variant="outlined"
         @click="openNewPropagationDialog"
-        v-if="plantId"
       >
-        <v-icon size="small">mdi-plus</v-icon>
+        <v-icon size="small">
+          mdi-plus
+        </v-icon>
         New Propagation
       </v-btn>
     </v-card-title>
 
     <v-card-text>
-      <div v-if="loading" class="text-center">
-        <v-progress-circular indeterminate size="24"></v-progress-circular>
-        <div class="mt-2">Loading propagation records...</div>
+      <div
+        v-if="loading"
+        class="text-center"
+      >
+        <v-progress-circular
+          indeterminate
+          size="24"
+        />
+        <div class="mt-2">
+          Loading propagation records...
+        </div>
       </div>
 
-      <div v-else-if="!propagations.length" class="text-center py-4">
-        <v-icon size="40" color="grey" class="mb-2">mdi-sprout-outline</v-icon>
+      <div
+        v-else-if="!propagations.length"
+        class="text-center py-4"
+      >
+        <v-icon
+          size="40"
+          color="grey"
+          class="mb-2"
+        >
+          mdi-sprout-outline
+        </v-icon>
         <div>No propagation records found</div>
         <v-btn
           v-if="plantId"
@@ -37,7 +58,11 @@
         </v-btn>
       </div>
 
-      <v-timeline v-else density="compact" align="start">
+      <v-timeline
+        v-else
+        density="compact"
+        align="start"
+      >
         <v-timeline-item
           v-for="prop in propagations"
           :key="prop.id"
@@ -64,7 +89,9 @@
                 color="primary"
                 title="View Details"
               >
-                <v-icon size="small">mdi-eye</v-icon>
+                <v-icon size="small">
+                  mdi-eye
+                </v-icon>
               </v-btn>
             </div>
           </div>
@@ -83,7 +110,10 @@
                 {{ prop.currentCount }}/{{ prop.initialCount }}
               </v-chip>
             </template>
-            <span v-if="prop.notes" class="text-truncate">
+            <span
+              v-if="prop.notes"
+              class="text-truncate"
+            >
               {{ truncateText(prop.notes, 60) }}
             </span>
           </div>
@@ -92,80 +122,89 @@
     </v-card-text>
 
     <v-card-actions v-if="propagations.length">
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-btn
+        v-if="plantId"
         color="primary"
         variant="text"
         :to="`/propagation?plantId=${plantId}`"
-        v-if="plantId"
       >
         View All
-        <v-icon end>mdi-arrow-right</v-icon>
+        <v-icon end>
+          mdi-arrow-right
+        </v-icon>
       </v-btn>
     </v-card-actions>
 
     <!-- New Propagation Dialog -->
-    <v-dialog v-model="propagationDialog" max-width="600px">
+    <v-dialog
+      v-model="propagationDialog"
+      max-width="600px"
+    >
       <v-card>
         <v-card-title>
           <span class="text-h5">New Propagation Record</span>
         </v-card-title>
         <v-card-text>
-          <v-form ref="form" v-model="valid" @submit.prevent="savePropagation">
+          <v-form
+            ref="form"
+            v-model="valid"
+            @submit.prevent="savePropagation"
+          >
             <v-select
               v-model="newPropagation.propType"
               :items="propTypeOptions"
               label="Propagation Type"
               required
               :rules="[(v) => !!v || 'Propagation type is required']"
-            ></v-select>
+            />
 
             <v-text-field
               v-if="newPropagation.propType === 1"
               v-model="newPropagation.seedSource"
               label="Seed Source"
               hint="Where did you get the seeds from?"
-            ></v-text-field>
+            />
 
             <v-text-field
               v-if="newPropagation.propType === 2"
               v-model="newPropagation.cuttingSource"
               label="Cutting Source"
               hint="Where did you get the cutting from?"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="date"
               v-model="newPropagation.propDate"
+              type="date"
               label="Propagation Date"
               required
               :rules="[(v) => !!v || 'Propagation date is required']"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="number"
               v-model.number="newPropagation.initialCount"
+              type="number"
               label="Initial Count"
               hint="How many plants/seeds did you start with?"
-            ></v-text-field>
+            />
 
             <v-text-field
-              type="number"
               v-model.number="newPropagation.currentCount"
+              type="number"
               label="Current Count"
               hint="How many plants survived/are growing?"
-            ></v-text-field>
+            />
 
             <v-textarea
               v-model="newPropagation.notes"
               label="Notes"
               hint="Any additional information about this propagation"
               rows="3"
-            ></v-textarea>
+            />
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             color="blue-darken-1"
             variant="text"
@@ -176,8 +215,8 @@
           <v-btn
             color="blue-darken-1"
             variant="text"
-            @click="savePropagation"
             :disabled="!valid"
+            @click="savePropagation"
           >
             Save
           </v-btn>

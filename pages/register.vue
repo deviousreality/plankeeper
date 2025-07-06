@@ -1,7 +1,12 @@
 <!-- pages/register.vue -->
 <template>
   <v-card-title class="text-center text-h4 mb-5">
-    <v-icon size="large" class="me-2">mdi-nature-people</v-icon>
+    <v-icon
+      size="large"
+      class="me-2"
+    >
+      mdi-nature-people
+    </v-icon>
     Create Account
   </v-card-title>
   <v-card-text>
@@ -12,7 +17,7 @@
         prepend-icon="mdi-account"
         :rules="[rules.required]"
         required
-      ></v-text-field>
+      />
 
       <v-text-field
         v-model="email"
@@ -21,7 +26,7 @@
         prepend-icon="mdi-email"
         :rules="[rules.required, rules.email]"
         required
-      ></v-text-field>
+      />
 
       <v-text-field
         v-model="password"
@@ -31,7 +36,7 @@
         :rules="[rules.required, rules.minLength]"
         required
         hint="Password must be at least 6 characters"
-      ></v-text-field>
+      />
 
       <v-text-field
         v-model="confirmPassword"
@@ -40,7 +45,7 @@
         prepend-icon="mdi-lock-check"
         :rules="[rules.required, rules.passwordMatch]"
         required
-      ></v-text-field>
+      />
 
       <v-alert
         v-if="auth.error"
@@ -61,8 +66,12 @@
         >
           Back to Login
         </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" type="submit" :loading="isLoading">
+        <v-spacer />
+        <v-btn
+          color="primary"
+          type="submit"
+          :loading="isLoading"
+        >
           Register
         </v-btn>
       </v-card-actions>

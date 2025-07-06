@@ -1,9 +1,14 @@
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Plant Taxonomy Manager</h1>
+    <h1 class="text-h3 mb-6">
+      Plant Taxonomy Manager
+    </h1>
 
     <v-row>
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title>Species</v-card-title>
           <v-card-text>
@@ -14,7 +19,7 @@
               append-inner-icon="mdi-plus"
               @click:append-inner="addSpecies"
               @keyup.enter="addSpecies"
-            ></v-text-field>
+            />
 
             <v-list lines="two">
               <v-list-item
@@ -22,20 +27,20 @@
                 :key="species.id"
                 :title="species.name"
               >
-                <template v-slot:append>
+                <template #append>
                   <v-btn
                     icon="mdi-pencil"
                     variant="text"
                     size="small"
                     @click="editItem('species', species)"
-                  ></v-btn>
+                  />
                   <v-btn
                     icon="mdi-delete"
                     variant="text"
                     color="error"
                     size="small"
                     @click="confirmDelete('species', species)"
-                  ></v-btn>
+                  />
                 </template>
               </v-list-item>
               <v-list-item v-if="!speciesList.length">
@@ -46,7 +51,10 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title>Genus</v-card-title>
           <v-card-text>
@@ -57,27 +65,27 @@
                   label="New Genus"
                   placeholder="Enter genus name"
                   @keyup.enter="addGenius"
-                ></v-text-field>
+                />
               </v-col>
               <v-col cols="4">
                 <v-select
                   v-model="newGeniusSpeciesId"
                   label="Species"
                   :items="speciesOptions"
-                ></v-select>
+                />
               </v-col>
             </v-row>
             <v-btn
               color="primary"
               block
               prepend-icon="mdi-plus"
-              @click="addGenius"
               :disabled="!newGenius"
+              @click="addGenius"
             >
               Add Genus
             </v-btn>
 
-            <v-divider class="my-4"></v-divider>
+            <v-divider class="my-4" />
 
             <v-list lines="two">
               <v-list-item
@@ -86,20 +94,20 @@
                 :title="genius.name"
                 :subtitle="getSpeciesNameById(genius.speciesId)"
               >
-                <template v-slot:append>
+                <template #append>
                   <v-btn
                     icon="mdi-pencil"
                     variant="text"
                     size="small"
                     @click="editItem('genius', genius)"
-                  ></v-btn>
+                  />
                   <v-btn
                     icon="mdi-delete"
                     variant="text"
                     color="error"
                     size="small"
                     @click="confirmDelete('genius', genius)"
-                  ></v-btn>
+                  />
                 </template>
               </v-list-item>
               <v-list-item v-if="!geniusList.length">
@@ -110,7 +118,10 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <v-card class="mb-4">
           <v-card-title>Family</v-card-title>
           <v-card-text>
@@ -121,34 +132,34 @@
                   label="New Family"
                   placeholder="Enter family name"
                   @keyup.enter="addFamily"
-                ></v-text-field>
+                />
               </v-col>
               <v-col cols="6">
                 <v-select
                   v-model="newFamilyGeniusId"
                   label="Genus"
                   :items="geniusOptions"
-                ></v-select>
+                />
               </v-col>
               <v-col cols="6">
                 <v-select
                   v-model="newFamilySpeciesId"
                   label="Species"
                   :items="speciesOptions"
-                ></v-select>
+                />
               </v-col>
             </v-row>
             <v-btn
               color="primary"
               block
               prepend-icon="mdi-plus"
-              @click="addFamily"
               :disabled="!newFamily"
+              @click="addFamily"
             >
               Add Family
             </v-btn>
 
-            <v-divider class="my-4"></v-divider>
+            <v-divider class="my-4" />
 
             <v-list lines="two">
               <v-list-item
@@ -159,20 +170,20 @@
                   getGeniusNameById(family.geniusId) || 'None'
                 }, Species: ${getSpeciesNameById(family.speciesId) || 'None'}`"
               >
-                <template v-slot:append>
+                <template #append>
                   <v-btn
                     icon="mdi-pencil"
                     variant="text"
                     size="small"
                     @click="editItem('family', family)"
-                  ></v-btn>
+                  />
                   <v-btn
                     icon="mdi-delete"
                     variant="text"
                     color="error"
                     size="small"
                     @click="confirmDelete('family', family)"
-                  ></v-btn>
+                  />
                 </template>
               </v-list-item>
               <v-list-item v-if="!familyList.length">
@@ -196,20 +207,28 @@
             "
             color="info"
             text="Add some taxonomy entries to see relationships visualized here"
-          ></v-alert>
-          <div v-else class="taxonomy-tree">
+          />
+          <div
+            v-else
+            class="taxonomy-tree"
+          >
             <div
               v-for="family in familyList"
               :key="`family-${family.id}`"
               class="family-node"
             >
-              <div class="taxonomy-label family">Family: {{ family.name }}</div>
-              <v-divider></v-divider>
-              <div v-if="family.geniusId" class="genius-node">
+              <div class="taxonomy-label family">
+                Family: {{ family.name }}
+              </div>
+              <v-divider />
+              <div
+                v-if="family.geniusId"
+                class="genius-node"
+              >
                 <div class="taxonomy-label genius">
                   Genus: {{ getGeniusNameById(family.geniusId) }}
                 </div>
-                <v-divider></v-divider>
+                <v-divider />
                 <div
                   v-if="getGeniusByIdWithSpecies(family.geniusId)?.speciesId"
                   class="species-node"
@@ -240,9 +259,14 @@
               :key="`genus-${genius.id}`"
               class="genius-node standalone"
             >
-              <div class="taxonomy-label genius">Genus: {{ genius.name }}</div>
-              <v-divider v-if="genius.speciesId"></v-divider>
-              <div v-if="genius.speciesId" class="species-node">
+              <div class="taxonomy-label genius">
+                Genus: {{ genius.name }}
+              </div>
+              <v-divider v-if="genius.speciesId" />
+              <div
+                v-if="genius.speciesId"
+                class="species-node"
+              >
                 <div class="taxonomy-label species">
                   Species: {{ getSpeciesNameById(genius.speciesId) }}
                 </div>
@@ -265,7 +289,10 @@
     </v-card>
 
     <!-- Edit Dialog -->
-    <v-dialog v-model="editDialog" max-width="500">
+    <v-dialog
+      v-model="editDialog"
+      max-width="500"
+    >
       <v-card>
         <v-card-title>Edit {{ editingType }}</v-card-title>
         <v-card-text>
@@ -273,40 +300,52 @@
             v-model="editingItem.name"
             :label="`${editingType} Name`"
             required
-          ></v-text-field>
+          />
 
           <v-select
             v-if="editingType === 'genius'"
             v-model="editingItem.speciesId"
             label="Species"
             :items="speciesOptions"
-          ></v-select>
+          />
 
           <template v-if="editingType === 'family'">
             <v-select
               v-model="editingItem.geniusId"
               label="Genus"
               :items="geniusOptions"
-            ></v-select>
+            />
             <v-select
               v-model="editingItem.speciesId"
               label="Species"
               :items="speciesOptions"
-            ></v-select>
+            />
           </template>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="editDialog = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="editDialog = false"
           >
-          <v-btn color="success" @click="saveEdit">Save</v-btn>
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            @click="saveEdit"
+          >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="400">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>Confirm Delete</v-card-title>
         <v-card-text>
@@ -317,14 +356,23 @@
             type="warning"
             class="mt-3"
             text="Warning: This item is referenced by other taxonomy entries. Deleting it may affect those relationships."
-          ></v-alert>
+          />
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="deleteDialog = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="deleteDialog = false"
           >
-          <v-btn color="error" @click="deleteItem">Delete</v-btn>
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            @click="deleteItem"
+          >
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

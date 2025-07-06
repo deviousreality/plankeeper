@@ -1,7 +1,9 @@
 <!-- pages/care-tips.vue -->
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Plant Care Tips</h1>
+    <h1 class="text-h3 mb-6">
+      Plant Care Tips
+    </h1>
 
     <v-card class="mb-6">
       <v-card-text>
@@ -12,17 +14,26 @@
           clearable
           hide-details
           @update:model-value="searchTips"
-        ></v-text-field>
+        />
       </v-card-text>
     </v-card>
 
-    <div v-if="loading" class="text-center pa-5">
-      <v-progress-circular indeterminate></v-progress-circular>
-      <div class="mt-3">Loading care tips...</div>
+    <div
+      v-if="loading"
+      class="text-center pa-5"
+    >
+      <v-progress-circular indeterminate />
+      <div class="mt-3">
+        Loading care tips...
+      </div>
     </div>
 
     <div v-else>
-      <v-tabs v-model="activeSpecies" show-arrows centered>
+      <v-tabs
+        v-model="activeSpecies"
+        show-arrows
+        centered
+      >
         <v-tab
           v-for="species in groupedTips.keys()"
           :key="species"
@@ -32,7 +43,10 @@
         </v-tab>
       </v-tabs>
 
-      <v-window v-model="activeSpecies" class="mt-4">
+      <v-window
+        v-model="activeSpecies"
+        class="mt-4"
+      >
         <v-window-item
           v-for="[species, tips] in groupedTips"
           :key="species"
@@ -52,15 +66,17 @@
               </v-btn>
             </v-card-title>
 
-            <v-divider></v-divider>
+            <v-divider />
 
             <v-list lines="two">
               <v-list-item
                 v-for="(tip, index) in tips"
                 :key="`${species}-${index}`"
               >
-                <template v-slot:prepend>
-                  <v-icon color="green">mdi-leaf</v-icon>
+                <template #prepend>
+                  <v-icon color="green">
+                    mdi-leaf
+                  </v-icon>
                 </template>
 
                 <v-list-item-title>
@@ -71,14 +87,17 @@
                   Source: {{ tip.source }}
                 </v-list-item-subtitle>
 
-                <template v-if="isAdmin" v-slot:append>
+                <template
+                  v-if="isAdmin"
+                  #append
+                >
                   <v-btn
                     icon="mdi-delete"
                     variant="text"
                     size="small"
                     color="error"
                     @click="deleteTip(tip.id)"
-                  ></v-btn>
+                  />
                 </template>
               </v-list-item>
             </v-list>
@@ -86,9 +105,20 @@
         </v-window-item>
       </v-window>
 
-      <div v-if="!groupedTips.size" class="text-center pa-5">
-        <v-icon size="64" color="grey" class="mb-4">mdi-leaf-off</v-icon>
-        <h3 class="text-h5 mb-3">No Care Tips Found</h3>
+      <div
+        v-if="!groupedTips.size"
+        class="text-center pa-5"
+      >
+        <v-icon
+          size="64"
+          color="grey"
+          class="mb-4"
+        >
+          mdi-leaf-off
+        </v-icon>
+        <h3 class="text-h5 mb-3">
+          No Care Tips Found
+        </h3>
         <p class="mb-4">
           {{
             search
@@ -96,14 +126,21 @@
               : "No care tips available yet."
           }}
         </p>
-        <v-btn v-if="isAdmin" color="primary" @click="openTipDialog()"
-          >Add The First Tip</v-btn
+        <v-btn
+          v-if="isAdmin"
+          color="primary"
+          @click="openTipDialog()"
         >
+          Add The First Tip
+        </v-btn>
       </div>
     </div>
 
     <!-- Add/Edit Dialog -->
-    <v-dialog v-model="showTipDialog" max-width="600px">
+    <v-dialog
+      v-model="showTipDialog"
+      max-width="600px"
+    >
       <v-card>
         <v-card-title>
           {{ currentTip.id ? "Edit Care Tip" : "Add New Care Tip" }}
@@ -116,7 +153,7 @@
               label="Plant Species*"
               required
               :rules="[(v) => !!v || 'Species is required']"
-            ></v-text-field>
+            />
 
             <v-textarea
               v-model="currentTip.tip"
@@ -124,22 +161,30 @@
               required
               :rules="[(v) => !!v || 'Tip content is required']"
               auto-grow
-            ></v-textarea>
+            />
 
             <v-text-field
               v-model="currentTip.source"
               label="Source"
               hint="Where this tip came from (optional)"
-            ></v-text-field>
+            />
           </v-form>
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="showTipDialog = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="showTipDialog = false"
           >
-          <v-btn color="success" @click="saveTip" :loading="savingTip">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            :loading="savingTip"
+            @click="saveTip"
+          >
             Save
           </v-btn>
         </v-card-actions>
@@ -147,7 +192,10 @@
     </v-dialog>
 
     <!-- Confirm Delete Dialog -->
-    <v-dialog v-model="showDeleteDialog" max-width="400px">
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="400px"
+    >
       <v-card>
         <v-card-title>Delete Care Tip</v-card-title>
         <v-card-text>
@@ -155,14 +203,19 @@
           undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             color="primary"
             variant="text"
             @click="showDeleteDialog = false"
-            >Cancel</v-btn
           >
-          <v-btn color="error" @click="confirmDeleteTip" :loading="deletingTip">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deletingTip"
+            @click="confirmDeleteTip"
+          >
             Delete
           </v-btn>
         </v-card-actions>

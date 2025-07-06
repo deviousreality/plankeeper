@@ -1,9 +1,14 @@
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Care Schedule Manager</h1>
+    <h1 class="text-h3 mb-6">
+      Care Schedule Manager
+    </h1>
 
     <v-row>
-      <v-col cols="12" lg="4">
+      <v-col
+        cols="12"
+        lg="4"
+      >
         <v-card class="mb-4">
           <v-card-title>Plants</v-card-title>
           <v-card-text>
@@ -14,12 +19,12 @@
               clearable
               hide-details
               class="mb-3"
-            ></v-text-field>
+            />
 
             <v-list
+              v-model:selected="selectedPlant"
               lines="two"
               select-strategy="single"
-              v-model:selected="selectedPlant"
             >
               <v-list-item
                 v-for="plant in filteredPlants"
@@ -28,15 +33,15 @@
                 :title="plant.name"
                 :subtitle="plant.species || 'Unknown species'"
               >
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-avatar color="grey-lighten-1">
                     <v-img
                       :src="plant.image_url || '/images/default-plant.jpg'"
-                    ></v-img>
+                    />
                   </v-avatar>
                 </template>
 
-                <template v-slot:append>
+                <template #append>
                   <v-chip
                     v-if="getNextTaskInfo(plant).overdue"
                     color="error"
@@ -51,15 +56,25 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" lg="8">
+      <v-col
+        cols="12"
+        lg="8"
+      >
         <v-card
           v-if="!selectedPlant"
           class="mb-4 d-flex align-center justify-center"
           height="300"
         >
           <div class="text-center pa-4">
-            <v-icon size="64" color="grey-lighten-1">mdi-flower</v-icon>
-            <h3 class="mt-4">Select a plant to manage its care schedule</h3>
+            <v-icon
+              size="64"
+              color="grey-lighten-1"
+            >
+              mdi-flower
+            </v-icon>
+            <h3 class="mt-4">
+              Select a plant to manage its care schedule
+            </h3>
           </div>
         </v-card>
 
@@ -68,7 +83,10 @@
             <v-card-title>{{ currentPlant?.name }} Care Schedule</v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="careSchedule.wateringInterval"
                     label="Watering Interval (days)"
@@ -76,19 +94,25 @@
                     min="1"
                     :hint="`Water every ${careSchedule.wateringInterval} days`"
                     persistent-hint
-                  ></v-text-field>
+                  />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="careSchedule.lastWatered"
                     label="Last Watered"
                     type="date"
                     :hint="lastWateredHint"
                     persistent-hint
-                  ></v-text-field>
+                  />
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="careSchedule.fertilizingInterval"
                     label="Fertilizing Interval (days)"
@@ -96,16 +120,19 @@
                     min="1"
                     :hint="`Fertilize every ${careSchedule.fertilizingInterval} days`"
                     persistent-hint
-                  ></v-text-field>
+                  />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="careSchedule.lastFertilized"
                     label="Last Fertilized"
                     type="date"
                     :hint="lastFertilizedHint"
                     persistent-hint
-                  ></v-text-field>
+                  />
                 </v-col>
 
                 <v-col cols="12">
@@ -119,15 +146,15 @@
                       'Full Sun',
                       'Part Shade',
                     ]"
-                  ></v-select>
+                  />
                 </v-col>
 
                 <v-col cols="12">
                   <v-btn
                     color="primary"
                     block
-                    @click="saveCareSchedule"
                     :loading="savingSchedule"
+                    @click="saveCareSchedule"
                   >
                     Save Care Schedule
                   </v-btn>
@@ -140,24 +167,30 @@
             <v-card-title>Quick Actions</v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" sm="6">
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
                   <v-btn
                     color="primary"
                     block
                     prepend-icon="mdi-water"
-                    @click="logWatering"
                     :loading="loggingWater"
+                    @click="logWatering"
                   >
                     Log Watering
                   </v-btn>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
                   <v-btn
                     color="success"
                     block
                     prepend-icon="mdi-leaf"
-                    @click="logFertilizing"
                     :loading="loggingFertilizer"
+                    @click="logFertilizing"
                   >
                     Log Fertilizing
                   </v-btn>
@@ -169,7 +202,7 @@
           <v-card class="mb-4">
             <v-card-title>
               Care History
-              <v-spacer></v-spacer>
+              <v-spacer />
               <v-btn
                 color="primary"
                 variant="text"
@@ -188,7 +221,7 @@
                 ]"
                 :items="formattedCareLog"
                 :loading="loadingLogs"
-              ></v-data-table>
+              />
             </v-card-text>
           </v-card>
 
@@ -201,13 +234,15 @@
                   :dot-color="getTaskColor(upcomingTasks.watering)"
                   size="small"
                 >
-                  <template v-slot:opposite>
+                  <template #opposite>
                     <div class="text-caption">
                       {{ formatDate(upcomingTasks.watering.date) }}
                     </div>
                   </template>
                   <div class="d-flex align-center">
-                    <v-icon class="me-2">mdi-water</v-icon>
+                    <v-icon class="me-2">
+                      mdi-water
+                    </v-icon>
                     <span>Watering Due</span>
                   </div>
                   <div class="text-caption mt-1">
@@ -220,13 +255,15 @@
                   :dot-color="getTaskColor(upcomingTasks.fertilizing)"
                   size="small"
                 >
-                  <template v-slot:opposite>
+                  <template #opposite>
                     <div class="text-caption">
                       {{ formatDate(upcomingTasks.fertilizing.date) }}
                     </div>
                   </template>
                   <div class="d-flex align-center">
-                    <v-icon class="me-2">mdi-leaf</v-icon>
+                    <v-icon class="me-2">
+                      mdi-leaf
+                    </v-icon>
                     <span>Fertilizing Due</span>
                   </div>
                   <div class="text-caption mt-1">
@@ -241,12 +278,18 @@
     </v-row>
 
     <!-- Add Care Log Dialog -->
-    <v-dialog v-model="addLogDialog" max-width="500px">
+    <v-dialog
+      v-model="addLogDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title>Add Care Log Entry</v-card-title>
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6">
+            <v-col
+              cols="12"
+              sm="6"
+            >
               <v-select
                 v-model="newLog.actionType"
                 label="Action Type"
@@ -261,33 +304,44 @@
                 item-title="title"
                 item-value="value"
                 required
-              ></v-select>
+              />
             </v-col>
-            <v-col cols="12" sm="6">
+            <v-col
+              cols="12"
+              sm="6"
+            >
               <v-text-field
                 v-model="newLog.actionDate"
                 label="Date"
                 type="date"
                 required
-              ></v-text-field>
+              />
             </v-col>
             <v-col cols="12">
               <v-textarea
                 v-model="newLog.notes"
                 label="Notes"
                 rows="3"
-              ></v-textarea>
+              />
             </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="addLogDialog = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="addLogDialog = false"
           >
-          <v-btn color="primary" @click="addCareLogEntry" :loading="addingLog"
-            >Save</v-btn
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="addingLog"
+            @click="addCareLogEntry"
           >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

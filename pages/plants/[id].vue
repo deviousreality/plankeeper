@@ -2,17 +2,34 @@
 <template>
   <div>
     <v-row v-if="loading">
-      <v-col cols="12" class="text-center">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div class="mt-3">Loading plant details...</div>
+      <v-col
+        cols="12"
+        class="text-center"
+      >
+        <v-progress-circular indeterminate />
+        <div class="mt-3">
+          Loading plant details...
+        </div>
       </v-col>
     </v-row>
 
-    <div v-else-if="error" class="text-center pa-5">
-      <v-alert type="error" title="Error Loading Plant">
+    <div
+      v-else-if="error"
+      class="text-center pa-5"
+    >
+      <v-alert
+        type="error"
+        title="Error Loading Plant"
+      >
         {{ error }}
       </v-alert>
-      <v-btn class="mt-4" color="primary" to="/plants"> Back to Plants </v-btn>
+      <v-btn
+        class="mt-4"
+        color="primary"
+        to="/plants"
+      >
+        Back to Plants
+      </v-btn>
     </div>
 
     <template v-else>
@@ -27,17 +44,30 @@
           Back to Plants
         </v-btn>
         <div>
-          <v-btn color="warning" class="me-2" @click="toggleFavorite">
-            <v-icon>{{
-              plant.is_favorite ? "mdi-star" : "mdi-star-outline"
-            }}</v-icon>
+          <v-btn
+            color="warning"
+            class="me-2"
+            @click="toggleFavorite"
+          >
+            <v-icon>
+              {{
+                plant.is_favorite ? "mdi-star" : "mdi-star-outline"
+              }}
+            </v-icon>
             {{ plant.is_favorite ? "Favorite" : "Add to Favorites" }}
           </v-btn>
-          <v-btn color="primary" class="me-2" :to="`/plants/${plant.id}/edit`">
+          <v-btn
+            color="primary"
+            class="me-2"
+            :to="`/plants/${plant.id}/edit`"
+          >
             <v-icon>mdi-pencil</v-icon>
             Edit
           </v-btn>
-          <v-btn color="error" @click="confirmDelete = true">
+          <v-btn
+            color="error"
+            @click="confirmDelete = true"
+          >
             <v-icon>mdi-delete</v-icon>
             Delete
           </v-btn>
@@ -46,7 +76,10 @@
 
       <v-row>
         <!-- Plant info -->
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-card class="mb-4">
             <v-img
               :src="plant.image_url || '/images/default-plant.jpg'"
@@ -54,77 +87,97 @@
               cover
               class="align-end"
             >
-              <template v-slot:placeholder>
+              <template #placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-icon size="64" color="grey">mdi-flower</v-icon>
+                  <v-icon
+                    size="64"
+                    color="grey"
+                  >
+                    mdi-flower
+                  </v-icon>
                 </div>
               </template>
             </v-img>
 
-            <v-card-title class="text-h4">{{ plant.name }}</v-card-title>
+            <v-card-title class="text-h4">
+              {{ plant.name }}
+            </v-card-title>
 
             <v-card-text>
               <v-list>
                 <v-list-item>
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon>mdi-flower</v-icon>
                   </template>
                   <v-list-item-title>Species</v-list-item-title>
-                  <v-list-item-subtitle>{{
-                    plant.species || "Unknown"
-                  }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                    {{
+                      plant.species || "Unknown"
+                    }}
+                  </v-list-item-subtitle>
                 </v-list-item>
 
                 <v-list-item>
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon>mdi-calendar</v-icon>
                   </template>
                   <v-list-item-title>Acquired</v-list-item-title>
-                  <v-list-item-subtitle>{{
-                    plant.acquired_date
-                      ? formatDate(plant.acquired_date)
-                      : "Unknown"
-                  }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                    {{
+                      plant.acquired_date
+                        ? formatDate(plant.acquired_date)
+                        : "Unknown"
+                    }}
+                  </v-list-item-subtitle>
                 </v-list-item>
 
                 <v-list-item>
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon>mdi-water</v-icon>
                   </template>
                   <v-list-item-title>Last Watered</v-list-item-title>
-                  <v-list-item-subtitle>{{
-                    plant.last_watered
-                      ? formatDate(plant.last_watered)
-                      : "Never"
-                  }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                    {{
+                      plant.last_watered
+                        ? formatDate(plant.last_watered)
+                        : "Never"
+                    }}
+                  </v-list-item-subtitle>
                 </v-list-item>
 
                 <v-list-item>
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon>mdi-fertilizer</v-icon>
                   </template>
                   <v-list-item-title>Last Fertilized</v-list-item-title>
-                  <v-list-item-subtitle>{{
-                    plant.last_fertilized
-                      ? formatDate(plant.last_fertilized)
-                      : "Never"
-                  }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                    {{
+                      plant.last_fertilized
+                        ? formatDate(plant.last_fertilized)
+                        : "Never"
+                    }}
+                  </v-list-item-subtitle>
                 </v-list-item>
 
                 <v-list-item>
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon>mdi-weather-sunny</v-icon>
                   </template>
                   <v-list-item-title>Light Needs</v-list-item-title>
-                  <v-list-item-subtitle>{{
-                    plant.light_needs || "Not specified"
-                  }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                    {{
+                      plant.light_needs || "Not specified"
+                    }}
+                  </v-list-item-subtitle>
                 </v-list-item>
               </v-list>
 
-              <v-expansion-panels variant="accordion" class="mt-4">
+              <v-expansion-panels
+                variant="accordion"
+                class="mt-4"
+              >
                 <v-expansion-panel title="Notes">
-                  <template v-slot:text>
+                  <template #text>
                     <div class="py-2">
                       {{ plant.notes || "No notes yet." }}
                     </div>
@@ -136,10 +189,13 @@
         </v-col>
 
         <!-- Care history and actions -->
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <!-- Propagation widget -->
           <PropagationWidget
-            :plantId="plant.id"
+            :plant-id="plant.id"
             class="mb-4"
             @propagation-added="refreshPlantData"
           />
@@ -152,8 +208,8 @@
                 <v-btn
                   color="primary"
                   prepend-icon="mdi-water"
-                  @click="recordCareAction('watering')"
                   :loading="careActionLoading === 'watering'"
+                  @click="recordCareAction('watering')"
                 >
                   Record Watering
                 </v-btn>
@@ -161,8 +217,8 @@
                 <v-btn
                   color="success"
                   prepend-icon="mdi-fertilizer"
-                  @click="recordCareAction('fertilizing')"
                   :loading="careActionLoading === 'fertilizing'"
+                  @click="recordCareAction('fertilizing')"
                 >
                   Record Fertilizing
                 </v-btn>
@@ -170,8 +226,8 @@
                 <v-btn
                   color="info"
                   prepend-icon="mdi-clipboard-text"
-                  @click="recordCareAction('pruning')"
                   :loading="careActionLoading === 'pruning'"
+                  @click="recordCareAction('pruning')"
                 >
                   Record Pruning
                 </v-btn>
@@ -180,20 +236,29 @@
           </v-card>
 
           <!-- Care tips -->
-          <v-card class="mb-4" v-if="careTips.length">
+          <v-card
+            v-if="careTips.length"
+            class="mb-4"
+          >
             <v-card-title>Care Tips</v-card-title>
             <v-card-text>
               <v-list lines="two">
-                <v-list-item v-for="(tip, index) in careTips" :key="index">
+                <v-list-item
+                  v-for="(tip, index) in careTips"
+                  :key="index"
+                >
                   <v-list-item-title>
                     <v-icon
                       color="info"
                       class="me-2"
                       icon="mdi-lightbulb"
-                    ></v-icon>
+                    />
                     {{ tip.tip }}
                   </v-list-item-title>
-                  <v-list-item-subtitle v-if="tip.source" class="text-grey">
+                  <v-list-item-subtitle
+                    v-if="tip.source"
+                    class="text-grey"
+                  >
                     Source: {{ tip.source }}
                   </v-list-item-subtitle>
                 </v-list-item>
@@ -205,21 +270,32 @@
           <v-card>
             <v-card-title>Care History</v-card-title>
             <v-card-text v-if="!careLogs.length">
-              <v-alert type="info" variant="tonal">
+              <v-alert
+                type="info"
+                variant="tonal"
+              >
                 No care history recorded yet.
               </v-alert>
             </v-card-text>
             <v-list v-else>
-              <v-list-item v-for="log in careLogs" :key="log.id">
-                <template v-slot:prepend>
-                  <v-icon :icon="getCareLogIcon(log.action_type)"></v-icon>
+              <v-list-item
+                v-for="log in careLogs"
+                :key="log.id"
+              >
+                <template #prepend>
+                  <v-icon :icon="getCareLogIcon(log.action_type)" />
                 </template>
-                <v-list-item-title>{{
-                  formatCareAction(log.action_type)
-                }}</v-list-item-title>
+                <v-list-item-title>
+                  {{
+                    formatCareAction(log.action_type)
+                  }}
+                </v-list-item-title>
                 <v-list-item-subtitle>
                   {{ formatDate(log.action_date) }}
-                  <span v-if="log.notes" class="ms-2">- {{ log.notes }}</span>
+                  <span
+                    v-if="log.notes"
+                    class="ms-2"
+                  >- {{ log.notes }}</span>
                 </v-list-item-subtitle>
               </v-list-item>
             </v-list>
@@ -229,27 +305,43 @@
     </template>
 
     <!-- Delete confirmation dialog -->
-    <v-dialog v-model="confirmDelete" max-width="500px">
+    <v-dialog
+      v-model="confirmDelete"
+      max-width="500px"
+    >
       <v-card>
-        <v-card-title class="text-h5">Delete Plant</v-card-title>
+        <v-card-title class="text-h5">
+          Delete Plant
+        </v-card-title>
         <v-card-text>
           Are you sure you want to delete {{ plant?.name }}? This action cannot
           be undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="confirmDelete = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="confirmDelete = false"
           >
-          <v-btn color="error" @click="deletePlant" :loading="deleteLoading"
-            >Delete</v-btn
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deleteLoading"
+            @click="deletePlant"
           >
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Care action dialog -->
-    <v-dialog v-model="showCareDialog" max-width="500px">
+    <v-dialog
+      v-model="showCareDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title>{{ formatCareAction(currentCareAction) }}</v-card-title>
         <v-card-text>
@@ -263,20 +355,25 @@
               v-model="careNotes"
               label="Notes (optional)"
               placeholder="Any details about this care action"
-            ></v-text-field>
+            />
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="showCareDialog = false"
-            >Cancel</v-btn
+          <v-spacer />
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="showCareDialog = false"
           >
+            Cancel
+          </v-btn>
           <v-btn
             color="success"
-            @click="saveCareAction"
             :loading="careActionLoading === 'saving'"
-            >Save</v-btn
+            @click="saveCareAction"
           >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

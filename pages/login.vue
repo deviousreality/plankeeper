@@ -1,7 +1,12 @@
 <!-- pages/login.vue -->
 <template>
   <v-card-title class="text-center text-h4 mb-5">
-    <v-icon size="large" class="me-2">mdi-nature-people</v-icon>
+    <v-icon
+      size="large"
+      class="me-2"
+    >
+      mdi-nature-people
+    </v-icon>
     PlantKeeper
   </v-card-title>
   <v-card-text>
@@ -12,7 +17,7 @@
         prepend-icon="mdi-account"
         :rules="[rules.required]"
         required
-      ></v-text-field>
+      />
 
       <v-text-field
         v-model="password"
@@ -21,7 +26,7 @@
         prepend-icon="mdi-lock"
         :rules="[rules.required]"
         required
-      ></v-text-field>
+      />
 
       <v-alert
         v-if="auth.error"
@@ -42,8 +47,12 @@
         >
           Register
         </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" type="submit" :loading="isLoading">
+        <v-spacer />
+        <v-btn
+          color="primary"
+          type="submit"
+          :loading="isLoading"
+        >
           Login
         </v-btn>
       </v-card-actions>
