@@ -70,7 +70,9 @@
           </div>
 
           <div class="text-body-2 mt-1">
-            <template v-if="prop.initialCount && prop.currentCount !== undefined">
+            <template
+              v-if="prop.initialCount && prop.currentCount !== undefined"
+            >
               <v-chip
                 size="x-small"
                 :color="getCountColor(prop)"
@@ -115,45 +117,45 @@
               :items="propTypeOptions"
               label="Propagation Type"
               required
-              :rules="[v => !!v || 'Propagation type is required']"
+              :rules="[(v) => !!v || 'Propagation type is required']"
             ></v-select>
-            
+
             <v-text-field
-              v-if="newPropagation.propType === 1" // Seed
+              v-if="newPropagation.propType === 1"
               v-model="newPropagation.seedSource"
               label="Seed Source"
               hint="Where did you get the seeds from?"
             ></v-text-field>
-            
+
             <v-text-field
-              v-if="newPropagation.propType === 2" // Cutting
+              v-if="newPropagation.propType === 2"
               v-model="newPropagation.cuttingSource"
               label="Cutting Source"
               hint="Where did you get the cutting from?"
             ></v-text-field>
-            
+
             <v-text-field
               type="date"
               v-model="newPropagation.propDate"
               label="Propagation Date"
               required
-              :rules="[v => !!v || 'Propagation date is required']"
+              :rules="[(v) => !!v || 'Propagation date is required']"
             ></v-text-field>
-            
+
             <v-text-field
               type="number"
               v-model.number="newPropagation.initialCount"
               label="Initial Count"
               hint="How many plants/seeds did you start with?"
             ></v-text-field>
-            
+
             <v-text-field
               type="number"
               v-model.number="newPropagation.currentCount"
               label="Current Count"
               hint="How many plants survived/are growing?"
             ></v-text-field>
-            
+
             <v-textarea
               v-model="newPropagation.notes"
               label="Notes"
@@ -164,7 +166,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="propagationDialog = false">
+          <v-btn
+            color="blue-darken-1"
+            variant="text"
+            @click="propagationDialog = false"
+          >
             Cancel
           </v-btn>
           <v-btn
@@ -182,168 +188,175 @@
 </template>
 
 <script setup lang="ts">
-import { PropagationType, type PlantPropagation } from '~/types/plant-models';
-import { formatDate } from '~/utils/format';
+  import { PropagationType, type PlantPropagation } from "~/types/plant-models";
+  import { formatDate } from "~/utils/format";
 
-const props = defineProps({
-  plantId: {
-    type: Number,
-    required: false
-  }
-});
+  const props = defineProps({
+    plantId: {
+      type: Number,
+      required: false,
+    },
+  });
 
-const emit = defineEmits(['update', 'propagation-added']);
+  const emit = defineEmits(["update", "propagation-added"]);
 
-// State
-const propagations = ref<PlantPropagation[]>([]);
-const loading = ref(true);
-const propagationDialog = ref(false);
-const valid = ref(false);
-const form = ref(null);
+  // State
+  const propagations = ref<PlantPropagation[]>([]);
+  const loading = ref(true);
+  const propagationDialog = ref(false);
+  const valid = ref(false);
+  const form = ref(null);
 
-const newPropagation = ref<Partial<PlantPropagation>>({
-  plantId: props.plantId,
-  propType: PropagationType.Seed,
-  propDate: new Date().toISOString().split('T')[0],
-  initialCount: 1,
-  currentCount: 1
-});
-
-// Options
-const propTypeOptions = [
-  { title: 'Seed', value: PropagationType.Seed },
-  { title: 'Cutting', value: PropagationType.Cutting },
-  { title: 'Division', value: PropagationType.Division },
-  { title: 'Offsets', value: PropagationType.Offsets },
-  { title: 'Layering', value: PropagationType.Layering },
-  { title: 'Other', value: PropagationType.Other },
-];
-
-// Methods
-function openNewPropagationDialog() {
-  newPropagation.value = {
+  const newPropagation = ref<Partial<PlantPropagation>>({
     plantId: props.plantId,
     propType: PropagationType.Seed,
-    propDate: new Date().toISOString().split('T')[0],
+    propDate: new Date().toISOString().split("T")[0],
     initialCount: 1,
-    currentCount: 1
-  };
-  propagationDialog.value = true;
-}
+    currentCount: 1,
+  });
 
-async function savePropagation() {
-  if (form.value && !form.value.validate()) return;
+  // Options
+  const propTypeOptions = [
+    { title: "Seed", value: PropagationType.Seed },
+    { title: "Cutting", value: PropagationType.Cutting },
+    { title: "Division", value: PropagationType.Division },
+    { title: "Offsets", value: PropagationType.Offsets },
+    { title: "Layering", value: PropagationType.Layering },
+    { title: "Other", value: PropagationType.Other },
+  ];
 
-  try {
-    await $fetch('/api/propagation', {
-      method: 'POST',
-      body: newPropagation.value
-    });
-    
-    propagationDialog.value = false;
-    fetchPropagations();
-    emit('propagation-added');
-  } catch (error) {
-    console.error('Error saving propagation record:', error);
-    // Show error notification
-  }
-}
-
-function getPropTypeName(type?: PropagationType): string {
-  if (!type) return 'Unknown';
-  
-  const found = propTypeOptions.find(option => option.value === type);
-  return found ? found.title : 'Unknown';
-}
-
-function getPropTypeIcon(type?: PropagationType): string {
-  if (!type) return 'mdi-sprout-outline';
-  
-  switch (type) {
-    case PropagationType.Seed:
-      return 'mdi-seed';
-    case PropagationType.Cutting:
-      return 'mdi-content-cut';
-    case PropagationType.Division:
-      return 'mdi-card-bulleted-outline';
-    case PropagationType.Offsets:
-      return 'mdi-flower';
-    case PropagationType.Layering:
-      return 'mdi-layers';
-    default:
-      return 'mdi-sprout-outline';
-  }
-}
-
-function getPropStatusColor(prop: PlantPropagation): string {
-  if (!prop.initialCount || prop.currentCount === undefined) {
-    return 'grey';
-  }
-  
-  if (prop.currentCount === 0) {
-    return 'red';
-  }
-  
-  const successRate = (prop.currentCount / prop.initialCount) * 100;
-  
-  if (successRate < 25) return 'red-darken-1';
-  if (successRate < 50) return 'orange';
-  if (successRate < 75) return 'amber';
-  return 'green';
-}
-
-function getCountColor(prop: PlantPropagation): string {
-  if (!prop.initialCount || prop.currentCount === undefined) {
-    return 'grey';
-  }
-  
-  const successRate = (prop.currentCount / prop.initialCount) * 100;
-  
-  if (successRate === 0) return 'red';
-  if (successRate < 25) return 'red-darken-1';
-  if (successRate < 50) return 'orange';
-  if (successRate < 75) return 'amber';
-  return 'green';
-}
-
-function truncateText(text?: string, maxLength = 50): string {
-  if (!text) return '';
-  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-}
-
-// Fetch propagations for this plant
-async function fetchPropagations() {
-  if (!props.plantId) {
-    loading.value = false;
-    return;
+  // Methods
+  function openNewPropagationDialog() {
+    newPropagation.value = {
+      plantId: props.plantId,
+      propType: PropagationType.Seed,
+      propDate: new Date().toISOString().split("T")[0],
+      initialCount: 1,
+      currentCount: 1,
+    };
+    propagationDialog.value = true;
   }
 
-  loading.value = true;
-  
-  try {
-    const response = await $fetch(`/api/propagation?plantId=${props.plantId}`);
-    propagations.value = response.data;
-  } catch (error) {
-    console.error('Error fetching propagation records:', error);
-  } finally {
-    loading.value = false;
-  }
-}
+  async function savePropagation() {
+    if (form.value && !form.value.validate()) return;
 
-// Watch for plant ID changes
-watch(() => props.plantId, (newValue) => {
-  if (newValue) {
-    newPropagation.value.plantId = newValue;
-    fetchPropagations();
-  }
-});
+    try {
+      await $fetch("/api/propagation", {
+        method: "POST",
+        body: newPropagation.value,
+      });
 
-// Lifecycle hooks
-onMounted(() => {
-  if (props.plantId) {
-    fetchPropagations();
-  } else {
-    loading.value = false;
+      propagationDialog.value = false;
+      fetchPropagations();
+      emit("propagation-added");
+    } catch (error) {
+      console.error("Error saving propagation record:", error);
+      // Show error notification
+    }
   }
-});
+
+  function getPropTypeName(type?: PropagationType): string {
+    if (!type) return "Unknown";
+
+    const found = propTypeOptions.find((option) => option.value === type);
+    return found ? found.title : "Unknown";
+  }
+
+  function getPropTypeIcon(type?: PropagationType): string {
+    if (!type) return "mdi-sprout-outline";
+
+    switch (type) {
+      case PropagationType.Seed:
+        return "mdi-seed";
+      case PropagationType.Cutting:
+        return "mdi-content-cut";
+      case PropagationType.Division:
+        return "mdi-card-bulleted-outline";
+      case PropagationType.Offsets:
+        return "mdi-flower";
+      case PropagationType.Layering:
+        return "mdi-layers";
+      default:
+        return "mdi-sprout-outline";
+    }
+  }
+
+  function getPropStatusColor(prop: PlantPropagation): string {
+    if (!prop.initialCount || prop.currentCount === undefined) {
+      return "grey";
+    }
+
+    if (prop.currentCount === 0) {
+      return "red";
+    }
+
+    const successRate = (prop.currentCount / prop.initialCount) * 100;
+
+    if (successRate < 25) return "red-darken-1";
+    if (successRate < 50) return "orange";
+    if (successRate < 75) return "amber";
+    return "green";
+  }
+
+  function getCountColor(prop: PlantPropagation): string {
+    if (!prop.initialCount || prop.currentCount === undefined) {
+      return "grey";
+    }
+
+    const successRate = (prop.currentCount / prop.initialCount) * 100;
+
+    if (successRate === 0) return "red";
+    if (successRate < 25) return "red-darken-1";
+    if (successRate < 50) return "orange";
+    if (successRate < 75) return "amber";
+    return "green";
+  }
+
+  function truncateText(text?: string, maxLength = 50): string {
+    if (!text) return "";
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + "..."
+      : text;
+  }
+
+  // Fetch propagations for this plant
+  async function fetchPropagations() {
+    if (!props.plantId) {
+      loading.value = false;
+      return;
+    }
+
+    loading.value = true;
+
+    try {
+      const response = await $fetch(
+        `/api/propagation?plantId=${props.plantId}`
+      );
+      propagations.value = response.data;
+    } catch (error) {
+      console.error("Error fetching propagation records:", error);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // Watch for plant ID changes
+  watch(
+    () => props.plantId,
+    (newValue) => {
+      if (newValue) {
+        newPropagation.value.plantId = newValue;
+        fetchPropagations();
+      }
+    }
+  );
+
+  // Lifecycle hooks
+  onMounted(() => {
+    if (props.plantId) {
+      fetchPropagations();
+    } else {
+      loading.value = false;
+    }
+  });
 </script>

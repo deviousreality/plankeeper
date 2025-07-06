@@ -3,7 +3,11 @@
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h3">Propagation Manager</h1>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openNewPropagationDialog">
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        @click="openNewPropagationDialog"
+      >
         New Propagation
       </v-btn>
     </div>
@@ -71,7 +75,9 @@
               : "Start by adding your first propagation record!"
           }}
         </p>
-        <v-btn color="primary" @click="openNewPropagationDialog">New Propagation</v-btn>
+        <v-btn color="primary" @click="openNewPropagationDialog"
+          >New Propagation</v-btn
+        >
       </v-card>
 
       <!-- Propagation records table -->
@@ -89,21 +95,18 @@
             {{ formatDate(item.propDate) }}
           </template>
           <template v-slot:item.transplantDate="{ item }">
-            {{ item.transplantDate ? formatDate(item.transplantDate) : 'N/A' }}
+            {{ item.transplantDate ? formatDate(item.transplantDate) : "N/A" }}
           </template>
           <template v-slot:item.currentCount="{ item }">
-            <v-chip
-              :color="getCountColor(item)"
-              text-color="white"
-            >
+            <v-chip :color="getCountColor(item)" text-color="white">
               {{ item.currentCount }}
             </v-chip>
           </template>
           <template v-slot:item.actions="{ item }">
             <div class="d-flex justify-end">
-              <v-btn 
-                icon 
-                variant="text" 
+              <v-btn
+                icon
+                variant="text"
                 density="compact"
                 color="primary"
                 :to="`/propagation/${item.id}`"
@@ -111,9 +114,9 @@
               >
                 <v-icon>mdi-eye</v-icon>
               </v-btn>
-              <v-btn 
-                icon 
-                variant="text" 
+              <v-btn
+                icon
+                variant="text"
                 density="compact"
                 color="warning"
                 @click="editPropagation(item)"
@@ -121,9 +124,9 @@
               >
                 <v-icon>mdi-pencil</v-icon>
               </v-btn>
-              <v-btn 
-                icon 
-                variant="text" 
+              <v-btn
+                icon
+                variant="text"
                 density="compact"
                 color="error"
                 @click="deletePropagation(item)"
@@ -141,7 +144,9 @@
     <v-dialog v-model="propagationDialog" max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="text-h5">{{ editMode ? 'Edit Propagation Record' : 'New Propagation Record' }}</span>
+          <span class="text-h5">{{
+            editMode ? "Edit Propagation Record" : "New Propagation Record"
+          }}</span>
         </v-card-title>
         <v-card-text>
           <v-form ref="form" v-model="valid" @submit.prevent="savePropagation">
@@ -150,67 +155,67 @@
               :items="plantsOptions"
               label="Plant"
               required
-              :rules="[v => !!v || 'Plant is required']"
+              :rules="[(v) => !!v || 'Plant is required']"
             ></v-select>
-            
+
             <v-select
               v-model="currentPropagation.propType"
               :items="propTypeOptions"
               label="Propagation Type"
               required
-              :rules="[v => !!v || 'Propagation type is required']"
+              :rules="[(v) => !!v || 'Propagation type is required']"
             ></v-select>
-            
+
             <v-text-field
-              v-if="currentPropagation.propType === 1" // Seed
+              v-if="currentPropagation.propType === 1"
               v-model="currentPropagation.seedSource"
               label="Seed Source"
               hint="Where did you get the seeds from?"
             ></v-text-field>
-            
+
             <v-text-field
-              v-if="currentPropagation.propType === 2" // Cutting
+              v-if="currentPropagation.propType === 2"
               v-model="currentPropagation.cuttingSource"
               label="Cutting Source"
               hint="Where did you get the cutting from?"
             ></v-text-field>
-            
+
             <v-text-field
               type="date"
               v-model="currentPropagation.propDate"
               label="Propagation Date"
               required
-              :rules="[v => !!v || 'Propagation date is required']"
+              :rules="[(v) => !!v || 'Propagation date is required']"
             ></v-text-field>
-            
+
             <v-text-field
               type="number"
               v-model.number="currentPropagation.initialCount"
               label="Initial Count"
               hint="How many plants/seeds did you start with?"
             ></v-text-field>
-            
+
             <v-text-field
               type="number"
               v-model.number="currentPropagation.currentCount"
               label="Current Count"
               hint="How many plants survived/are growing?"
             ></v-text-field>
-            
+
             <v-text-field
               type="date"
               v-model="currentPropagation.transplantDate"
               label="Transplant Date"
               hint="When did you transplant (if applicable)?"
             ></v-text-field>
-            
+
             <v-textarea
               v-model="currentPropagation.notes"
               label="Notes"
               hint="Any additional information about this propagation"
               rows="3"
             ></v-textarea>
-            
+
             <v-textarea
               v-if="currentPropagation.currentCount === 0"
               v-model="currentPropagation.zeroCoutNotes"
@@ -222,7 +227,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="closePropagationDialog">
+          <v-btn
+            color="blue-darken-1"
+            variant="text"
+            @click="closePropagationDialog"
+          >
             Cancel
           </v-btn>
           <v-btn
@@ -242,13 +251,20 @@
       <v-card>
         <v-card-title class="text-h5">Confirm Delete</v-card-title>
         <v-card-text>
-          Are you sure you want to delete this propagation record?
-          This action cannot be undone.
+          Are you sure you want to delete this propagation record? This action
+          cannot be undone.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" variant="text" @click="confirmDelete">Delete</v-btn>
+          <v-btn
+            color="blue-darken-1"
+            variant="text"
+            @click="deleteDialog = false"
+            >Cancel</v-btn
+          >
+          <v-btn color="error" variant="text" @click="confirmDelete"
+            >Delete</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -256,242 +272,239 @@
 </template>
 
 <script setup lang="ts">
-import { PropagationType, type PlantPropagation } from '~/types/plant-models';
+  import { PropagationType, type PlantPropagation } from "~/types/plant-models";
 
-// State
-const propagations = ref<PlantPropagation[]>([]);
-const loading = ref(true);
-const search = ref('');
-const propagationDialog = ref(false);
-const deleteDialog = ref(false);
-const valid = ref(false);
-const editMode = ref(false);
-const form = ref(null);
-const propagationToDelete = ref<PlantPropagation | null>(null);
+  // State
+  const propagations = ref<PlantPropagation[]>([]);
+  const loading = ref(true);
+  const search = ref("");
+  const propagationDialog = ref(false);
+  const deleteDialog = ref(false);
+  const valid = ref(false);
+  const editMode = ref(false);
+  const form = ref(null);
+  const propagationToDelete = ref<PlantPropagation | null>(null);
 
-const currentPropagation = ref<Partial<PlantPropagation>>({
-  propType: PropagationType.Seed,
-  propDate: new Date().toISOString().split('T')[0],
-  initialCount: 1,
-  currentCount: 1,
-});
-
-// Filters
-const filters = ref({
-  propType: null as PropagationType | null,
-  dateRange: 'all',
-  plantSpecies: null as string | null,
-});
-
-// Table headers
-const headers = [
-  { title: 'Plant', key: 'plantName' },
-  { title: 'Type', key: 'propType' },
-  { title: 'Date', key: 'propDate' },
-  { title: 'Initial Count', key: 'initialCount' },
-  { title: 'Current Count', key: 'currentCount' },
-  { title: 'Transplant Date', key: 'transplantDate' },
-  { title: 'Actions', key: 'actions', sortable: false },
-];
-
-// Options
-const propTypeOptions = [
-  { title: 'Seed', value: PropagationType.Seed },
-  { title: 'Cutting', value: PropagationType.Cutting },
-  { title: 'Division', value: PropagationType.Division },
-  { title: 'Offsets', value: PropagationType.Offsets },
-  { title: 'Layering', value: PropagationType.Layering },
-  { title: 'Other', value: PropagationType.Other },
-];
-
-const dateRangeOptions = [
-  { title: 'All Time', value: 'all' },
-  { title: 'Last 30 Days', value: '30days' },
-  { title: 'Last 3 Months', value: '3months' },
-  { title: 'Last 6 Months', value: '6months' },
-  { title: 'This Year', value: 'year' },
-];
-
-const plantsOptions = ref<Array<{ title: string, value: number }>>([]);
-const speciesOptions = ref<Array<{ title: string, value: string }>>([]);
-
-// Computed
-const filteredPropagations = computed(() => {
-  let result = [...propagations.value];
-  
-  // Apply propagation type filter
-  if (filters.value.propType) {
-    result = result.filter(p => p.propType === filters.value.propType);
-  }
-  
-  // Apply date range filter
-  if (filters.value.dateRange !== 'all') {
-    const now = new Date();
-    let cutoffDate: Date;
-    
-    switch (filters.value.dateRange) {
-      case '30days':
-        cutoffDate = new Date(now.setDate(now.getDate() - 30));
-        break;
-      case '3months':
-        cutoffDate = new Date(now.setMonth(now.getMonth() - 3));
-        break;
-      case '6months':
-        cutoffDate = new Date(now.setMonth(now.getMonth() - 6));
-        break;
-      case 'year':
-        cutoffDate = new Date(now.setFullYear(now.getFullYear() - 1));
-        break;
-      default:
-        cutoffDate = new Date(0); // Beginning of time
-    }
-    
-    result = result.filter(p => {
-      if (!p.propDate) return false;
-      return new Date(p.propDate) >= cutoffDate;
-    });
-  }
-  
-  // Apply plant species filter
-  if (filters.value.plantSpecies) {
-    result = result.filter(p => p.species === filters.value.plantSpecies);
-  }
-  
-  return result;
-});
-
-// Methods
-function openNewPropagationDialog() {
-  editMode.value = false;
-  currentPropagation.value = {
+  const currentPropagation = ref<Partial<PlantPropagation>>({
     propType: PropagationType.Seed,
-    propDate: new Date().toISOString().split('T')[0],
+    propDate: new Date().toISOString().split("T")[0],
     initialCount: 1,
     currentCount: 1,
-  };
-  propagationDialog.value = true;
-}
+  });
 
-function editPropagation(item: PlantPropagation) {
-  editMode.value = true;
-  currentPropagation.value = { ...item };
-  propagationDialog.value = true;
-}
+  // Filters
+  const filters = ref({
+    propType: null as PropagationType | null,
+    dateRange: "all",
+    plantSpecies: null as string | null,
+  });
 
-function closePropagationDialog() {
-  propagationDialog.value = false;
-}
+  // Table headers
+  const headers = [
+    { title: "Plant", key: "plantName" },
+    { title: "Type", key: "propType" },
+    { title: "Date", key: "propDate" },
+    { title: "Initial Count", key: "initialCount" },
+    { title: "Current Count", key: "currentCount" },
+    { title: "Transplant Date", key: "transplantDate" },
+    { title: "Actions", key: "actions", sortable: false },
+  ];
 
-async function savePropagation() {
-  if (form.value && !form.value.validate()) return;
+  // Options
+  const propTypeOptions = [
+    { title: "Seed", value: PropagationType.Seed },
+    { title: "Cutting", value: PropagationType.Cutting },
+    { title: "Division", value: PropagationType.Division },
+    { title: "Offsets", value: PropagationType.Offsets },
+    { title: "Layering", value: PropagationType.Layering },
+    { title: "Other", value: PropagationType.Other },
+  ];
 
-  try {
-    if (editMode.value && currentPropagation.value.id) {
-      await $fetch(`/api/propagation/${currentPropagation.value.id}`, {
-        method: 'PUT',
-        body: currentPropagation.value
-      });
-    } else {
-      await $fetch('/api/propagation', {
-        method: 'POST',
-        body: currentPropagation.value
+  const dateRangeOptions = [
+    { title: "All Time", value: "all" },
+    { title: "Last 30 Days", value: "30days" },
+    { title: "Last 3 Months", value: "3months" },
+    { title: "Last 6 Months", value: "6months" },
+    { title: "This Year", value: "year" },
+  ];
+
+  const plantsOptions = ref<Array<{ title: string; value: number }>>([]);
+  const speciesOptions = ref<Array<{ title: string; value: string }>>([]);
+
+  // Computed
+  const filteredPropagations = computed(() => {
+    let result = [...propagations.value];
+
+    // Apply propagation type filter
+    if (filters.value.propType) {
+      result = result.filter((p) => p.propType === filters.value.propType);
+    }
+
+    // Apply date range filter
+    if (filters.value.dateRange !== "all") {
+      const now = new Date();
+      let cutoffDate: Date;
+
+      switch (filters.value.dateRange) {
+        case "30days":
+          cutoffDate = new Date(now.setDate(now.getDate() - 30));
+          break;
+        case "3months":
+          cutoffDate = new Date(now.setMonth(now.getMonth() - 3));
+          break;
+        case "6months":
+          cutoffDate = new Date(now.setMonth(now.getMonth() - 6));
+          break;
+        case "year":
+          cutoffDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          break;
+        default:
+          cutoffDate = new Date(0); // Beginning of time
+      }
+
+      result = result.filter((p) => {
+        if (!p.propDate) return false;
+        return new Date(p.propDate) >= cutoffDate;
       });
     }
-    
-    closePropagationDialog();
-    fetchPropagationRecords();
-  } catch (error) {
-    console.error('Error saving propagation record:', error);
-    // Show error notification
+
+    // Apply plant species filter
+    if (filters.value.plantSpecies) {
+      result = result.filter((p) => p.species === filters.value.plantSpecies);
+    }
+
+    return result;
+  });
+
+  // Methods
+  function openNewPropagationDialog() {
+    editMode.value = false;
+    currentPropagation.value = {
+      propType: PropagationType.Seed,
+      propDate: new Date().toISOString().split("T")[0],
+      initialCount: 1,
+      currentCount: 1,
+    };
+    propagationDialog.value = true;
   }
-}
 
-function deletePropagation(item: PlantPropagation) {
-  propagationToDelete.value = item;
-  deleteDialog.value = true;
-}
-
-async function confirmDelete() {
-  if (!propagationToDelete.value) return;
-  
-  try {
-    await $fetch(`/api/propagation/${propagationToDelete.value.id}`, {
-      method: 'DELETE'
-    });
-    deleteDialog.value = false;
-    fetchPropagationRecords();
-  } catch (error) {
-    console.error('Error deleting propagation record:', error);
-    // Show error notification
+  function editPropagation(item: PlantPropagation) {
+    editMode.value = true;
+    currentPropagation.value = { ...item };
+    propagationDialog.value = true;
   }
-}
 
-function getPropTypeName(type?: PropagationType): string {
-  if (!type) return 'Unknown';
-  
-  const found = propTypeOptions.find(option => option.value === type);
-  return found ? found.title : 'Unknown';
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return 'N/A';
-  return new Date(dateStr).toLocaleDateString();
-}
-
-function getCountColor(item: PlantPropagation): string {
-  if (!item.initialCount || !item.currentCount) return 'grey';
-  
-  const successRate = (item.currentCount / item.initialCount) * 100;
-  
-  if (successRate === 0) return 'red';
-  if (successRate < 25) return 'red-darken-1';
-  if (successRate < 50) return 'orange';
-  if (successRate < 75) return 'amber';
-  return 'green';
-}
-
-// Fetch plants for dropdown
-async function fetchPlants() {
-  try {
-    const response = await $fetch('/api/plants');
-    plantsOptions.value = response.data.map((plant: any) => ({
-      title: plant.name,
-      value: plant.id
-    }));
-    
-    // Build species options for filter
-    const uniqueSpecies = new Set<string>();
-    response.data.forEach((plant: any) => {
-      if (plant.species) uniqueSpecies.add(plant.species);
-    });
-    
-    speciesOptions.value = Array.from(uniqueSpecies).map(species => ({
-      title: species,
-      value: species
-    }));
-  } catch (error) {
-    console.error('Error fetching plants:', error);
+  function closePropagationDialog() {
+    propagationDialog.value = false;
   }
-}
 
-// Fetch propagation records
-async function fetchPropagationRecords() {
-  loading.value = true;
-  try {
-    const response = await $fetch('/api/propagation');
-    propagations.value = response.data;
-  } catch (error) {
-    console.error('Error fetching propagation records:', error);
-  } finally {
-    loading.value = false;
+  async function savePropagation() {
+    if (form.value && !form.value.validate()) return;
+
+    try {
+      if (editMode.value && currentPropagation.value.id) {
+        await $fetch(`/api/propagation/${currentPropagation.value.id}`, {
+          method: "PUT",
+          body: currentPropagation.value,
+        });
+      } else {
+        await $fetch("/api/propagation", {
+          method: "POST",
+          body: currentPropagation.value,
+        });
+      }
+
+      closePropagationDialog();
+      fetchPropagationRecords();
+    } catch (error) {
+      console.error("Error saving propagation record:", error);
+      // Show error notification
+    }
   }
-}
 
-// Lifecycle hooks
-onMounted(async () => {
-  await Promise.all([
-    fetchPlants(),
-    fetchPropagationRecords()
-  ]);
-});
+  function deletePropagation(item: PlantPropagation) {
+    propagationToDelete.value = item;
+    deleteDialog.value = true;
+  }
+
+  async function confirmDelete() {
+    if (!propagationToDelete.value) return;
+
+    try {
+      await $fetch(`/api/propagation/${propagationToDelete.value.id}`, {
+        method: "DELETE",
+      });
+      deleteDialog.value = false;
+      fetchPropagationRecords();
+    } catch (error) {
+      console.error("Error deleting propagation record:", error);
+      // Show error notification
+    }
+  }
+
+  function getPropTypeName(type?: PropagationType): string {
+    if (!type) return "Unknown";
+
+    const found = propTypeOptions.find((option) => option.value === type);
+    return found ? found.title : "Unknown";
+  }
+
+  function formatDate(dateStr?: string): string {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString();
+  }
+
+  function getCountColor(item: PlantPropagation): string {
+    if (!item.initialCount || !item.currentCount) return "grey";
+
+    const successRate = (item.currentCount / item.initialCount) * 100;
+
+    if (successRate === 0) return "red";
+    if (successRate < 25) return "red-darken-1";
+    if (successRate < 50) return "orange";
+    if (successRate < 75) return "amber";
+    return "green";
+  }
+
+  // Fetch plants for dropdown
+  async function fetchPlants() {
+    try {
+      const response = await $fetch("/api/plants");
+      plantsOptions.value = response.data.map((plant: any) => ({
+        title: plant.name,
+        value: plant.id,
+      }));
+
+      // Build species options for filter
+      const uniqueSpecies = new Set<string>();
+      response.data.forEach((plant: any) => {
+        if (plant.species) uniqueSpecies.add(plant.species);
+      });
+
+      speciesOptions.value = Array.from(uniqueSpecies).map((species) => ({
+        title: species,
+        value: species,
+      }));
+    } catch (error) {
+      console.error("Error fetching plants:", error);
+    }
+  }
+
+  // Fetch propagation records
+  async function fetchPropagationRecords() {
+    loading.value = true;
+    try {
+      const response = await $fetch("/api/propagation");
+      propagations.value = response.data;
+    } catch (error) {
+      console.error("Error fetching propagation records:", error);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // Lifecycle hooks
+  onMounted(async () => {
+    await Promise.all([fetchPlants(), fetchPropagationRecords()]);
+  });
 </script>
