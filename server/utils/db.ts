@@ -1,13 +1,13 @@
 /**
  * Database utility module for PlantKeeper application
- * 
+ *
  * This module provides database connection, initialization, and utility functions
  * for interacting with the SQLite database. It uses better-sqlite3 for efficient
  * and synchronous database operations.
  */
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import Database from "better-sqlite3";
+import fs from "fs";
+import path from "path";
 
 /**
  * Database table types
@@ -26,6 +26,8 @@ export type Plant = {
   user_id: number;
   name: string;
   species: string | null;
+  family: string | null;
+  genius: string | null;
   acquired_date: string | null;
   image_url: string | null;
   notes: string | null;
@@ -111,7 +113,8 @@ export type CareSchedule = {
 };
 
 export type CareLog = {
-  id: number;  plant_id: number;
+  id: number;
+  plant_id: number;
   action_type: string;
   action_date: string;
   notes: string | null;
@@ -126,17 +129,17 @@ export type CareTip = {
 };
 
 // Configuration
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const DB_FILENAME = 'plant-keeper.db';
+const DATA_DIR = path.resolve(process.cwd(), "data");
+const DB_FILENAME = "plant-keeper.db";
 
 // Ensure the data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.mkdirSync(DATA_DIR, {recursive: true});
     console.log(`Created data directory at: ${DATA_DIR}`);
   } catch (error) {
     console.error(`Failed to create data directory: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error('Failed to initialize database storage directory');
+    throw new Error("Failed to initialize database storage directory");
   }
 }
 
@@ -149,12 +152,12 @@ try {
   console.log(`Connected to database at: ${dbPath}`);
 } catch (error) {
   console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error('Failed to connect to database');
+  throw new Error("Failed to connect to database");
 }
 
 /**
  * Initializes the database schema by creating tables if they don't exist
- * 
+ *
  * Creates the following tables:
  * - users: For user authentication and profile
  * - plants: For plant information storage
@@ -202,22 +205,24 @@ const initDb = (): void => {
 
   // Add columns to plants table if they don't exist
   try {
-    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as { name: string }[];
-    const existingColumns = new Set(plantsColumns.map(col => col.name));
-    
+    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as {name: string}[];
+    const existingColumns = new Set(plantsColumns.map((col) => col.name));
+
     // Add each new column if it doesn't exist
     const newColumns = [
-      { name: 'is_favorite', type: 'BOOLEAN DEFAULT 0' },
-      { name: 'can_sell', type: 'BOOLEAN DEFAULT 0' },
-      { name: 'is_personal', type: 'BOOLEAN DEFAULT 1' },
-      { name: 'common_name', type: 'TEXT' },
-      { name: 'flower_color', type: 'TEXT' },
-      { name: 'variety', type: 'TEXT' },
-      { name: 'light_pref', type: 'TEXT' },
-      { name: 'water_pref', type: 'TEXT' },
-      { name: 'soil_type', type: 'TEXT' }
+      {name: "is_favorite", type: "BOOLEAN DEFAULT 0"},
+      {name: "can_sell", type: "BOOLEAN DEFAULT 0"},
+      {name: "is_personal", type: "BOOLEAN DEFAULT 1"},
+      {name: "common_name", type: "TEXT"},
+      {name: "flower_color", type: "TEXT"},
+      {name: "variety", type: "TEXT"},
+      {name: "light_pref", type: "TEXT"},
+      {name: "water_pref", type: "TEXT"},
+      {name: "soil_type", type: "TEXT"},
+      {name: "family", type: "TEXT"},
+      {name: "genius", type: "TEXT"},
     ];
-    
+
     for (const column of newColumns) {
       if (!existingColumns.has(column.name)) {
         db.exec(`ALTER TABLE plants ADD COLUMN ${column.name} ${column.type}`);
@@ -348,86 +353,8 @@ const initDb = (): void => {
     )
   `);
 
-  // Species table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS species (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
-    )
-  `);
-
-  // Genius table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS genius (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      species_id INTEGER,
-      FOREIGN KEY (species_id) REFERENCES species(id)
-    )
-  `);
-
-  // Family table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS family (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      genius_id INTEGER,
-      species_id INTEGER,
-      FOREIGN KEY (genius_id) REFERENCES genius(id),
-      FOREIGN KEY (species_id) REFERENCES species(id)
-    )
-  `);
-
-  // Market prices table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS market_prices (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      plant_id INTEGER NOT NULL,
-      date_checked DATE NOT NULL,
-      price REAL NOT NULL,
-      FOREIGN KEY (plant_id) REFERENCES plants(id)
-    )
-  `);
-
-  // Propagation table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS propagation (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      plant_id INTEGER NOT NULL,
-      prop_type INTEGER,
-      seed_source TEXT,
-      cutting_source TEXT,
-      prop_date DATE,
-      initial_count INTEGER,
-      current_count INTEGER,
-      transplant_date DATE,
-      notes TEXT,
-      zero_cout_notes TEXT,
-      FOREIGN KEY (plant_id) REFERENCES plants(id)
-    )
-  `);
-
-  // Inventory table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS inventory (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      plant_id INTEGER NOT NULL,
-      quantity INTEGER,
-      plant_age INTEGER,
-      plant_size INTEGER,
-      last_watered_date DATE,
-      last_fertilized_date DATE,
-      location TEXT,
-      notes TEXT,
-      acquisition_date DATE,
-      status TEXT,
-      date_death DATE,
-      cause_of_death TEXT,
-      death_notes TEXT,
-      death_location TEXT,
-      FOREIGN KEY (plant_id) REFERENCES plants(id)
-    )
-  `);
+  // Note: Removed duplicate table creation
+  // Using plant_species, plant_genius, plant_family, market_price, plant_propagation, and plant_inventory instead
 
   console.log("Database schema initialized successfully");
 };
@@ -457,7 +384,7 @@ export const safelyPrepare = (sql: string): Database.Statement => {
   } catch (error) {
     console.error(`SQL preparation error: ${error instanceof Error ? error.message : String(error)}`);
     console.error(`Failed SQL: ${sql}`);
-    throw new Error('Failed to prepare SQL statement');
+    throw new Error("Failed to prepare SQL statement");
   }
 };
 
@@ -466,7 +393,7 @@ export const safelyPrepare = (sql: string): Database.Statement => {
  * @param {(...args: any[]) => any} fn - Function containing multiple database operations
  * @returns {(...args: any[]) => any} - Transaction function that works atomically
  */
-export const createTransaction = (fn: (...args: any[]) => any): (...args: any[]) => any => {
+export const createTransaction = (fn: (...args: any[]) => any): ((...args: any[]) => any) => {
   return db.transaction(fn);
 };
 
@@ -475,7 +402,7 @@ try {
   initDb();
 } catch (error) {
   console.error(`Critical database initialization error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error('Failed to initialize database schema');
+  throw new Error("Failed to initialize database schema");
 }
 
-export { db, initDb };
+export {db, initDb};
