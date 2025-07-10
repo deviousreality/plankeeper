@@ -41,7 +41,7 @@ export enum PropagationType {
 export interface PlantPropagation {
   id: number;
   plantId: number;
-  propType?: PropagationType;
+  propType: PropagationType;
   seedSource?: string;
   cuttingSource?: string;
   propDate?: string;

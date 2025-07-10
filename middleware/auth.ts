@@ -1,14 +1,37 @@
 // middleware/auth.ts
-export default defineNuxtRouteMiddleware((to, from) => {
-  const auth = useAuth();
-  
-  // If user is not authenticated and not trying to access the login/register pages
-  if (!auth.isAuthenticated.value && !['/login', '/register'].includes(to.path)) {
-    return navigateTo('/login');
+export default defineNuxtRouteMiddleware((to) => {
+  // Skip auth check on server side - let client handle authentication
+  if (process.server) {
+    return;
   }
 
-  // If user is authenticated and trying to access login/register pages
-  if (auth.isAuthenticated.value && ['/login', '/register'].includes(to.path)) {
-    return navigateTo('/');
+  const auth = useAuth();
+
+  // Initialize auth if not already initialized
+  if (!auth.user.value) {
+    auth.initAuth();
   }
+
+  // Double check with localStorage as fallback
+  if (!auth.isAuthenticated.value) {
+    const storedUser = localStorage.getItem("plankeeper_user");
+    if (storedUser) {
+      try {
+        auth.initAuth();
+        if (auth.isAuthenticated.value) {
+          return;
+        }
+      } catch (e) {
+        console.error("Error in auth middleware:", e);
+      }
+    }
+  }
+
+  // If user is authenticated, allow access
+  if (auth.isAuthenticated.value) {
+    return;
+  }
+
+  // If not authenticated, redirect to login but preserve the intended destination
+  return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
 });

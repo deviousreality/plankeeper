@@ -1,5 +1,5 @@
 // composables/useAuth.ts
-import { ref, computed } from 'vue';
+import {ref, computed} from "vue";
 
 export interface User {
   id: number;
@@ -8,19 +8,28 @@ export interface User {
 }
 
 export const useAuth = () => {
-  const user = ref<User | null>(null);
+  // Initialize user state - starts as null, will be set from localStorage on client
+  const user = useState<User | null>("auth.user", () => null);
+
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
   // Check if user is already logged in (from storage)
   const initAuth = () => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        user.value = JSON.parse(storedUser);
-      } catch (e) {
-        localStorage.removeItem('user');
+    if (process.client && !user.value) {
+      const storedUser = localStorage.getItem("plankeeper_user");
+
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          user.value = parsed;
+          console.log("User auto-authenticated from storage:", parsed);
+        } catch (e) {
+          console.error("Error parsing stored user:", e);
+          localStorage.removeItem("plankeeper_user");
+          localStorage.removeItem("plankeeper_token");
+        }
       }
     }
   };
@@ -29,19 +38,27 @@ export const useAuth = () => {
   const login = async (username: string, password: string) => {
     isLoading.value = true;
     error.value = null;
-    
+
     try {
-      const response = await $fetch('/api/auth/login', {
-        method: 'POST',
-        body: { username, password }
+      const response = await $fetch("/api/auth/login", {
+        method: "POST",
+        body: {username, password},
       });
-      
+
       user.value = response as User;
-      localStorage.setItem('user', JSON.stringify(user.value));
-      return true;
+
+      // Store authentication data
+      if (process.client) {
+        localStorage.setItem("plankeeper_user", JSON.stringify(user.value));
+        // Note: If your API returns a token, store it too
+        // localStorage.setItem('plankeeper_token', response.token);
+      }
+
+      console.log("User logged in and stored:", user.value);
+      return {success: true};
     } catch (e: any) {
-      error.value = e.data?.message || 'Login failed';
-      return false;
+      error.value = e.data?.message || "Login failed";
+      return {success: false, error: error.value};
     } finally {
       isLoading.value = false;
     }
@@ -51,42 +68,56 @@ export const useAuth = () => {
   const register = async (username: string, password: string, email: string) => {
     isLoading.value = true;
     error.value = null;
-    
+
     try {
-      const response = await $fetch('/api/auth/register', {
-        method: 'POST',
-        body: { username, password, email }
+      const response = await $fetch("/api/auth/register", {
+        method: "POST",
+        body: {username, password, email},
       });
-      
+
       user.value = response as User;
-      localStorage.setItem('user', JSON.stringify(user.value));
-      return true;
+
+      // Store authentication data
+      if (process.client) {
+        localStorage.setItem("plankeeper_user", JSON.stringify(user.value));
+      }
+
+      return {success: true};
     } catch (e: any) {
-      error.value = e.data?.message || 'Registration failed';
-      return false;
+      error.value = e.data?.message || "Registration failed";
+      return {success: false, error: error.value};
     } finally {
       isLoading.value = false;
     }
   };
 
   // Logout function
-  const logout = () => {
-    user.value = null;
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await $fetch("/api/auth/logout", {method: "POST"});
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      user.value = null;
+
+      // Clear stored authentication data
+      if (process.client) {
+        localStorage.removeItem("plankeeper_user");
+        localStorage.removeItem("plankeeper_token");
+      }
+
+      await navigateTo("/login");
+    }
   };
 
-  // Initialize on creation
-  if (process.client) {
-    initAuth();
-  }
-
   return {
-    user,
+    user: readonly(user),
     isAuthenticated,
     isLoading,
     error,
     login,
     register,
-    logout
+    logout,
+    initAuth, // Expose the init function
   };
 };
