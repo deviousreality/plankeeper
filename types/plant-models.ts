@@ -1,41 +1,25 @@
 /**
  * Extended Plant model that includes the new fields
  */
-import { PlantListItem } from '.';
+import type {Plant} from ".";
 
-export interface PlantDetails extends PlantListItem {
-  userId: number;
-  species?: string;
-  acquiredDate?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  canSell: boolean;
-  isPersonal: boolean;
-  commonName?: string;
-  flowerColor?: string;
-  variety?: string;
-  lightPref?: string;
-  waterPref?: string;
-  soilType?: string;
-}
+export type PlantModel = Omit<Plant, "id" | "user_id" | "created_at">;
+export type PlantModelPost = Omit<Plant, "id" | "created_at">;
 
 export interface PlantSpecies {
   id: number;
   name: string;
 }
 
-export interface PlantGenius {
+export interface PlantGenus {
   id: number;
   name: string;
-  speciesId?: number;
+  familyId: number;
 }
 
 export interface PlantFamily {
   id: number;
   name: string;
-  geniusId?: number;
-  speciesId?: number;
 }
 
 export interface MarketPrice {
@@ -51,7 +35,7 @@ export enum PropagationType {
   Division = 3,
   Offsets = 4,
   Layering = 5,
-  Other = 6
+  Other = 6,
 }
 
 export interface PlantPropagation {
@@ -86,7 +70,7 @@ export interface PlantInventory {
   deathLocation?: string;
 }
 
-export interface PlantWithInventory extends PlantDetails {
+export interface PlantWithInventory {
   inventory?: PlantInventory[];
   marketPrices?: MarketPrice[];
   propagation?: PlantPropagation[];

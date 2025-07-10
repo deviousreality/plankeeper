@@ -8,125 +8,7 @@
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
-
-/**
- * Database table types
- */
-export type User = {
-  id: number;
-  username: string;
-  password: string;
-  email: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type Plant = {
-  id: number;
-  user_id: number;
-  name: string;
-  species: string | null;
-  family: string | null;
-  genius: string | null;
-  acquired_date: string | null;
-  image_url: string | null;
-  notes: string | null;
-  is_favorite: number; // 0 = false, 1 = true (SQLite doesn't have true boolean)
-  created_at: string;
-  updated_at: string;
-  can_sell: number;
-  is_personal: number;
-  common_name: string | null;
-  flower_color: string | null;
-  variety: string | null;
-  light_pref: string | null;
-  water_pref: string | null;
-  soil_type: string | null;
-};
-
-export type PlantSpecies = {
-  id: number;
-  name: string;
-};
-
-export type PlantGenius = {
-  id: number;
-  name: string;
-  species_id: number | null;
-};
-
-export type PlantFamily = {
-  id: number;
-  name: string;
-  genius_id: number | null;
-  species_id: number | null;
-};
-
-export type MarketPrice = {
-  id: number;
-  plant_id: number;
-  date_checked: string;
-  price: number;
-};
-
-export type PlantPropagation = {
-  id: number;
-  plant_id: number;
-  prop_type: number | null;
-  seed_source: string | null;
-  cutting_source: string | null;
-  prop_date: string | null;
-  initial_count: number | null;
-  current_count: number | null;
-  transplant_date: string | null;
-  notes: string | null;
-  zero_cout_notes: string | null;
-};
-
-export type PlantInventory = {
-  id: number;
-  plant_id: number;
-  quantity: number | null;
-  plant_age: number | null;
-  plant_size: number | null;
-  last_watered_date: string | null;
-  last_fertilized_date: string | null;
-  location: string | null;
-  notes: string | null;
-  acquisition_date: string | null;
-  status: string | null;
-  date_death: string | null;
-  cause_of_death: string | null;
-  death_notes: string | null;
-  death_location: string | null;
-};
-
-export type CareSchedule = {
-  id: number;
-  plant_id: number;
-  watering_interval: number | null;
-  fertilizing_interval: number | null;
-  last_watered: string | null;
-  last_fertilized: string | null;
-  light_needs: string | null;
-  next_task_date: string | null;
-};
-
-export type CareLog = {
-  id: number;
-  plant_id: number;
-  action_type: string;
-  action_date: string;
-  notes: string | null;
-};
-
-export type CareTip = {
-  id: number;
-  species: string;
-  tip: string;
-  source: string | null;
-  created_at: string;
-};
+import type {Plant, PlantRow} from "~/types/database";
 
 // Configuration
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -184,13 +66,15 @@ const initDb = (): void => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       name TEXT NOT NULL,
-      species TEXT,
+      species_id INTEGER,
+      family_id INTEGER,
+      genus_id INTEGER,
       acquired_date DATE,
       image_url TEXT,
       notes TEXT,
       is_favorite BOOLEAN DEFAULT 0,
       can_sell BOOLEAN DEFAULT 0,
-      is_personal BOOLEAN DEFAULT 1,
+      is_personal BOOLEAN DEFAULT 0,
       common_name TEXT,
       flower_color TEXT,
       variety TEXT,
@@ -198,8 +82,11 @@ const initDb = (): void => {
       water_pref TEXT,
       soil_type TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      updated_at DATE,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (species_id) REFERENCES plant_species(id),
+      FOREIGN KEY (family_id) REFERENCES plant_family(id),
+      FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
     )
   `);
 
@@ -212,15 +99,16 @@ const initDb = (): void => {
     const newColumns = [
       {name: "is_favorite", type: "BOOLEAN DEFAULT 0"},
       {name: "can_sell", type: "BOOLEAN DEFAULT 0"},
-      {name: "is_personal", type: "BOOLEAN DEFAULT 1"},
+      {name: "is_personal", type: "BOOLEAN DEFAULT 0"},
       {name: "common_name", type: "TEXT"},
       {name: "flower_color", type: "TEXT"},
       {name: "variety", type: "TEXT"},
       {name: "light_pref", type: "TEXT"},
       {name: "water_pref", type: "TEXT"},
       {name: "soil_type", type: "TEXT"},
-      {name: "family", type: "TEXT"},
-      {name: "genius", type: "TEXT"},
+      {name: "family_id", type: "INTEGER"},
+      {name: "genus_id", type: "INTEGER"},
+      {name: "species_id", type: "INTEGER"},
     ];
 
     for (const column of newColumns) {
@@ -238,17 +126,24 @@ const initDb = (): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS plant_species (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
+      name TEXT NOT NULL UNIQUE,
+      genus_id INTEGER NOT NULL,
+      common_name TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
     )
   `);
 
-  // Plant Genus table (corrected from "genius")
+  // Plant Genus table
   db.exec(`
-    CREATE TABLE IF NOT EXISTS plant_genius (
+    CREATE TABLE IF NOT EXISTS plant_genus (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      species_id INTEGER,
-      FOREIGN KEY (species_id) REFERENCES plant_species(id)
+      name TEXT NOT NULL UNIQUE,
+      family_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (family_id) REFERENCES plant_family(id)
     )
   `);
 
@@ -256,11 +151,9 @@ const initDb = (): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS plant_family (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      genius_id INTEGER,
-      species_id INTEGER,
-      FOREIGN KEY (genius_id) REFERENCES plant_genius(id),
-      FOREIGN KEY (species_id) REFERENCES plant_species(id)
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -354,7 +247,7 @@ const initDb = (): void => {
   `);
 
   // Note: Removed duplicate table creation
-  // Using plant_species, plant_genius, plant_family, market_price, plant_propagation, and plant_inventory instead
+  // Using plant_species, plant_genus, plant_family, market_price, plant_propagation, and plant_inventory instead
 
   console.log("Database schema initialized successfully");
 };
@@ -370,6 +263,73 @@ export const toCamelCase = <T extends Record<string, unknown>>(row: T): Record<s
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
     result[camelKey] = row[key];
   }
+  return result;
+};
+
+/**
+ * Helper function to convert SQLite Plant row to application Plant type
+ * Converts integer booleans (0/1) to actual booleans and null to undefined
+ * @param {PlantRow} row - Database row with integer booleans and potential nulls
+ * @returns {Plant} - Plant object with proper boolean types and undefined instead of null
+ */
+export const plantRowToPlant = (row: PlantRow): Plant => {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    is_favorite: Boolean(row.is_favorite),
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    can_sell: Boolean(row.can_sell),
+    is_personal: Boolean(row.is_personal),
+    species_id: row.species_id ?? undefined,
+    family_id: row.family_id ?? undefined,
+    genus_id: row.genus_id ?? undefined,
+    acquired_date: row.acquired_date ?? undefined,
+    image_url: row.image_url ?? undefined,
+    notes: row.notes ?? undefined,
+    common_name: row.common_name ?? undefined,
+    flower_color: row.flower_color ?? undefined,
+    variety: row.variety ?? undefined,
+    light_pref: row.light_pref ?? undefined,
+    water_pref: row.water_pref ?? undefined,
+    soil_type: row.soil_type ?? undefined,
+  };
+};
+
+/**
+ * Helper function to convert application Plant type to database-ready data
+ * Converts undefined to null for database storage (SQLite handles booleans natively)
+ * @param {Partial<Plant>} plant - Plant object with boolean types and undefined values
+ * @returns {Partial<PlantRow>} - Database-ready object with null values
+ */
+export const plantToPlantRow = (plant: Partial<Plant>): Partial<PlantRow> => {
+  const result: any = {...plant};
+
+  // No boolean conversion needed - SQLite handles booleans natively
+
+  // Convert undefined to null for database storage
+  const optionalFields = [
+    "species_id",
+    "family_id",
+    "genus_id",
+    "acquired_date",
+    "image_url",
+    "notes",
+    "common_name",
+    "flower_color",
+    "variety",
+    "light_pref",
+    "water_pref",
+    "soil_type",
+  ];
+
+  optionalFields.forEach((field) => {
+    if (result[field] === undefined) {
+      result[field] = null;
+    }
+  });
+
   return result;
 };
 
@@ -395,6 +355,47 @@ export const safelyPrepare = (sql: string): Database.Statement => {
  */
 export const createTransaction = (fn: (...args: any[]) => any): ((...args: any[]) => any) => {
   return db.transaction(fn);
+};
+
+/**
+ * Utility function to convert null values to undefined in any object
+ * @param {any} obj - Object that may contain null values
+ * @returns {any} - Object with null values converted to undefined
+ */
+export const nullToUndefined = <T>(obj: T): T => {
+  if (obj === null) return undefined as any;
+  if (typeof obj !== "object" || obj === undefined) return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(nullToUndefined) as any;
+  }
+
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = nullToUndefined(value);
+  }
+  return result;
+};
+
+/**
+ * Utility function to convert undefined values to null in any object (for database storage)
+ * @param {any} obj - Object that may contain undefined values
+ * @returns {any} - Object with undefined values converted to null
+ */
+export const undefinedToNull = <T>(obj: T): T => {
+  if (obj === undefined) return null as any;
+  if (typeof obj !== "object" || obj === null) return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(undefinedToNull) as any;
+  }
+
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Explicitly convert undefined to null
+    result[key] = value === undefined ? null : undefinedToNull(value);
+  }
+  return result;
 };
 
 // Initialize the database

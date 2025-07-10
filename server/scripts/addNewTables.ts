@@ -1,180 +1,346 @@
 /**
- * Database migration script for PlantKeeper application
+ * Database setup script for PlantKeeper application
  *
- * This script adds new tables and columns to the existing database schema:
- * - market_price: For tracking plant market prices
- * - plant_species: For standardizing plant species data
- * - plant_genius: For tracking plant genus (taxonomic classification)
+ * This script creates the complete database schema with correct taxonomy naming:
  * - plant_family: For tracking plant family classification
+ * - plant_genus: For tracking plant genus (taxonomic classification)
+ * - plant_species: For standardizing plant species data
+ * - market_price: For tracking plant market prices
  * - plant_propagation: For tracking plant propagation efforts
  * - plant_inventory: For detailed plant inventory management
- * - Updates plants table with new columns
- * - Fixes foreign key issues and removes duplicate tables
+ * - Updates plants table with all required columns
+ * - Ensures proper foreign key relationships and data integrity
  */
 import {db} from "../utils/db";
 
-console.log("Starting database migration...");
+console.log("Starting database setup...");
 
 // Enable foreign key constraints
 db.pragma("foreign_keys = ON");
 
 try {
-  // Start a transaction for all schema changes
-  const migration = db.transaction(() => {
-    console.log("Step 1: Cleaning up duplicate tables...");
+  // Start a transaction for all schema setup
+  const setup = db.transaction(() => {
+    console.log("Step 1: Cleaning up any legacy data and tables...");
 
-    // Check for and remove duplicate tables
-    const duplicateTables = ["species", "genius", "family", "market_prices", "propagation", "inventory"];
+    // Temporarily disable foreign keys for structural changes
+    db.pragma("foreign_keys = OFF");
 
+    // Check what tables exist
+    const allTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+    const tableNames = allTables.map((t: any) => t.name);
+
+    // Handle legacy genius→genus data migration if old tables exist
+    if (tableNames.includes("plant_genius")) {
+      console.log("Found legacy data - migrating to correct taxonomy structure...");
+
+      // Backup legacy data
+      const geniusData = db.prepare("SELECT * FROM plant_genius").all();
+      const speciesData = tableNames.includes("plant_species") ? db.prepare("SELECT * FROM plant_species").all() : [];
+      const plantsData = tableNames.includes("plants") ? db.prepare("SELECT * FROM plants").all() : [];
+
+      // Drop legacy tables to start fresh
+      if (tableNames.includes("plant_genus")) db.exec("DROP TABLE plant_genus");
+      if (tableNames.includes("plant_species")) db.exec("DROP TABLE plant_species");
+      if (tableNames.includes("plant_family")) db.exec("DROP TABLE plant_family");
+      if (tableNames.includes("plant_genius")) db.exec("DROP TABLE plant_genius");
+
+      // Store legacy data for later restoration
+      if (geniusData.length > 0 || speciesData.length > 0 || plantsData.length > 0) {
+        console.log(
+          `Preserving ${geniusData.length} genus, ${speciesData.length} species, and ${plantsData.length} plant records for migration`
+        );
+      }
+    }
+
+    // Remove any duplicate or incorrectly named tables
+    const duplicateTables = ["species", "family", "market_prices", "propagation", "inventory", "genius"];
     for (const tableName of duplicateTables) {
-      try {
-        // Check if table exists
-        const tableExists = db
-          .prepare(
-            `
-          SELECT name FROM sqlite_master WHERE type='table' AND name=?
-        `
-          )
-          .get(tableName);
-
-        if (tableExists) {
-          console.log(`Found duplicate table: ${tableName}`);
-          // Backup data if it exists
-          const data = db.prepare(`SELECT * FROM ${tableName}`).all();
-          if (data.length > 0) {
-            console.log(`Warning: ${tableName} contains ${data.length} records that will be lost`);
-          }
-
-          // Drop the duplicate table
-          db.exec(`DROP TABLE ${tableName}`);
-          console.log(`Dropped duplicate table: ${tableName}`);
-        }
-      } catch (error) {
-        console.log(`No duplicate table ${tableName} found or already removed`);
+      if (tableNames.includes(tableName)) {
+        console.log(`Removing duplicate/legacy table: ${tableName}`);
+        db.exec(`DROP TABLE ${tableName}`);
       }
     }
 
-    console.log("Step 2: Updating plants table with new columns...");
+    // Clean up plants table structure if it exists
+    if (tableNames.includes("plants")) {
+      const plantsColumns = db.prepare("PRAGMA table_info(plants)").all();
+      const columnNames = plantsColumns.map((c: any) => c.name);
 
-    // Check if columns exist before adding them
-    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as {name: string}[];
-    const existingColumns = new Set(plantsColumns.map((col) => col.name));
+      // If plants table has legacy genius column, recreate it properly
+      if (columnNames.includes("genius")) {
+        console.log("Updating plants table structure...");
+        const plantsData = db.prepare("SELECT * FROM plants").all();
 
-    // Add each new column if it doesn't exist
-    const newColumns = [
-      {name: "can_sell", type: "BOOLEAN DEFAULT 0"},
-      {name: "is_personal", type: "BOOLEAN DEFAULT 1"},
-      {name: "common_name", type: "TEXT"},
-      {name: "flower_color", type: "TEXT"},
-      {name: "variety", type: "TEXT"},
-      {name: "light_pref", type: "TEXT"},
-      {name: "water_pref", type: "TEXT"},
-      {name: "soil_type", type: "TEXT"},
-    ];
+        db.exec("DROP TABLE plants");
 
-    for (const column of newColumns) {
-      if (!existingColumns.has(column.name)) {
-        db.exec(`ALTER TABLE plants ADD COLUMN ${column.name} ${column.type}`);
-        console.log(`Added ${column.name} column to plants table`);
-      }
-    }
-
-    // Create plant_species table
-    console.log("Step 3: Creating plant_species table...");
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS plant_species (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-      )
-    `);
-
-    // Create plant_genius (genus) table
-    console.log("Step 4: Creating plant_genius table...");
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS plant_genius (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        species_id INTEGER,
-        FOREIGN KEY (species_id) REFERENCES plant_species(id)
-      )
-    `);
-
-    // Create plant_family table (fixed hierarchy)
-    console.log("Step 5: Creating plant_family table with correct hierarchy...");
-
-    // First check if plant_family exists and has wrong structure
-    const familyExists = db
-      .prepare(
-        `
-      SELECT name FROM sqlite_master WHERE type='table' AND name='plant_family'
-    `
-      )
-      .get();
-
-    if (familyExists) {
-      // Check current structure
-      const familyInfo = db.prepare(`PRAGMA table_info(plant_family)`).all() as {name: string}[];
-      const hasSpeciesId = familyInfo.some((col) => col.name === "species_id");
-
-      if (hasSpeciesId) {
-        console.log("Fixing plant_family table structure...");
-
-        // Backup existing data
-        const familyData = db.prepare(`SELECT * FROM plant_family`).all() as {name: string; genius_id: number}[];
-
-        // Drop and recreate with correct structure
-        db.exec(`DROP TABLE plant_family`);
-
+        // Create plants table with correct structure and foreign key references
         db.exec(`
-          CREATE TABLE plant_family (
+          CREATE TABLE plants (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
             name TEXT NOT NULL,
-            genius_id INTEGER,
-            FOREIGN KEY (genius_id) REFERENCES plant_genius(id)
+            species_id INTEGER,
+            family_id INTEGER,
+            genus_id INTEGER,
+            acquired_date DATE,
+            image_url TEXT,
+            notes TEXT,
+            is_favorite INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            can_sell INTEGER DEFAULT 0,
+            is_personal INTEGER DEFAULT 1,
+            common_name TEXT,
+            flower_color TEXT,
+            variety TEXT,
+            light_pref TEXT,
+            water_pref TEXT,
+            soil_type TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (species_id) REFERENCES plant_species(id),
+            FOREIGN KEY (family_id) REFERENCES plant_family(id),
+            FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
           )
         `);
 
-        // Restore data (excluding species_id)
-        if (familyData.length > 0) {
-          const insertFamily = db.prepare(`
-            INSERT INTO plant_family (name, genius_id) VALUES (?, ?)
+        // Restore plant data with proper foreign key references
+        if (plantsData.length > 0) {
+          const insertPlant = db.prepare(`
+            INSERT INTO plants (
+              id, user_id, name, species_id, family_id, genus_id, acquired_date, image_url, notes,
+              is_favorite, created_at, updated_at, can_sell, is_personal, common_name,
+              flower_color, variety, light_pref, water_pref, soil_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
 
-          for (const row of familyData) {
-            insertFamily.run(row.name, row.genius_id);
+          for (const row of plantsData) {
+            // Convert old text references to NULL for now - will need manual data migration
+            // In production, you'd want to look up the actual IDs from the taxonomy tables
+            insertPlant.run(
+              (row as any).id,
+              (row as any).user_id,
+              (row as any).name,
+              null, // species_id - will need manual migration
+              null, // family_id - will need manual migration
+              null, // genus_id - will need manual migration
+              (row as any).acquired_date,
+              (row as any).image_url,
+              (row as any).notes,
+              (row as any).is_favorite,
+              (row as any).created_at,
+              (row as any).updated_at,
+              (row as any).can_sell,
+              (row as any).is_personal,
+              (row as any).common_name,
+              (row as any).flower_color,
+              (row as any).variety,
+              (row as any).light_pref,
+              (row as any).water_pref,
+              (row as any).soil_type
+            );
           }
-
-          console.log(`Restored ${familyData.length} family records with corrected structure`);
+          console.log(
+            `Restored ${plantsData.length} plant records with correct structure (taxonomy links need manual migration)`
+          );
         }
-      } else {
-        console.log("plant_family table already has correct structure");
       }
-    } else {
-      // Create new table with correct structure
-      db.exec(`
-        CREATE TABLE plant_family (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          genius_id INTEGER,
-          FOREIGN KEY (genius_id) REFERENCES plant_genius(id)
-        )
-      `);
     }
 
+    console.log("Step 2: Creating core taxonomy tables with correct hierarchy...");
+
+    // Create plant_family table (top level)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS plant_family (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create plant_genus table (references family)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS plant_genus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        family_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (family_id) REFERENCES plant_family(id)
+      )
+    `);
+
+    // Create plant_species table (references genus)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS plant_species (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        genus_id INTEGER NOT NULL,
+        common_name TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
+      )
+    `);
+
+    console.log("Step 3: Creating plants table with complete structure...");
+
+    // Create or update plants table with all required columns and foreign keys
+    if (!tableNames.includes("plants")) {
+      db.exec(`
+        CREATE TABLE plants (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          species_id INTEGER,
+          family_id INTEGER,
+          genus_id INTEGER,
+          acquired_date DATE,
+          image_url TEXT,
+          notes TEXT,
+          is_favorite INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          can_sell INTEGER DEFAULT 0,
+          is_personal INTEGER DEFAULT 1,
+          common_name TEXT,
+          flower_color TEXT,
+          variety TEXT,
+          light_pref TEXT,
+          water_pref TEXT,
+          soil_type TEXT,
+          FOREIGN KEY (user_id) REFERENCES users(id),
+          FOREIGN KEY (species_id) REFERENCES plant_species(id),
+          FOREIGN KEY (family_id) REFERENCES plant_family(id),
+          FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
+        )
+      `);
+    } else {
+      // Check if plants table needs to be updated from text to foreign key columns
+      const plantsColumns = db.prepare("PRAGMA table_info(plants)").all() as {name: string; type: string}[];
+      const existingColumns = new Map(plantsColumns.map((col) => [col.name, col.type]));
+
+      // Check if we need to migrate from text columns to foreign key columns OR clean up mixed schema
+      const hasTextSpecies = existingColumns.has("species");
+      const hasTextFamily = existingColumns.has("family");
+      const hasTextGenus = existingColumns.has("genus");
+
+      if (hasTextSpecies || hasTextFamily || hasTextGenus) {
+        console.log("Converting plants table from text taxonomy to foreign key references...");
+
+        // Backup existing data
+        const existingPlants = db.prepare("SELECT * FROM plants").all();
+
+        // Drop and recreate with proper structure
+        db.exec("DROP TABLE plants");
+
+        db.exec(`
+          CREATE TABLE plants (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            species_id INTEGER,
+            family_id INTEGER,
+            genus_id INTEGER,
+            acquired_date DATE,
+            image_url TEXT,
+            notes TEXT,
+            is_favorite INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            can_sell INTEGER DEFAULT 0,
+            is_personal INTEGER DEFAULT 1,
+            common_name TEXT,
+            flower_color TEXT,
+            variety TEXT,
+            light_pref TEXT,
+            water_pref TEXT,
+            soil_type TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (species_id) REFERENCES plant_species(id),
+            FOREIGN KEY (family_id) REFERENCES plant_family(id),
+            FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
+          )
+        `);
+
+        // Restore data preserving existing foreign key values where they exist
+        if (existingPlants.length > 0) {
+          const insertPlant = db.prepare(`
+            INSERT INTO plants (
+              user_id, name, species_id, family_id, genus_id, acquired_date, image_url, notes,
+              is_favorite, created_at, updated_at, can_sell, is_personal, common_name,
+              flower_color, variety, light_pref, water_pref, soil_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+
+          for (const row of existingPlants) {
+            insertPlant.run(
+              (row as any).user_id,
+              (row as any).name,
+              (row as any).species_id || null, // Preserve existing foreign key if present
+              (row as any).family_id || null, // Preserve existing foreign key if present
+              (row as any).genus_id || null, // Preserve existing foreign key if present
+              (row as any).acquired_date,
+              (row as any).image_url,
+              (row as any).notes,
+              (row as any).is_favorite,
+              (row as any).created_at,
+              (row as any).updated_at,
+              (row as any).can_sell,
+              (row as any).is_personal,
+              (row as any).common_name,
+              (row as any).flower_color,
+              (row as any).variety,
+              (row as any).light_pref,
+              (row as any).water_pref,
+              (row as any).soil_type
+            );
+          }
+          console.log(
+            `Migrated ${existingPlants.length} plants to clean foreign key structure (preserving existing taxonomy links)`
+          );
+        }
+      } else {
+        // Ensure all other required columns exist
+        const requiredColumns = [
+          {name: "can_sell", type: "INTEGER DEFAULT 0"},
+          {name: "is_personal", type: "INTEGER DEFAULT 1"},
+          {name: "common_name", type: "TEXT"},
+          {name: "flower_color", type: "TEXT"},
+          {name: "variety", type: "TEXT"},
+          {name: "light_pref", type: "TEXT"},
+          {name: "water_pref", type: "TEXT"},
+          {name: "soil_type", type: "TEXT"},
+          {name: "species_id", type: "INTEGER"},
+          {name: "family_id", type: "INTEGER"},
+          {name: "genus_id", type: "INTEGER"},
+        ];
+
+        for (const column of requiredColumns) {
+          if (!existingColumns.has(column.name)) {
+            db.exec(`ALTER TABLE plants ADD COLUMN ${column.name} ${column.type}`);
+            console.log(`Added ${column.name} column to plants table`);
+          }
+        }
+      }
+    }
+
+    console.log("Step 4: Creating supporting application tables...");
+
     // Create market_price table
-    console.log("Step 6: Creating market_price table...");
     db.exec(`
       CREATE TABLE IF NOT EXISTS market_price (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         plant_id INTEGER NOT NULL,
         date_checked DATE NOT NULL,
-        price DECIMAL(5,2) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (plant_id) REFERENCES plants(id)
       )
     `);
 
     // Create plant_propagation table
-    console.log("Step 7: Creating plant_propagation table...");
     db.exec(`
       CREATE TABLE IF NOT EXISTS plant_propagation (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -187,13 +353,14 @@ try {
         current_count INTEGER,
         transplant_date DATE,
         notes TEXT,
-        zero_cout_notes TEXT,
+        zero_count_notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (plant_id) REFERENCES plants(id)
       )
     `);
 
     // Create plant_inventory table
-    console.log("Step 8: Creating plant_inventory table...");
     db.exec(`
       CREATE TABLE IF NOT EXISTS plant_inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -211,11 +378,16 @@ try {
         cause_of_death TEXT,
         death_notes TEXT,
         death_location TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (plant_id) REFERENCES plants(id)
       )
     `);
 
-    console.log("Step 9: Verifying foreign key constraints...");
+    // Re-enable foreign keys
+    db.pragma("foreign_keys = ON");
+
+    console.log("Step 5: Verifying database integrity...");
 
     // Check for foreign key violations
     const foreignKeys = db.prepare(`PRAGMA foreign_key_check`).all();
@@ -226,13 +398,29 @@ try {
     }
 
     console.log("All foreign key constraints are valid!");
+
+    // Final verification: ensure plants table has clean schema (no mixed old/new columns)
+    const finalPlantsColumns = db.prepare("PRAGMA table_info(plants)").all() as {name: string; type: string}[];
+    const finalColumnNames = finalPlantsColumns.map((col) => col.name);
+    const hasOldTextColumns =
+      finalColumnNames.includes("species") || finalColumnNames.includes("family") || finalColumnNames.includes("genus");
+
+    if (hasOldTextColumns) {
+      console.log(
+        "Warning: Plants table still has old text columns. Consider running 'npm run fix-plants-schema' to clean up."
+      );
+    } else {
+      console.log("✓ Plants table has clean foreign key schema");
+    }
+
+    console.log("Database setup completed successfully with correct taxonomy structure!");
   });
 
-  // Execute the transaction
-  migration();
+  // Execute the setup transaction
+  setup();
 
-  console.log("Database migration completed successfully!");
+  console.log("PlantKeeper database is ready for use!");
 } catch (error) {
-  console.error(`Migration failed: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`Database setup failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }

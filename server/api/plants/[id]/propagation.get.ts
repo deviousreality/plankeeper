@@ -2,8 +2,8 @@
  * API endpoint to get propagation records for a specific plant
  * GET /api/plants/[id]/propagation
  */
-import { db } from '~/server/utils/db';
-import type { H3Event } from 'h3';
+import {db, nullToUndefined} from "~/server/utils/db";
+import type {H3Event} from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
   try {
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: "Unauthorized",
       });
     }
 
@@ -21,55 +21,55 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!plantId) {
       throw createError({
         statusCode: 400,
-        message: 'Plant ID is required'
+        message: "Plant ID is required",
       });
     }
 
     // Verify user owns the plant
-    const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?')
-      .get(plantId, user.id);
-      
+    const plant = db.prepare("SELECT id FROM plants WHERE id = ? AND user_id = ?").get(plantId, user.id);
+
     if (!plant) {
       throw createError({
         statusCode: 404,
-        message: 'Plant not found or you do not have permission to access it'
+        message: "Plant not found or you do not have permission to access it",
       });
     }
 
     // Get propagation records for this plant
-    const propagations = db.prepare(`
+    const propagationsRaw = db
+      .prepare(
+        `
       SELECT * FROM plant_propagation
       WHERE plant_id = ?
       ORDER BY prop_date DESC
-    `).all(plantId);
+    `
+      )
+      .all(plantId);
 
-    // Map DB column names to camelCase for frontend
-    const mappedPropagations = propagations.map(p => {
-      const record = p as Record<string, any>;
-      return {
-        id: record.id,
-        plantId: record.plant_id,
-        propType: record.prop_type,
-        seedSource: record.seed_source,
-        cuttingSource: record.cutting_source,
-        propDate: record.prop_date,
-        initialCount: record.initial_count,
-        currentCount: record.current_count,
-        transplantDate: record.transplant_date,
-        notes: record.notes,
-        zeroCoutNotes: record.zero_cout_notes
-      };
-    });
+    // Convert nulls to undefined and map DB column names to camelCase for frontend
+    const propagations = nullToUndefined(propagationsRaw).map((p: any) => ({
+      id: p.id,
+      plantId: p.plant_id,
+      propType: p.prop_type,
+      seedSource: p.seed_source,
+      cuttingSource: p.cutting_source,
+      propDate: p.prop_date,
+      initialCount: p.initial_count,
+      currentCount: p.current_count,
+      transplantDate: p.transplant_date,
+      notes: p.notes,
+      zeroCoutNotes: p.zero_cout_notes,
+    }));
 
     return {
       success: true,
-      data: mappedPropagations
+      data: propagations,
     };
   } catch (error) {
-    console.error('Error fetching plant propagation records:', error);
+    console.error("Error fetching plant propagation records:", error);
     throw createError({
       statusCode: 500,
-      message: 'Error fetching plant propagation records'
+      message: "Error fetching plant propagation records",
     });
   }
 });

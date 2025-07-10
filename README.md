@@ -71,6 +71,24 @@ A web application for plant enthusiasts to track care schedules, record history,
    - A sample admin user (username: `admin`, password: `password123`)
    - Plant care tips for common houseplants
 
+### Database Management
+
+Several scripts are available for database management:
+
+```bash
+# Reset database (creates fresh database with sample data)
+npm run reset-db
+
+# Run database migrations (updates schema to latest, includes automatic schema fixes)
+npm run migrate-db
+
+# Verify database schema integrity
+npm run verify-db
+
+# Update admin password
+npm run update-admin-password
+```
+
 ### Development
 
 1. Start the development server:
@@ -102,7 +120,7 @@ npm run lint:fix
 ### Security Note
 
 For production deployment, remember to:
-- Update the admin password using the provided script: `npm run update-admin-password`
+- Update the admin password using `npm run update-admin-password`
 - Use a secure, randomly generated JWT secret in your `.env` file
 
 ### VS Code Tasks

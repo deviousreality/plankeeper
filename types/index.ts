@@ -1,13 +1,12 @@
 /**
  * Shared type definitions for the PlantKeeper application
- * 
+ *
  * This file contains common type definitions used throughout the application.
  * Place shared types here to avoid duplication and ensure consistency.
- * 
- * For more specialized plant-related types, see plant-models.ts
  */
 
-export * from './plant-models';
+export * from "./plant-models";
+export * from "./database";
 
 /**
  * Common API response types
@@ -67,17 +66,15 @@ export type PlantSpecies = {
   name: string;
 };
 
-export type PlantGenius = {
+export type PlantGenus = {
   id: number;
   name: string;
-  speciesId?: number;
+  familyId: number;
 };
 
 export type PlantFamily = {
   id: number;
   name: string;
-  geniusId?: number;
-  speciesId?: number;
 };
 
 export type MarketPrice = {
@@ -124,7 +121,7 @@ export type PlantInventory = {
 /**
  * Plant care related types
  */
-export type CareAction = 'watering' | 'fertilizing' | 'repotting' | 'pruning' | 'other';
+export type CareAction = "watering" | "fertilizing" | "repotting" | "pruning" | "other";
 
 export type CareEvent = {
   id: number;
@@ -154,9 +151,9 @@ export type PlantListItem = {
 /**
  * UI related types
  */
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = "light" | "dark" | "system";
 
-export type AlertType = 'success' | 'info' | 'warning' | 'error';
+export type AlertType = "success" | "info" | "warning" | "error";
 
 export type Alert = {
   type: AlertType;
