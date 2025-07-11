@@ -46,7 +46,7 @@
   </v-card-text>
 </template>
 
-<script setup>
+<script setup lang="ts">
 definePageMeta({
   layout: "auth",
   middleware: "guest",
