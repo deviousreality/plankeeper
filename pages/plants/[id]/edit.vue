@@ -58,7 +58,7 @@
                     readonly
                     v-bind="props"
                     clearable
-                    @click:clear="plant.acquired_date = null" />
+                    @click:clear="clearAcquiredDate()" />
                 </template>
                 <v-date-picker v-model="plant.acquired_date" @update:model-value="datePickerModal = false" />
               </v-dialog>
@@ -69,7 +69,8 @@
               <h2 class="text-h5 mb-4">Care Details</h2>
 
               <v-select
-                v-model="plant.light_needs"
+                :model-value="plant.light_needs || null"
+                @update:model-value="updateLightNeeds"
                 :items="lightOptions"
                 label="Light Needs"
                 hint="Select the light requirement for this plant" />
@@ -111,7 +112,7 @@
                         clearable
                         @click:clear="plant.last_watered = null" />
                     </template>
-                    <v-date-picker v-model="plant.last_watered" @update:model-value="wateringDateModal = false" />
+                    <v-date-picker :model-value="plant.last_watered || null" @update:model-value="updateLastWatered" />
                   </v-dialog>
                 </v-col>
 
@@ -131,7 +132,9 @@
                         clearable
                         @click:clear="plant.last_fertilized = null" />
                     </template>
-                    <v-date-picker v-model="plant.last_fertilized" @update:model-value="fertilizingDateModal = false" />
+                    <v-date-picker
+                      :model-value="plant.last_fertilized || null"
+                      @update:model-value="updateLastFertilized" />
                   </v-dialog>
                 </v-col>
               </v-row>
@@ -152,30 +155,68 @@
 </template>
 
 <script setup lang="ts">
+import type {Plant} from "~/types/database";
+import type {LocationQueryValue} from "vue-router";
+
 definePageMeta({
   middleware: "auth",
 });
 
+// Helper function to safely get route parameter
+function getRouteParam(param: LocationQueryValue | LocationQueryValue[] | undefined): string {
+  if (typeof param === "string") {
+    return param;
+  }
+  throw new Error("Invalid route parameter");
+}
+
 const route = useRoute();
 const router = useRouter();
 const auth = useAuth();
-const form = ref(null);
-const plantId = route.params.id;
+const form = ref<any>(null);
+const plantId = getRouteParam(route.params["id"]);
 const loading = ref(true);
 const saving = ref(false);
-const error = ref(null);
+const error = ref<string | null>(null);
 
 const datePickerModal = ref(false);
 const wateringDateModal = ref(false);
 const fertilizingDateModal = ref(false);
 
-// Plant data
-const plant = ref({
+// Plant data with proper typing
+type PlantEditData = Plant & {
+  careLogs?: any[];
+  careTips?: any[];
+  species?: string; // Add species field for form
+  light_needs?: string | null;
+  watering_interval?: number | null;
+  fertilizing_interval?: number | null;
+  last_watered?: string | null;
+  last_fertilized?: string | null;
+};
+
+const plant = ref<PlantEditData>({
+  id: 0,
+  user_id: 0,
   name: "",
+  species_id: undefined,
+  family_id: undefined,
+  genus_id: undefined,
+  acquired_date: undefined,
+  image_url: undefined,
+  notes: undefined,
+  is_favorite: false,
+  created_at: "",
+  updated_at: "",
+  can_sell: false,
+  is_personal: false,
+  common_name: undefined,
+  flower_color: undefined,
+  variety: undefined,
+  light_pref: undefined,
+  water_pref: undefined,
+  soil_type: undefined,
   species: "",
-  image_url: "",
-  notes: "",
-  acquired_date: null,
   light_needs: "Medium Light",
   watering_interval: 7,
   fertilizing_interval: 30,
@@ -185,6 +226,28 @@ const plant = ref({
 
 // Form options
 const lightOptions = ["Low Light", "Medium Light", "Bright Indirect Light", "Full Sun"];
+
+// Clear acquired date helper
+function clearAcquiredDate(): void {
+  plant.value.acquired_date = undefined;
+}
+
+// Update light needs helper
+function updateLightNeeds(value: string | null): void {
+  plant.value.light_needs = value;
+}
+
+// Update last watered helper
+function updateLastWatered(value: string | null | undefined): void {
+  plant.value.last_watered = value || null;
+  wateringDateModal.value = false;
+}
+
+// Update last fertilized helper
+function updateLastFertilized(value: string | null | undefined): void {
+  plant.value.last_fertilized = value || null;
+  fertilizingDateModal.value = false;
+}
 
 // Format dates for display
 const formattedDate = computed(() => {
@@ -203,14 +266,14 @@ const lastFertilizedFormatted = computed(() => {
 });
 
 // Load plant data
-async function fetchPlantData() {
+async function fetchPlantData(): Promise<void> {
   loading.value = true;
   error.value = null;
 
   try {
-    const plantData = await $fetch(`/api/plants/${plantId}`);
+    const plantData = await $fetch<PlantEditData>(`/api/plants/${plantId}`);
     // The API returns the plant data directly, not nested
-    plant.value = plantData;
+    plant.value = {...plant.value, ...plantData};
   } catch (e) {
     console.error("Error fetching plant:", e);
     error.value = "Failed to load plant data. Please try again.";
@@ -220,8 +283,12 @@ async function fetchPlantData() {
 }
 
 // Save plant changes
-async function savePlant() {
-  if (!form.value.validate()) return;
+async function savePlant(): Promise<void> {
+  if (!form.value?.validate()) return;
+  if (!auth.user.value) {
+    error.value = "Authentication required";
+    return;
+  }
 
   saving.value = true;
 

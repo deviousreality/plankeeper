@@ -1,3 +1,4 @@
+<!-- pages/care-schedules/index.vue -->
 <template>
   <div>
     <h1 class="text-h3 mb-6">Care Schedule Manager</h1>
@@ -15,13 +16,13 @@
               hide-details
               class="mb-3" />
 
-            <v-list v-model:selected="selectedPlant" lines="two" select-strategy="single">
+            <v-list v-model:selected="selectedPlant" lines="two" select-strategy="single-independent">
               <v-list-item
                 v-for="plant in filteredPlants"
                 :key="plant.id"
                 :value="plant.id"
                 :title="plant.name"
-                :subtitle="plant.species || 'Unknown species'">
+                :subtitle="plant.common_name || 'Unknown species'">
                 <template #prepend>
                   <v-avatar color="grey-lighten-1">
                     <v-img :src="plant.image_url || '/images/default-plant.jpg'" />
@@ -232,40 +233,75 @@
 </template>
 
 <script setup lang="ts">
+import type {Plant, CareLog} from "~/types/database";
+
 definePageMeta({
   middleware: "auth",
 });
 
+// Types for the component
+interface CareScheduleForm {
+  wateringInterval: number | string;
+  fertilizingInterval: number | string;
+  lastWatered: string;
+  lastFertilized: string;
+  lightNeeds: string;
+}
+
+interface CareLogForm {
+  actionType: string;
+  actionDate: string;
+  notes: string;
+}
+
+interface FormattedCareLog extends CareLog {
+  formattedDate: string;
+}
+
+interface TaskInfo {
+  date: Date | null;
+  overdue: boolean;
+}
+
+interface UpcomingTasks {
+  watering: TaskInfo | null;
+  fertilizing: TaskInfo | null;
+}
+
+interface PlantWithNextTask extends Plant {
+  next_task_date?: string;
+}
+
 const auth = useAuth();
-const search = ref("");
-const plants = ref([]);
-const loading = ref(true);
-const selectedPlant = ref(null);
-const currentPlant = ref(null);
-const careSchedule = ref({
+const search = ref<string>("");
+const plants = ref<PlantWithNextTask[]>([]);
+const loading = ref<boolean>(true);
+const selectedPlant = ref<number | null>(null);
+const currentPlant = ref<PlantWithNextTask | null>(null);
+const careSchedule = ref<CareScheduleForm>({
   wateringInterval: 7,
   fertilizingInterval: 30,
-  lastWatered: new Date().toISOString().split("T")[0],
-  lastFertilized: new Date().toISOString().split("T")[0],
+  lastWatered: new Date().toISOString().substring(0, 10),
+  lastFertilized: new Date().toISOString().substring(0, 10),
   lightNeeds: "Medium Light",
 });
-const savingSchedule = ref(false);
-const loggingWater = ref(false);
-const loggingFertilizer = ref(false);
-const careLog = ref([]);
-const loadingLogs = ref(false);
+const savingSchedule = ref<boolean>(false);
+const loggingWater = ref<boolean>(false);
+const loggingFertilizer = ref<boolean>(false);
+const careLog = ref<CareLog[]>([]);
+const loadingLogs = ref<boolean>(false);
 
 // Dialog state
-const addLogDialog = ref(false);
-const newLog = ref({
+const addLogDialog = ref<boolean>(false);
+const newLog = ref<CareLogForm>({
   actionType: "watering",
-  actionDate: new Date().toISOString().split("T")[0],
+  actionDate: new Date().toISOString().substring(0, 10),
   notes: "",
 });
-const addingLog = ref(false);
+const addingLog = ref<boolean>(false);
 
 // Computed properties
-const filteredPlants = computed(() => {
+const filteredPlants = computed<PlantWithNextTask[]>(() => {
   if (!plants.value) return [];
 
   return plants.value.filter((plant) => {
@@ -273,7 +309,7 @@ const filteredPlants = computed(() => {
     if (
       search.value &&
       !plant.name.toLowerCase().includes(search.value.toLowerCase()) &&
-      !plant.species?.toLowerCase().includes(search.value.toLowerCase())
+      !plant.common_name?.toLowerCase().includes(search.value.toLowerCase())
     ) {
       return false;
     }
@@ -281,23 +317,23 @@ const filteredPlants = computed(() => {
   });
 });
 
-const formattedCareLog = computed(() => {
+const formattedCareLog = computed<FormattedCareLog[]>(() => {
   return careLog.value.map((log) => ({
     ...log,
     formattedDate: formatDate(log.action_date),
   }));
 });
 
-const upcomingTasks = computed(() => {
+const upcomingTasks = computed<UpcomingTasks>(() => {
   if (!currentPlant.value) return {watering: null, fertilizing: null};
 
-  const tasks = {watering: null, fertilizing: null};
+  const tasks: UpcomingTasks = {watering: null, fertilizing: null};
 
   // Calculate next watering date
   if (careSchedule.value.lastWatered && careSchedule.value.wateringInterval) {
     const lastWatered = new Date(careSchedule.value.lastWatered);
     const nextWatering = new Date(lastWatered);
-    nextWatering.setDate(lastWatered.getDate() + parseInt(careSchedule.value.wateringInterval));
+    nextWatering.setDate(lastWatered.getDate() + Number(careSchedule.value.wateringInterval));
 
     tasks.watering = {
       date: nextWatering,
@@ -309,7 +345,7 @@ const upcomingTasks = computed(() => {
   if (careSchedule.value.lastFertilized && careSchedule.value.fertilizingInterval) {
     const lastFertilized = new Date(careSchedule.value.lastFertilized);
     const nextFertilizing = new Date(lastFertilized);
-    nextFertilizing.setDate(lastFertilized.getDate() + parseInt(careSchedule.value.fertilizingInterval));
+    nextFertilizing.setDate(lastFertilized.getDate() + Number(careSchedule.value.fertilizingInterval));
 
     tasks.fertilizing = {
       date: nextFertilizing,
@@ -320,14 +356,14 @@ const upcomingTasks = computed(() => {
   return tasks;
 });
 
-const lastWateredHint = computed(() => {
+const lastWateredHint = computed<string>(() => {
   if (!careSchedule.value.lastWatered) return "No watering recorded";
 
   const days = daysSince(careSchedule.value.lastWatered);
   return `Last watered ${days} days ago`;
 });
 
-const lastFertilizedHint = computed(() => {
+const lastFertilizedHint = computed<string>(() => {
   if (!careSchedule.value.lastFertilized) return "No fertilizing recorded";
 
   const days = daysSince(careSchedule.value.lastFertilized);
@@ -335,24 +371,24 @@ const lastFertilizedHint = computed(() => {
 });
 
 // Helper functions
-function formatDate(dateString) {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
+function formatDate(date: string | Date | null): string {
+  if (!date) return "N/A";
+  const dateObj = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
-  }).format(date);
+  }).format(dateObj);
 }
 
-function daysSince(dateString) {
+function daysSince(dateString: string): number {
   const date = new Date(dateString);
   const today = new Date();
-  const diffTime = Math.abs(today - date);
+  const diffTime = Math.abs(today.getTime() - date.getTime());
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-function getNextTaskInfo(plant) {
+function getNextTaskInfo(plant: PlantWithNextTask): {date: Date | null; days: number | null; overdue: boolean} {
   const today = new Date();
 
   // Default if no schedule
@@ -361,7 +397,7 @@ function getNextTaskInfo(plant) {
   }
 
   const nextTaskDate = new Date(plant.next_task_date);
-  const diffTime = nextTaskDate - today;
+  const diffTime = nextTaskDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   return {
@@ -371,15 +407,17 @@ function getNextTaskInfo(plant) {
   };
 }
 
-function getTaskColor(task) {
+function getTaskColor(task: TaskInfo | null): string {
   if (!task) return "grey";
 
   if (task.overdue) {
     return "error";
   }
 
+  if (!task.date) return "grey";
+
   // Calculate days until due
-  const diffDays = Math.ceil((task.date - new Date()) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil((task.date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 2) {
     return "warning";
@@ -388,11 +426,11 @@ function getTaskColor(task) {
   return "success";
 }
 
-function getRelativeDateText(date) {
+function getRelativeDateText(date: Date | null): string {
   if (!date) return "";
 
   const today = new Date();
-  const diffTime = date - today;
+  const diffTime = date.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
@@ -405,9 +443,13 @@ function getRelativeDateText(date) {
 }
 
 // API functions
-async function loadPlants() {
+async function loadPlants(): Promise<void> {
   loading.value = true;
   try {
+    if (!auth.user.value?.id) {
+      throw new Error("User not authenticated");
+    }
+
     const response = await fetch(`/api/plants?userId=${auth.user.value.id}`);
 
     if (!response.ok) {
@@ -422,7 +464,7 @@ async function loadPlants() {
   }
 }
 
-async function loadPlantCareSchedule(plantId) {
+async function loadPlantCareSchedule(plantId: number): Promise<void> {
   if (!plantId) return;
 
   try {
@@ -435,24 +477,24 @@ async function loadPlantCareSchedule(plantId) {
     const schedule = await response.json();
 
     // Set current plant
-    currentPlant.value = plants.value.find((p) => p.id === plantId);
+    currentPlant.value = plants.value.find((p) => p.id === plantId) || null;
 
     // Set care schedule
     if (schedule) {
       careSchedule.value = {
-        wateringInterval: schedule.watering_interval || "",
-        fertilizingInterval: schedule.fertilizing_interval || "",
-        lastWatered: schedule.last_watered || "",
-        lastFertilized: schedule.last_fertilized || "",
-        lightNeeds: schedule.light_needs || "",
+        wateringInterval: schedule.watering_interval || 7,
+        fertilizingInterval: schedule.fertilizing_interval || 30,
+        lastWatered: schedule.last_watered || new Date().toISOString().substring(0, 10),
+        lastFertilized: schedule.last_fertilized || new Date().toISOString().substring(0, 10),
+        lightNeeds: schedule.light_needs || "Medium Light",
       };
     } else {
       // Default values
       careSchedule.value = {
         wateringInterval: 7,
         fertilizingInterval: 30,
-        lastWatered: new Date().toISOString().split("T")[0],
-        lastFertilized: new Date().toISOString().split("T")[0],
+        lastWatered: new Date().toISOString().substring(0, 10),
+        lastFertilized: new Date().toISOString().substring(0, 10),
         lightNeeds: "Medium Light",
       };
     }
@@ -464,7 +506,7 @@ async function loadPlantCareSchedule(plantId) {
   }
 }
 
-async function loadCareLogs(plantId) {
+async function loadCareLogs(plantId: number): Promise<void> {
   loadingLogs.value = true;
   try {
     const response = await fetch(`/api/care-logs/${plantId}`);
@@ -481,7 +523,7 @@ async function loadCareLogs(plantId) {
   }
 }
 
-async function saveCareSchedule() {
+async function saveCareSchedule(): Promise<void> {
   if (!currentPlant.value) return;
 
   savingSchedule.value = true;
@@ -493,8 +535,8 @@ async function saveCareSchedule() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        wateringInterval: parseInt(careSchedule.value.wateringInterval) || null,
-        fertilizingInterval: parseInt(careSchedule.value.fertilizingInterval) || null,
+        wateringInterval: Number(careSchedule.value.wateringInterval) || null,
+        fertilizingInterval: Number(careSchedule.value.fertilizingInterval) || null,
         lastWatered: careSchedule.value.lastWatered || null,
         lastFertilized: careSchedule.value.lastFertilized || null,
         lightNeeds: careSchedule.value.lightNeeds || null,
@@ -514,7 +556,7 @@ async function saveCareSchedule() {
   }
 }
 
-async function logWatering() {
+async function logWatering(): Promise<void> {
   if (!currentPlant.value) return;
 
   loggingWater.value = true;
@@ -523,12 +565,12 @@ async function logWatering() {
     // Log the watering
     await addCareLog({
       actionType: "watering",
-      actionDate: new Date().toISOString().split("T")[0],
+      actionDate: new Date().toISOString().substring(0, 10),
       notes: "Regular watering",
     });
 
     // Update the care schedule
-    careSchedule.value.lastWatered = new Date().toISOString().split("T")[0];
+    careSchedule.value.lastWatered = new Date().toISOString().substring(0, 10);
     await saveCareSchedule();
   } catch (error) {
     console.error("Error logging watering:", error);
@@ -537,7 +579,7 @@ async function logWatering() {
   }
 }
 
-async function logFertilizing() {
+async function logFertilizing(): Promise<void> {
   if (!currentPlant.value) return;
 
   loggingFertilizer.value = true;
@@ -546,12 +588,12 @@ async function logFertilizing() {
     // Log the fertilizing
     await addCareLog({
       actionType: "fertilizing",
-      actionDate: new Date().toISOString().split("T")[0],
+      actionDate: new Date().toISOString().substring(0, 10),
       notes: "Regular fertilizing",
     });
 
     // Update the care schedule
-    careSchedule.value.lastFertilized = new Date().toISOString().split("T")[0];
+    careSchedule.value.lastFertilized = new Date().toISOString().substring(0, 10);
     await saveCareSchedule();
   } catch (error) {
     console.error("Error logging fertilizing:", error);
@@ -560,7 +602,7 @@ async function logFertilizing() {
   }
 }
 
-async function addCareLog(log) {
+async function addCareLog(log: CareLogForm): Promise<void> {
   if (!currentPlant.value) return;
 
   try {
@@ -587,7 +629,7 @@ async function addCareLog(log) {
   }
 }
 
-async function addCareLogEntry() {
+async function addCareLogEntry(): Promise<void> {
   if (!currentPlant.value || !newLog.value.actionType || !newLog.value.actionDate) {
     return;
   }
@@ -609,7 +651,7 @@ async function addCareLogEntry() {
     // Reset and close dialog
     newLog.value = {
       actionType: "watering",
-      actionDate: new Date().toISOString().split("T")[0],
+      actionDate: new Date().toISOString().substring(0, 10),
       notes: "",
     };
 

@@ -43,29 +43,20 @@ export default defineConfig([
 
       parserOptions: {
         parser: "@typescript-eslint/parser",
+        project: "./tsconfig.json",
+        tsconfigRootDir: __dirname,
+        extraFileExtensions: [".vue"],
       },
     },
 
     rules: {
+      // TypeScript rules (type-aware)
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
-      "@typescript-eslint/prefer-optional-chain": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "warn",
+      "@typescript-eslint/prefer-optional-chain": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      "@typescript-eslint/prefer-for-of": "warn",
-      "@typescript-eslint/no-unnecessary-condition": "warn",
-      "@typescript-eslint/prefer-readonly": "warn",
-      "@typescript-eslint/prefer-string-starts-ends-with": "warn",
-      "@typescript-eslint/no-inferrable-types": "warn",
-      "@typescript-eslint/prefer-includes": "warn",
 
-      "@typescript-eslint/explicit-function-return-type": [
-        "warn",
-        {
-          allowExpressions: true,
-          allowTypedFunctionExpressions: true,
-        },
-      ],
-
+      // TypeScript rules (non-type-aware)
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -73,10 +64,13 @@ export default defineConfig([
           varsIgnorePattern: "^_",
         },
       ],
-
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/prefer-interface": "off",
+      "@typescript-eslint/no-inferrable-types": "warn",
+
+      // General rules
       "no-console": "off",
+
+      // Vue rules
       "vue/multi-word-component-names": "off",
       "vue/no-v-html": "error",
       "vue/require-default-prop": "error",

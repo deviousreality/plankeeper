@@ -73,35 +73,35 @@ export type Plant = {
 
 // Extended Plant type with taxonomy data (for display)
 export interface PlantWithTaxonomy extends Plant {
-  species?: PlantSpecies;
-  family?: PlantFamily;
-  genus?: PlantGenus;
+  species?: Species;
+  family?: Family;
+  genus?: Genus;
 }
 
 // =====================================
 // Taxonomy Types
 // =====================================
 
-export interface PlantFamily {
+export interface Species {
   id: number;
   name: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface PlantGenus {
+export interface Genus {
   id: number;
   name: string;
-  family_id: number;
+  speciesId: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface PlantSpecies {
+export interface Family {
   id: number;
   name: string;
-  genus_id: number;
-  common_name?: string;
+  geniusId: number | null;
+  speciesId: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -143,10 +143,11 @@ export interface CareTip {
 
 export interface MarketPrice {
   id: number;
-  plant_id: number;
-  date_checked: string;
+  plantId: number;
   price: number;
-  created_at?: string;
+  dateChecked: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PlantPropagation {
@@ -190,9 +191,9 @@ export interface PlantInventory {
 // =====================================
 
 export interface TaxonomyApiResponse {
-  families: PlantFamily[];
-  genera: PlantGenus[];
-  species: PlantSpecies[];
+  families: Family[];
+  genera: Genus[];
+  species: Species[];
 }
 
 export interface PlantFormData {
@@ -221,6 +222,6 @@ export interface PlantFormData {
 export type CreatePlant = Omit<Plant, "id" | "created_at" | "updated_at">;
 export type UpdatePlant = Partial<Omit<Plant, "id" | "created_at" | "updated_at">>;
 
-export type CreatePlantFamily = Omit<PlantFamily, "id" | "created_at" | "updated_at">;
-export type CreatePlantGenus = Omit<PlantGenus, "id" | "created_at" | "updated_at">;
-export type CreatePlantSpecies = Omit<PlantSpecies, "id" | "created_at" | "updated_at">;
+export type CreatePlantFamily = Omit<Family, "id" | "created_at" | "updated_at">;
+export type CreatePlantGenus = Omit<Genus, "id" | "created_at" | "updated_at">;
+export type CreatePlantSpecies = Omit<Species, "id" | "created_at" | "updated_at">;

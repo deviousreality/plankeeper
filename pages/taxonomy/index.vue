@@ -233,35 +233,36 @@
 </template>
 
 <script setup lang="ts">
+import type {Species, Genus, Family} from "~/types/database";
+
 definePageMeta({
   middleware: "auth",
 });
 
-const auth = useAuth();
-const loading = ref(true);
+const loading = ref<boolean>(true);
 
 // Data
-const speciesList = ref([]);
-const geniusList = ref([]);
-const familyList = ref([]);
+const speciesList = ref<Species[]>([]);
+const geniusList = ref<Genus[]>([]);
+const familyList = ref<Family[]>([]);
 
 // Form inputs
-const newSpecies = ref("");
-const newGenius = ref("");
-const newGeniusSpeciesId = ref(null);
-const newFamily = ref("");
-const newFamilyGeniusId = ref(null);
-const newFamilySpeciesId = ref(null);
+const newSpecies = ref<string>("");
+const newGenius = ref<string>("");
+const newGeniusSpeciesId = ref<number | null>(null);
+const newFamily = ref<string>("");
+const newFamilyGeniusId = ref<number | null>(null);
+const newFamilySpeciesId = ref<number | null>(null);
 
 // Edit dialog
-const editDialog = ref(false);
-const editingType = ref("");
-const editingItem = ref({});
+const editDialog = ref<boolean>(false);
+const editingType = ref<string>("");
+const editingItem = ref<any>({});
 
 // Delete dialog
-const deleteDialog = ref(false);
-const deletingType = ref("");
-const deletingItem = ref(null);
+const deleteDialog = ref<boolean>(false);
+const deletingType = ref<string>("");
+const deletingItem = ref<Species | Genus | Family | null>(null);
 
 // Computed properties
 const speciesOptions = computed(() => {
@@ -293,24 +294,24 @@ const speciesNotInGenusOrFamily = computed(() => {
 });
 
 // Helper functions
-function getSpeciesNameById(id) {
+function getSpeciesNameById(id: number | null | undefined): string {
   if (!id) return "";
   const species = speciesList.value.find((s) => s.id === id);
   return species ? species.name : "";
 }
 
-function getGeniusNameById(id) {
+function getGeniusNameById(id: number | null | undefined): string {
   if (!id) return "";
   const genius = geniusList.value.find((g) => g.id === id);
   return genius ? genius.name : "";
 }
 
-function getGeniusByIdWithSpecies(id) {
+function getGeniusByIdWithSpecies(id: number | null | undefined): Genus | null {
   if (!id) return null;
-  return geniusList.value.find((g) => g.id === id);
+  return geniusList.value.find((g) => g.id === id) || null;
 }
 
-function isItemInUse(type, item) {
+function isItemInUse(type: string, item: Species | Genus | Family | null): boolean {
   if (!item) return false;
 
   switch (type) {
@@ -335,9 +336,9 @@ async function loadData() {
       fetch("/api/taxonomy/family"),
     ]);
 
-    speciesList.value = await speciesRes.json();
-    geniusList.value = await geniusRes.json();
-    familyList.value = await familyRes.json();
+    speciesList.value = (await speciesRes.json()) as Species[];
+    geniusList.value = (await geniusRes.json()) as Genus[];
+    familyList.value = (await familyRes.json()) as Family[];
   } catch (error) {
     console.error("Error loading taxonomy data:", error);
   } finally {
@@ -362,7 +363,7 @@ async function addSpecies() {
 
     const result = await response.json();
     if (response.ok) {
-      speciesList.value.push(result);
+      speciesList.value.push(result as Species);
       newSpecies.value = "";
     }
   } catch (error) {
@@ -387,7 +388,7 @@ async function addGenius() {
 
     const result = await response.json();
     if (response.ok) {
-      geniusList.value.push(result);
+      geniusList.value.push(result as Genus);
       newGenius.value = "";
       newGeniusSpeciesId.value = null;
     }
@@ -414,7 +415,7 @@ async function addFamily() {
 
     const result = await response.json();
     if (response.ok) {
-      familyList.value.push(result);
+      familyList.value.push(result as Family);
       newFamily.value = "";
       newFamilyGeniusId.value = null;
       newFamilySpeciesId.value = null;
@@ -424,7 +425,7 @@ async function addFamily() {
   }
 }
 
-function editItem(type, item) {
+function editItem(type: string, item: Species | Genus | Family) {
   editingType.value = type;
   editingItem.value = {...item};
   editDialog.value = true;
@@ -465,7 +466,7 @@ async function saveEdit() {
   }
 }
 
-function confirmDelete(type, item) {
+function confirmDelete(type: string, item: Species | Genus | Family) {
   deletingType.value = type;
   deletingItem.value = item;
   deleteDialog.value = true;
@@ -484,12 +485,12 @@ async function deleteItem() {
 
     if (response.ok) {
       // Update local data
-      if (deletingType.value === "species") {
-        speciesList.value = speciesList.value.filter((s) => s.id !== deletingItem.value.id);
-      } else if (deletingType.value === "genius") {
-        geniusList.value = geniusList.value.filter((g) => g.id !== deletingItem.value.id);
-      } else if (deletingType.value === "family") {
-        familyList.value = familyList.value.filter((f) => f.id !== deletingItem.value.id);
+      if (deletingType.value === "species" && deletingItem.value) {
+        speciesList.value = speciesList.value.filter((s) => s.id !== deletingItem.value!.id);
+      } else if (deletingType.value === "genius" && deletingItem.value) {
+        geniusList.value = geniusList.value.filter((g) => g.id !== deletingItem.value!.id);
+      } else if (deletingType.value === "family" && deletingItem.value) {
+        familyList.value = familyList.value.filter((f) => f.id !== deletingItem.value!.id);
       }
     }
   } catch (error) {

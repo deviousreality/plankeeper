@@ -1,4 +1,6 @@
-<!-- pages/plants/index.vue -->
+<!-- pages/plants/index.vue -                  <v-col cols="12" sm="6" md="4">
+                    <v-select v-model="filters.species" :items="speciesOptions" label="Common Name" />
+                  </v-col>
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
@@ -119,15 +121,36 @@
 </template>
 
 <script setup lang="ts">
+import type { Plant } from "~/types/database";
+
 definePageMeta({
   middleware: "auth",
 });
 
+// Type for plant with care schedule data
+type PlantWithCareSchedule = Plant & {
+  species?: string;
+  watering_interval?: number;
+  fertilizing_interval?: number;
+  last_watered?: string;
+  last_fertilized?: string;
+  light_needs?: string;
+  next_task_date?: string;
+};
+
+// Type for filter options
+type FilterOptions = {
+  species: string | null;
+  needsWater: boolean | null;
+  needsFertilizer: boolean | null;
+  favorite: boolean | null;
+};
+
 const auth = useAuth();
-const plants = ref([]);
+const plants = ref<PlantWithCareSchedule[]>([]);
 const loading = ref(true);
 const search = ref("");
-const filters = ref({
+const filters = ref<FilterOptions>({
   species: null,
   needsWater: null,
   needsFertilizer: null,
@@ -136,7 +159,7 @@ const filters = ref({
 
 // Computed for filter options
 const speciesOptions = computed(() => {
-  const uniqueSpecies = new Set(plants.value.map((p) => p.species).filter(Boolean));
+  const uniqueSpecies = new Set(plants.value.map((p) => p.common_name).filter((name): name is string => Boolean(name)));
   const options = [{title: "All", value: null}];
   uniqueSpecies.forEach((species) => options.push({title: species, value: species}));
   return options;
@@ -187,28 +210,29 @@ const filteredPlants = computed(() => {
 });
 
 // Helpers
-function daysTillNextTask(plant) {
+function daysTillNextTask(plant: PlantWithCareSchedule): number | null {
   if (!plant.next_task_date) return null;
   const today = new Date();
   const nextTask = new Date(plant.next_task_date);
-  return Math.floor((nextTask - today) / (1000 * 60 * 60 * 24));
+  return Math.floor((nextTask.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function isNextTaskWatering(plant) {
+function isNextTaskWatering(plant: PlantWithCareSchedule): boolean {
   if (!plant.last_watered || !plant.last_fertilized) return true; // Default to watering if missing data
   const lastWatered = new Date(plant.last_watered);
   const lastFertilized = new Date(plant.last_fertilized);
   return lastWatered <= lastFertilized;
 }
 
-function getTaskIcon(plant) {
+function getTaskIcon(plant: PlantWithCareSchedule): string {
   return isNextTaskWatering(plant) ? "mdi-water" : "mdi-fertilizer";
 }
 
-function getTaskText(plant) {
+function getTaskText(plant: PlantWithCareSchedule): string {
   const days = daysTillNextTask(plant);
   const taskType = isNextTaskWatering(plant) ? "Water" : "Fertilize";
 
+  if (days === null) return "No schedule";
   if (days < 0) {
     return `${taskType} overdue`;
   } else if (days === 0) {
@@ -219,12 +243,12 @@ function getTaskText(plant) {
 }
 
 // Fetch plants data
-async function fetchPlants() {
+async function fetchPlants(): Promise<void> {
   if (!auth.user.value) return;
 
   loading.value = true;
   try {
-    plants.value = await $fetch(`/api/plants?userId=${auth.user.value.id}`);
+    plants.value = await $fetch<PlantWithCareSchedule[]>(`/api/plants?userId=${auth.user.value.id}`);
   } catch (error) {
     console.error("Error fetching plants:", error);
   } finally {

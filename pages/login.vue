@@ -30,6 +30,8 @@
 </template>
 
 <script setup lang="ts">
+import type {LocationQueryValue} from "vue-router";
+
 definePageMeta({
   layout: "auth",
   middleware: "guest",
@@ -42,17 +44,25 @@ const username = ref("");
 const password = ref("");
 const isLoading = ref(false);
 
+// Helper function to safely get redirect URL
+function getRedirectUrl(redirectQuery: LocationQueryValue | LocationQueryValue[] | undefined): string {
+  if (typeof redirectQuery === "string") {
+    return redirectQuery;
+  }
+  return "/plants";
+}
+
 // If already authenticated, redirect to intended page or home
 if (auth.isAuthenticated.value) {
-  const redirectTo = route.query.redirect || "/plants";
+  const redirectTo = getRedirectUrl(route.query["redirect"]);
   await navigateTo(redirectTo);
 }
 
 const rules = {
-  required: (value) => !!value || "Required.",
+  required: (value: string) => !!value || "Required.",
 };
 
-async function handleLogin() {
+async function handleLogin(): Promise<void> {
   if (!username.value || !password.value) return;
 
   isLoading.value = true;
@@ -60,7 +70,7 @@ async function handleLogin() {
     const result = await auth.login(username.value, password.value);
     if (result.success) {
       // Redirect to intended page or default to /plants
-      const redirectTo = route.query.redirect || "/plants";
+      const redirectTo = getRedirectUrl(route.query["redirect"]);
       await navigateTo(redirectTo);
     }
   } finally {

@@ -125,45 +125,55 @@
 </template>
 
 <script setup lang="ts">
+import type {CareTip} from "~/types/database";
+
 definePageMeta({
   middleware: "auth",
 });
 
+// Types for the component
+interface CareTipForm {
+  id?: number;
+  species: string;
+  tip: string;
+  source: string;
+}
+
 const auth = useAuth();
-const tips = ref([]);
-const loading = ref(true);
-const search = ref("");
-const activeSpecies = ref(null);
-const tipForm = ref(null);
+const tips = ref<CareTip[]>([]);
+const loading = ref<boolean>(true);
+const search = ref<string>("");
+const activeSpecies = ref<string | null>(null);
+const tipForm = ref<{validate: () => boolean} | null>(null);
 
 // Dialog controls
-const showTipDialog = ref(false);
-const showDeleteDialog = ref(false);
-const savingTip = ref(false);
-const deletingTip = ref(false);
-const tipToDelete = ref(null);
+const showTipDialog = ref<boolean>(false);
+const showDeleteDialog = ref<boolean>(false);
+const savingTip = ref<boolean>(false);
+const deletingTip = ref<boolean>(false);
+const tipToDelete = ref<number | null>(null);
 
 // Current tip for editing/adding
-const currentTip = ref({
+const currentTip = ref<CareTipForm>({
   species: "",
   tip: "",
   source: "",
 });
 
 // Check if user is an admin (for this demo purpose, let's add admin capability to user with ID 1)
-const isAdmin = computed(() => {
+const isAdmin = computed<boolean>(() => {
   return auth.user.value?.id === 1;
 });
 
 // Group tips by species
-const groupedTips = computed(() => {
-  const grouped = new Map();
+const groupedTips = computed<Map<string, CareTip[]>>(() => {
+  const grouped = new Map<string, CareTip[]>();
 
   tips.value.forEach((tip) => {
     if (!grouped.has(tip.species)) {
       grouped.set(tip.species, []);
     }
-    grouped.get(tip.species).push(tip);
+    grouped.get(tip.species)!.push(tip);
   });
 
   // Convert to a sorted Map
@@ -173,16 +183,17 @@ const groupedTips = computed(() => {
 // Set active species tab based on available data
 watchEffect(() => {
   if (groupedTips.value.size && !activeSpecies.value) {
-    activeSpecies.value = [...groupedTips.value.keys()][0];
+    const firstKey = [...groupedTips.value.keys()][0];
+    activeSpecies.value = firstKey || null;
   }
 });
 
 // Fetch care tips
-async function fetchTips() {
+async function fetchTips(): Promise<void> {
   loading.value = true;
 
   try {
-    tips.value = await $fetch("/api/care-tips");
+    tips.value = await $fetch<CareTip[]>("/api/care-tips");
   } catch (error) {
     console.error("Error fetching care tips:", error);
   } finally {
@@ -191,7 +202,7 @@ async function fetchTips() {
 }
 
 // Search tips
-function searchTips() {
+function searchTips(): void {
   if (!search.value.trim()) {
     fetchTips(); // Reset to all tips
     return;
@@ -199,7 +210,7 @@ function searchTips() {
 
   loading.value = true;
 
-  $fetch(`/api/care-tips?search=${encodeURIComponent(search.value)}`)
+  $fetch<CareTip[]>(`/api/care-tips?search=${encodeURIComponent(search.value)}`)
     .then((result) => {
       tips.value = result;
     })
@@ -212,7 +223,7 @@ function searchTips() {
 }
 
 // Open dialog to add/edit tip
-function openTipDialog(species = "") {
+function openTipDialog(species = ""): void {
   currentTip.value = {
     species: species,
     tip: "",
@@ -222,13 +233,13 @@ function openTipDialog(species = "") {
 }
 
 // Save tip
-async function saveTip() {
-  if (!tipForm.value.validate()) return;
+async function saveTip(): Promise<void> {
+  if (!tipForm.value?.validate()) return;
 
   savingTip.value = true;
 
   try {
-    const response = await $fetch("/api/care-tips", {
+    const response = await $fetch<CareTip>("/api/care-tips", {
       method: "POST",
       body: currentTip.value,
     });
@@ -256,13 +267,13 @@ async function saveTip() {
 }
 
 // Delete tip
-function deleteTip(tipId) {
+function deleteTip(tipId: number): void {
   tipToDelete.value = tipId;
   showDeleteDialog.value = true;
 }
 
 // Confirm delete tip
-async function confirmDeleteTip() {
+async function confirmDeleteTip(): Promise<void> {
   if (!tipToDelete.value) return;
 
   deletingTip.value = true;

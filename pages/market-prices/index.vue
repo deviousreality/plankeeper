@@ -56,7 +56,7 @@
                   {{ selectedPlant?.name }}
                 </h3>
                 <p class="text-subtitle-1">
-                  {{ selectedPlant?.species || "Unknown Species" }}
+                  {{ selectedPlant?.common_name || "Unknown Species" }}
                 </p>
               </v-col>
               <v-col cols="12">
@@ -86,49 +86,66 @@
 </template>
 
 <script setup lang="ts">
+import type {Plant, MarketPrice} from "~/types/database";
+
 definePageMeta({
   middleware: "auth",
 });
 
-const auth = useAuth();
-const loading = ref(true);
-const saving = ref(false);
-const plants = ref([]);
-const search = ref("");
-const dialog = ref(false);
-const selectedPlant = ref(null);
+// Types for the component
+interface PlantWithPrice extends Plant {
+  latestPrice?: MarketPrice;
+}
 
-const priceRecord = ref({
+interface PlantDisplay extends Plant {
+  latestPrice: string;
+  lastPriceUpdate: string;
+}
+
+interface PriceRecordForm {
+  price: number | string;
+  dateChecked: string;
+}
+
+const auth = useAuth();
+const loading = ref<boolean>(true);
+const saving = ref<boolean>(false);
+const plants = ref<PlantWithPrice[]>([]);
+const search = ref<string>("");
+const dialog = ref<boolean>(false);
+const selectedPlant = ref<PlantDisplay | null>(null);
+
+const priceRecord = ref<PriceRecordForm>({
   price: 0,
   dateChecked: new Date().toISOString().substr(0, 10),
 });
 
 const headers = [
   {title: "Name", key: "name"},
-  {title: "Species", key: "species"},
+  {title: "Species", key: "common_name"},
   {title: "Latest Price", key: "latestPrice"},
   {title: "Last Updated", key: "lastPriceUpdate"},
   {title: "Price History", key: "priceHistory"},
   {title: "Actions", key: "actions", sortable: false},
 ];
 
-const filteredPlants = computed(() => {
+const filteredPlants = computed<PlantDisplay[]>(() => {
   if (!plants.value) return [];
 
   return plants.value.map((plant) => {
     const latest = plant.latestPrice ? `$${plant.latestPrice.price.toFixed(2)}` : "No data";
 
-    const lastUpdate = plant.latestPrice ? formatDate(plant.latestPrice.dateChecked) : "Never";
+    const lastUpdate = plant.latestPrice ? formatDate(plant.latestPrice.date_checked) : "Never";
 
     return {
       ...plant,
       latestPrice: latest,
       lastPriceUpdate: lastUpdate,
-    };
+    } as PlantDisplay;
   });
 });
 
-function formatDate(dateString) {
+function formatDate(dateString: string): string {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
@@ -138,9 +155,13 @@ function formatDate(dateString) {
   }).format(date);
 }
 
-async function loadPlants() {
+async function loadPlants(): Promise<void> {
   loading.value = true;
   try {
+    if (!auth.user.value?.id) {
+      throw new Error("User not authenticated");
+    }
+
     const response = await fetch(`/api/market-prices?userId=${auth.user.value.id}`);
 
     if (!response.ok) {
@@ -156,7 +177,7 @@ async function loadPlants() {
   }
 }
 
-function openPriceDialog(plant) {
+function openPriceDialog(plant: PlantDisplay): void {
   selectedPlant.value = plant;
   priceRecord.value = {
     price: 0,
@@ -165,12 +186,12 @@ function openPriceDialog(plant) {
   dialog.value = true;
 }
 
-function closeDialog() {
+function closeDialog(): void {
   dialog.value = false;
   selectedPlant.value = null;
 }
 
-async function savePriceRecord() {
+async function savePriceRecord(): Promise<void> {
   if (!selectedPlant.value || !priceRecord.value.price) {
     return;
   }
@@ -183,7 +204,7 @@ async function savePriceRecord() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        price: parseFloat(priceRecord.value.price),
+        price: Number(priceRecord.value.price),
         dateChecked: priceRecord.value.dateChecked,
       }),
     });

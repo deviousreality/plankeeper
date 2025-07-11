@@ -11,7 +11,7 @@
             {{ plant?.name }}
           </v-card-title>
           <v-card-subtitle>
-            {{ plant?.species || "Unknown Species" }}
+            {{ plant?.species_id ? `Species ID: ${plant.species_id}` : "Unknown Species" }}
           </v-card-subtitle>
 
           <v-img :src="plant?.image_url || '/images/default-plant.jpg'" height="200" cover />
@@ -107,27 +107,31 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted} from "vue";
+import {ref, computed, onMounted, onBeforeUnmount} from "vue";
 import {Chart} from "chart.js/auto";
+import type {Plant, MarketPrice} from "~/types";
 
 definePageMeta({
   middleware: "auth",
 });
 
 const route = useRoute();
-const plantId = parseInt(route.params.id);
+const plantId = parseInt(route.params["id"] as string);
 const auth = useAuth();
 
-const plant = ref(null);
-const priceHistory = ref([]);
-const loading = ref(true);
-const saving = ref(false);
-const deleting = ref(false);
-const deleteDialog = ref(false);
-const selectedPrice = ref(null);
-let chart = null;
+const plant = ref<Plant | null>(null);
+const priceHistory = ref<MarketPrice[]>([]);
+const loading = ref<boolean>(true);
+const saving = ref<boolean>(false);
+const deleting = ref<boolean>(false);
+const deleteDialog = ref<boolean>(false);
+const selectedPrice = ref<MarketPrice | null>(null);
+let chart: Chart | null = null;
 
-const newPrice = ref({
+const newPrice = ref<{
+  price: string;
+  dateChecked: string;
+}>({
   price: "",
   dateChecked: new Date().toISOString().substr(0, 10),
 });
@@ -149,21 +153,25 @@ const currentPrice = computed(() => {
 const priceDifference = computed(() => {
   if (priceHistory.value.length < 2) return null;
 
-  const latest = priceHistory.value[0].price;
-  const previous = priceHistory.value[1].price;
+  const latest = priceHistory.value[0];
+  const previous = priceHistory.value[1];
 
-  return latest - previous;
+  if (!latest || !previous) return null;
+
+  return latest.price - previous.price;
 });
 
 const priceChangePercent = computed(() => {
   if (!priceDifference.value || priceHistory.value.length < 2) return "0";
 
-  const previous = priceHistory.value[1].price;
-  return ((priceDifference.value / previous) * 100).toFixed(1);
+  const previous = priceHistory.value[1];
+  if (!previous) return "0";
+
+  return ((priceDifference.value / previous.price) * 100).toFixed(1);
 });
 
 // Functions
-function formatDate(dateString) {
+function formatDate(dateString: string | undefined): string {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
@@ -177,7 +185,7 @@ async function loadPlantData() {
   loading.value = true;
   try {
     // Load plant data
-    const plantResponse = await fetch(`/api/plants/${plantId}?userId=${auth.user.value.id}`);
+    const plantResponse = await fetch(`/api/plants/${plantId}?userId=${auth.user.value?.id}`);
     if (!plantResponse.ok) throw new Error("Failed to load plant");
     plant.value = await plantResponse.json();
 
@@ -186,7 +194,10 @@ async function loadPlantData() {
     if (!pricesResponse.ok) throw new Error("Failed to load price history");
 
     const data = await pricesResponse.json();
-    priceHistory.value = data.sort((a, b) => new Date(b.dateChecked) - new Date(a.dateChecked));
+    priceHistory.value = (data as MarketPrice[]).sort(
+      (a: MarketPrice, b: MarketPrice) =>
+        new Date(b.dateChecked || "").getTime() - new Date(a.dateChecked || "").getTime()
+    );
 
     // Render chart after data is loaded
     renderChart();
@@ -205,7 +216,9 @@ function renderChart() {
   if (priceHistory.value.length === 0) return;
 
   // Sort by date for the chart (oldest to newest)
-  const sortedData = [...priceHistory.value].sort((a, b) => new Date(a.dateChecked) - new Date(b.dateChecked));
+  const sortedData = [...priceHistory.value].sort(
+    (a, b) => new Date(a.dateChecked || "").getTime() - new Date(b.dateChecked || "").getTime()
+  );
 
   const chartData = {
     labels: sortedData.map((record) => formatDate(record.dateChecked)),
@@ -234,14 +247,14 @@ function renderChart() {
         y: {
           beginAtZero: true,
           ticks: {
-            callback: (value) => `$${value}`,
+            callback: (value: any) => `$${value}`,
           },
         },
       },
       plugins: {
         tooltip: {
           callbacks: {
-            label: (context) => `Price: $${context.raw.toFixed(2)}`,
+            label: (context: any) => `Price: $${context.raw.toFixed(2)}`,
           },
         },
       },
@@ -285,7 +298,7 @@ async function addNewPrice() {
   }
 }
 
-function confirmDeletePrice(priceRecord) {
+function confirmDeletePrice(priceRecord: MarketPrice) {
   selectedPrice.value = priceRecord;
   deleteDialog.value = true;
 }

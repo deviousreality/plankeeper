@@ -102,27 +102,50 @@
 </template>
 
 <script setup lang="ts">
+import type {Plant} from "~/types/database";
+import type {WeatherInfo} from "~/types/index";
+
 definePageMeta({
   middleware: "auth",
 });
 
+// Type for plant with care schedule data
+type PlantWithCareSchedule = Plant & {
+  species?: string;
+  watering_interval?: number;
+  fertilizing_interval?: number;
+  last_watered?: string;
+  last_fertilized?: string;
+  light_needs?: string;
+  next_task_date?: string;
+};
+
+// Type for dashboard task
+type DashboardTask = {
+  plantId: number;
+  plantName: string;
+  type: string;
+  dueDate: string;
+  date: Date;
+};
+
 const auth = useAuth();
-const plants = ref([]);
+const plants = ref<PlantWithCareSchedule[]>([]);
 const plantsLoading = ref(true);
-const weather = ref(null);
+const weather = ref<WeatherInfo | null>(null);
 const weatherLoading = ref(true);
 
 // Computed for upcoming tasks
-const upcomingTasks = computed(() => {
+const upcomingTasks = computed((): DashboardTask[] => {
   if (!plants.value) return [];
 
-  const tasks = [];
+  const tasks: DashboardTask[] = [];
   const today = new Date();
 
   plants.value.forEach((plant) => {
     if (plant.next_task_date) {
       const nextTask = new Date(plant.next_task_date);
-      const daysUntil = Math.floor((nextTask - today) / (1000 * 60 * 60 * 24));
+      const daysUntil = Math.floor((nextTask.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysUntil <= 7 && daysUntil >= 0) {
         // Determine if it's watering or fertilizing
@@ -149,16 +172,16 @@ const upcomingTasks = computed(() => {
     }
   });
 
-  return tasks.sort((a, b) => a.date - b.date);
+  return tasks.sort((a, b) => a.date.getTime() - b.date.getTime());
 });
 
 // Fetch plants data
-async function fetchPlants() {
+async function fetchPlants(): Promise<void> {
   if (!auth.user.value) return;
 
   plantsLoading.value = true;
   try {
-    plants.value = await $fetch(`/api/plants?userId=${auth.user.value.id}`);
+    plants.value = await $fetch<PlantWithCareSchedule[]>(`/api/plants?userId=${auth.user.value.id}`);
   } catch (error) {
     console.error("Error fetching plants:", error);
   } finally {
@@ -167,13 +190,13 @@ async function fetchPlants() {
 }
 
 // Fetch weather data
-async function fetchWeather() {
+async function fetchWeather(): Promise<void> {
   weatherLoading.value = true;
   try {
     // TODO: Disable weather API for now
     // For demo purposes, using a default city
     // In a real app, you would use geolocation or user preferences
-    // weather.value = await $fetch("/api/weather?city=London");
+    // weather.value = await $fetch<WeatherInfo>("/api/weather?city=London");
 
     // Temporary placeholder
     weather.value = null;

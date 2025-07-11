@@ -47,6 +47,8 @@
 </template>
 
 <script setup lang="ts">
+import type {LocationQueryValue} from "vue-router";
+
 definePageMeta({
   layout: "auth",
   middleware: "guest",
@@ -61,17 +63,26 @@ const password = ref("");
 const confirmPassword = ref("");
 const isLoading = ref(false);
 
+// Helper function to safely get redirect URL
+function getRedirectUrl(redirectQuery: LocationQueryValue | LocationQueryValue[] | undefined): string {
+  if (typeof redirectQuery === "string") {
+    return redirectQuery;
+  }
+  return "/plants";
+}
+
 const rules = {
-  required: (value) => !!value || "Required.",
-  email: (value) => {
+  required: (value: string) => !!value || "Required.",
+  email: (value: string) => {
     const pattern =
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return pattern.test(value) || "Invalid e-mail.";
   },
-  minLength: (value) => (value && value.length >= 6) || "Min 6 characters",
-  passwordMatch: (value) => value === password.value || "Passwords do not match",
+  minLength: (value: string) => (value && value.length >= 6) || "Min 6 characters",
+  passwordMatch: (value: string) => value === password.value || "Passwords do not match",
 };
-async function handleRegister() {
+
+async function handleRegister(): Promise<void> {
   if (!username.value || !password.value || !email.value || password.value !== confirmPassword.value) return;
 
   isLoading.value = true;
@@ -79,7 +90,7 @@ async function handleRegister() {
     const result = await auth.register(username.value, password.value, email.value);
     if (result.success) {
       // Redirect to intended page or default to /plants
-      const redirectTo = route.query.redirect || "/plants";
+      const redirectTo = getRedirectUrl(route.query["redirect"]);
       await navigateTo(redirectTo);
     }
   } finally {

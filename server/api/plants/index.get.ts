@@ -5,7 +5,7 @@ import type {PlantRow} from "~/types/database";
 export default defineEventHandler(async (event) => {
   // In a real app, you'd get the user id from session/token validation
   const query = getQuery(event);
-  const userId = parseInt(query.userId as string);
+  const userId = parseInt(query["userId"] as string);
 
   if (!userId) {
     throw createError({
