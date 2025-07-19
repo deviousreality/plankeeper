@@ -14,16 +14,7 @@
     "noImplicitReturns": true, // Report error when not all code paths in function return a value
     "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statement
     "useUnknownInCatchVariables": true, // Type catch clause variables as 'unknown' instead of 'any'
-    "verbatimModuleSyntax": true, // Enforce explicit type imports and prevent import elision
     "noUncheckedIndexedAccess": true, // Add 'undefined' to a type when accessed using an index
-    "noPropertyAccessFromIndexSignature": true, // Require undeclared properties to be accessed via element access
-    "plugins": [
-      {
-        "name": "@typescript-eslint/eslint-plugin",
-        "rules": {
-          "consistent-type-definitions": ["error", "type"]
-        }
-      }
-    ]
+    "noPropertyAccessFromIndexSignature": true // Require undeclared properties to be accessed via element access
   }
 }
