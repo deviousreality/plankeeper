@@ -81,6 +81,11 @@ const initDb = (): void => {
       light_pref TEXT,
       water_pref TEXT,
       soil_type TEXT,
+      plant_use VARCHAR(50),
+      has_fragrance BOOLEAN DEFAULT 0,
+      fragrance_description TEXT,
+      is_petsafe BOOLEAN DEFAULT 0,
+      plant_zones INTEGER,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at DATE,
       FOREIGN KEY (user_id) REFERENCES users(id),
@@ -89,38 +94,6 @@ const initDb = (): void => {
       FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
     )
   `);
-
-  // Add columns to plants table if they don't exist
-  try {
-    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as { name: string }[];
-    const existingColumns = new Set(plantsColumns.map((col) => col.name));
-
-    // Add each new column if it doesn't exist
-    const newColumns = [
-      { name: 'is_favorite', type: 'BOOLEAN DEFAULT 0' },
-      { name: 'can_sell', type: 'BOOLEAN DEFAULT 0' },
-      { name: 'is_personal', type: 'BOOLEAN DEFAULT 0' },
-      { name: 'common_name', type: 'TEXT' },
-      { name: 'flower_color', type: 'TEXT' },
-      { name: 'variety', type: 'TEXT' },
-      { name: 'light_pref', type: 'TEXT' },
-      { name: 'water_pref', type: 'TEXT' },
-      { name: 'soil_type', type: 'TEXT' },
-      { name: 'family_id', type: 'INTEGER' },
-      { name: 'genus_id', type: 'INTEGER' },
-      { name: 'species_id', type: 'INTEGER' },
-    ];
-
-    for (const column of newColumns) {
-      if (!existingColumns.has(column.name)) {
-        db.exec(`ALTER TABLE plants ADD COLUMN ${column.name} ${column.type}`);
-        console.log(`Added ${column.name} column to plants table`);
-      }
-    }
-  } catch (error) {
-    console.error(`Error checking/adding plant columns: ${error instanceof Error ? error.message : String(error)}`);
-    // Non-critical error, don't throw
-  }
 
   // Plant Species table
   db.exec(`
@@ -246,6 +219,20 @@ const initDb = (): void => {
     )
   `);
 
+  // Personal Plants table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS personal_plants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      count INTEGER,
+      zero_reason TEXT,
+      container_type VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (plant_id) REFERENCES plants(id)
+    )
+  `);
+
   // Note: Removed duplicate table creation
   // Using plant_species, plant_genus, plant_family, market_price, plant_propagation, and plant_inventory instead
 
@@ -282,6 +269,8 @@ export const plantRowToPlant = (row: PlantRow): Plant => {
     updated_at: row.updated_at,
     can_sell: Boolean(row.can_sell),
     is_personal: Boolean(row.is_personal),
+    has_fragrance: Boolean(row.has_fragrance),
+    is_petsafe: Boolean(row.is_petsafe),
     species_id: row.species_id ?? undefined,
     family_id: row.family_id ?? undefined,
     genus_id: row.genus_id ?? undefined,
@@ -294,6 +283,9 @@ export const plantRowToPlant = (row: PlantRow): Plant => {
     light_pref: row.light_pref ?? undefined,
     water_pref: row.water_pref ?? undefined,
     soil_type: row.soil_type ?? undefined,
+    plant_use: row.plant_use ?? undefined,
+    fragrance_description: row.fragrance_description ?? undefined,
+    plant_zones: row.plant_zones ?? undefined,
   };
 };
 
@@ -322,6 +314,9 @@ export const plantToPlantRow = (plant: Partial<Plant>): Partial<PlantRow> => {
     'light_pref',
     'water_pref',
     'soil_type',
+    'plant_use',
+    'fragrance_description',
+    'plant_zones',
   ];
 
   optionalFields.forEach((field) => {

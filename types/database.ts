@@ -45,6 +45,11 @@ export interface PlantRow {
   light_pref: string | null;
   water_pref: string | null;
   soil_type: string | null;
+  plant_use: string | null;
+  has_fragrance: number; // 0 = false, 1 = true (SQLite boolean)
+  fragrance_description: string | null;
+  is_petsafe: number; // 0 = false, 1 = true (SQLite boolean)
+  plant_zones: number | null;
 }
 
 // Application type (for Vue/frontend with proper booleans)
@@ -69,6 +74,11 @@ export type Plant = {
   light_pref: string | undefined;
   water_pref: string | undefined;
   soil_type: string | undefined;
+  plant_use: string | undefined;
+  has_fragrance: boolean;
+  fragrance_description: string | undefined;
+  is_petsafe: boolean;
+  plant_zones: number | undefined;
 };
 
 // Extended Plant type with taxonomy data (for display)
@@ -186,6 +196,16 @@ export interface PlantInventory {
   updated_at?: string;
 }
 
+export interface PersonalPlant {
+  id: number;
+  plant_id: number;
+  count?: number;
+  zero_reason?: string;
+  container_type?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // =====================================
 // API Response Types
 // =====================================
@@ -213,6 +233,11 @@ export interface PlantFormData {
   light_pref?: string;
   water_pref?: string;
   soil_type?: string;
+  plant_use?: string;
+  has_fragrance?: boolean;
+  fragrance_description?: string;
+  is_petsafe?: boolean;
+  plant_zones?: number;
 }
 
 // =====================================
@@ -225,3 +250,6 @@ export type UpdatePlant = Partial<Omit<Plant, 'id' | 'created_at' | 'updated_at'
 export type CreatePlantFamily = Omit<Family, 'id' | 'created_at' | 'updated_at'>;
 export type CreatePlantGenus = Omit<Genus, 'id' | 'created_at' | 'updated_at'>;
 export type CreatePlantSpecies = Omit<Species, 'id' | 'created_at' | 'updated_at'>;
+
+export type CreatePersonalPlant = Omit<PersonalPlant, 'id' | 'created_at' | 'updated_at'>;
+export type UpdatePersonalPlant = Partial<Omit<PersonalPlant, 'id' | 'created_at' | 'updated_at'>>;
