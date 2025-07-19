@@ -14,8 +14,13 @@
       </v-card-text>
     </v-card>
 
-    <v-data-table :headers="headers" :items="filteredPlants" :loading="loading" class="elevation-1" :search="search">
-      <template #item.priceHistory="{item}">
+    <v-data-table
+      :headers="headers"
+      :items="filteredPlants"
+      :loading="loading"
+      class="elevation-1"
+      :search="search">
+      <template #item.priceHistory="{ item }">
         <v-btn
           color="primary"
           size="small"
@@ -26,7 +31,7 @@
         </v-btn>
       </template>
 
-      <template #item.actions="{item}">
+      <template #item.actions="{ item }">
         <v-btn
           color="primary"
           size="small"
@@ -39,13 +44,20 @@
 
       <template #bottom>
         <div class="text-center pt-2 pb-2">
-          <v-btn color="primary" prepend-icon="mdi-refresh" @click="loadPlants"> Refresh </v-btn>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-refresh"
+            @click="loadPlants">
+            Refresh
+          </v-btn>
         </div>
       </template>
     </v-data-table>
 
     <!-- Add Price Dialog -->
-    <v-dialog v-model="dialog" max-width="500px">
+    <v-dialog
+      v-model="dialog"
+      max-width="500px">
       <v-card>
         <v-card-title class="text-h5"> Add Price Record </v-card-title>
         <v-card-text>
@@ -56,7 +68,7 @@
                   {{ selectedPlant?.name }}
                 </h3>
                 <p class="text-subtitle-1">
-                  {{ selectedPlant?.common_name || "Unknown Species" }}
+                  {{ selectedPlant?.common_name || 'Unknown Species' }}
                 </p>
               </v-col>
               <v-col cols="12">
@@ -70,15 +82,29 @@
                   required />
               </v-col>
               <v-col cols="12">
-                <v-text-field v-model="priceRecord.dateChecked" label="Date Checked" type="date" required />
+                <v-text-field
+                  v-model="priceRecord.dateChecked"
+                  label="Date Checked"
+                  type="date"
+                  required />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="error" variant="text" @click="closeDialog"> Cancel </v-btn>
-          <v-btn color="primary" :loading="saving" @click="savePriceRecord"> Save </v-btn>
+          <v-btn
+            color="error"
+            variant="text"
+            @click="closeDialog">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="saving"
+            @click="savePriceRecord">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -86,10 +112,10 @@
 </template>
 
 <script setup lang="ts">
-import type {Plant, MarketPrice} from "~/types/database";
+import type { Plant, MarketPrice } from '~/types/database';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 // Types for the component
@@ -111,7 +137,7 @@ const auth = useAuth();
 const loading = ref<boolean>(true);
 const saving = ref<boolean>(false);
 const plants = ref<PlantWithPrice[]>([]);
-const search = ref<string>("");
+const search = ref<string>('');
 const dialog = ref<boolean>(false);
 const selectedPlant = ref<PlantDisplay | null>(null);
 
@@ -121,21 +147,21 @@ const priceRecord = ref<PriceRecordForm>({
 });
 
 const headers = [
-  {title: "Name", key: "name"},
-  {title: "Species", key: "common_name"},
-  {title: "Latest Price", key: "latestPrice"},
-  {title: "Last Updated", key: "lastPriceUpdate"},
-  {title: "Price History", key: "priceHistory"},
-  {title: "Actions", key: "actions", sortable: false},
+  { title: 'Name', key: 'name' },
+  { title: 'Species', key: 'common_name' },
+  { title: 'Latest Price', key: 'latestPrice' },
+  { title: 'Last Updated', key: 'lastPriceUpdate' },
+  { title: 'Price History', key: 'priceHistory' },
+  { title: 'Actions', key: 'actions', sortable: false },
 ];
 
 const filteredPlants = computed<PlantDisplay[]>(() => {
   if (!plants.value) return [];
 
   return plants.value.map((plant) => {
-    const latest = plant.latestPrice ? `$${plant.latestPrice.price.toFixed(2)}` : "No data";
+    const latest = plant.latestPrice ? `$${plant.latestPrice.price.toFixed(2)}` : 'No data';
 
-    const lastUpdate = plant.latestPrice ? formatDate(plant.latestPrice.date_checked) : "Never";
+    const lastUpdate = plant.latestPrice ? formatDate(plant.latestPrice.date_checked) : 'Never';
 
     return {
       ...plant,
@@ -146,12 +172,12 @@ const filteredPlants = computed<PlantDisplay[]>(() => {
 });
 
 function formatDate(dateString: string): string {
-  if (!dateString) return "N/A";
+  if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(date);
 }
 
@@ -159,19 +185,19 @@ async function loadPlants(): Promise<void> {
   loading.value = true;
   try {
     if (!auth.user.value?.id) {
-      throw new Error("User not authenticated");
+      throw new Error('User not authenticated');
     }
 
     const response = await fetch(`/api/market-prices?userId=${auth.user.value.id}`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch plants");
+      throw new Error('Failed to fetch plants');
     }
 
     const data = await response.json();
     plants.value = data;
   } catch (err) {
-    console.error("Error loading plants:", err);
+    console.error('Error loading plants:', err);
   } finally {
     loading.value = false;
   }
@@ -199,9 +225,9 @@ async function savePriceRecord(): Promise<void> {
   saving.value = true;
   try {
     const response = await fetch(`/api/market-prices/${selectedPlant.value.id}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         price: Number(priceRecord.value.price),
@@ -210,14 +236,14 @@ async function savePriceRecord(): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to save price record");
+      throw new Error('Failed to save price record');
     }
 
     // Refresh the plant list to show the new price
     await loadPlants();
     closeDialog();
   } catch (err) {
-    console.error("Error saving price record:", err);
+    console.error('Error saving price record:', err);
   } finally {
     saving.value = false;
   }

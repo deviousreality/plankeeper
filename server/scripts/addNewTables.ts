@@ -11,39 +11,39 @@
  * - Updates plants table with all required columns
  * - Ensures proper foreign key relationships and data integrity
  */
-import {db} from "../utils/db";
+import { db } from '../utils/db';
 
-console.log("Starting database setup...");
+console.log('Starting database setup...');
 
 // Enable foreign key constraints
-db.pragma("foreign_keys = ON");
+db.pragma('foreign_keys = ON');
 
 try {
   // Start a transaction for all schema setup
   const setup = db.transaction(() => {
-    console.log("Step 1: Cleaning up any legacy data and tables...");
+    console.log('Step 1: Cleaning up any legacy data and tables...');
 
     // Temporarily disable foreign keys for structural changes
-    db.pragma("foreign_keys = OFF");
+    db.pragma('foreign_keys = OFF');
 
     // Check what tables exist
     const allTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
     const tableNames = allTables.map((t: any) => t.name);
 
     // Handle legacy genius→genus data migration if old tables exist
-    if (tableNames.includes("plant_genius")) {
-      console.log("Found legacy data - migrating to correct taxonomy structure...");
+    if (tableNames.includes('plant_genius')) {
+      console.log('Found legacy data - migrating to correct taxonomy structure...');
 
       // Backup legacy data
-      const geniusData = db.prepare("SELECT * FROM plant_genius").all();
-      const speciesData = tableNames.includes("plant_species") ? db.prepare("SELECT * FROM plant_species").all() : [];
-      const plantsData = tableNames.includes("plants") ? db.prepare("SELECT * FROM plants").all() : [];
+      const geniusData = db.prepare('SELECT * FROM plant_genius').all();
+      const speciesData = tableNames.includes('plant_species') ? db.prepare('SELECT * FROM plant_species').all() : [];
+      const plantsData = tableNames.includes('plants') ? db.prepare('SELECT * FROM plants').all() : [];
 
       // Drop legacy tables to start fresh
-      if (tableNames.includes("plant_genus")) db.exec("DROP TABLE plant_genus");
-      if (tableNames.includes("plant_species")) db.exec("DROP TABLE plant_species");
-      if (tableNames.includes("plant_family")) db.exec("DROP TABLE plant_family");
-      if (tableNames.includes("plant_genius")) db.exec("DROP TABLE plant_genius");
+      if (tableNames.includes('plant_genus')) db.exec('DROP TABLE plant_genus');
+      if (tableNames.includes('plant_species')) db.exec('DROP TABLE plant_species');
+      if (tableNames.includes('plant_family')) db.exec('DROP TABLE plant_family');
+      if (tableNames.includes('plant_genius')) db.exec('DROP TABLE plant_genius');
 
       // Store legacy data for later restoration
       if (geniusData.length > 0 || speciesData.length > 0 || plantsData.length > 0) {
@@ -54,7 +54,7 @@ try {
     }
 
     // Remove any duplicate or incorrectly named tables
-    const duplicateTables = ["species", "family", "market_prices", "propagation", "inventory", "genius"];
+    const duplicateTables = ['species', 'family', 'market_prices', 'propagation', 'inventory', 'genius'];
     for (const tableName of duplicateTables) {
       if (tableNames.includes(tableName)) {
         console.log(`Removing duplicate/legacy table: ${tableName}`);
@@ -63,16 +63,16 @@ try {
     }
 
     // Clean up plants table structure if it exists
-    if (tableNames.includes("plants")) {
-      const plantsColumns = db.prepare("PRAGMA table_info(plants)").all();
+    if (tableNames.includes('plants')) {
+      const plantsColumns = db.prepare('PRAGMA table_info(plants)').all();
       const columnNames = plantsColumns.map((c: any) => c.name);
 
       // If plants table has legacy genius column, recreate it properly
-      if (columnNames.includes("genius")) {
-        console.log("Updating plants table structure...");
-        const plantsData = db.prepare("SELECT * FROM plants").all();
+      if (columnNames.includes('genius')) {
+        console.log('Updating plants table structure...');
+        const plantsData = db.prepare('SELECT * FROM plants').all();
 
-        db.exec("DROP TABLE plants");
+        db.exec('DROP TABLE plants');
 
         // Create plants table with correct structure and foreign key references
         db.exec(`
@@ -147,7 +147,7 @@ try {
       }
     }
 
-    console.log("Step 2: Creating core taxonomy tables with correct hierarchy...");
+    console.log('Step 2: Creating core taxonomy tables with correct hierarchy...');
 
     // Create plant_family table (top level)
     db.exec(`
@@ -184,10 +184,10 @@ try {
       )
     `);
 
-    console.log("Step 3: Creating plants table with complete structure...");
+    console.log('Step 3: Creating plants table with complete structure...');
 
     // Create or update plants table with all required columns and foreign keys
-    if (!tableNames.includes("plants")) {
+    if (!tableNames.includes('plants')) {
       db.exec(`
         CREATE TABLE plants (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -218,22 +218,22 @@ try {
       `);
     } else {
       // Check if plants table needs to be updated from text to foreign key columns
-      const plantsColumns = db.prepare("PRAGMA table_info(plants)").all() as {name: string; type: string}[];
+      const plantsColumns = db.prepare('PRAGMA table_info(plants)').all() as { name: string; type: string }[];
       const existingColumns = new Map(plantsColumns.map((col) => [col.name, col.type]));
 
       // Check if we need to migrate from text columns to foreign key columns OR clean up mixed schema
-      const hasTextSpecies = existingColumns.has("species");
-      const hasTextFamily = existingColumns.has("family");
-      const hasTextGenus = existingColumns.has("genus");
+      const hasTextSpecies = existingColumns.has('species');
+      const hasTextFamily = existingColumns.has('family');
+      const hasTextGenus = existingColumns.has('genus');
 
       if (hasTextSpecies || hasTextFamily || hasTextGenus) {
-        console.log("Converting plants table from text taxonomy to foreign key references...");
+        console.log('Converting plants table from text taxonomy to foreign key references...');
 
         // Backup existing data
-        const existingPlants = db.prepare("SELECT * FROM plants").all();
+        const existingPlants = db.prepare('SELECT * FROM plants').all();
 
         // Drop and recreate with proper structure
-        db.exec("DROP TABLE plants");
+        db.exec('DROP TABLE plants');
 
         db.exec(`
           CREATE TABLE plants (
@@ -304,17 +304,17 @@ try {
       } else {
         // Ensure all other required columns exist
         const requiredColumns = [
-          {name: "can_sell", type: "INTEGER DEFAULT 0"},
-          {name: "is_personal", type: "INTEGER DEFAULT 1"},
-          {name: "common_name", type: "TEXT"},
-          {name: "flower_color", type: "TEXT"},
-          {name: "variety", type: "TEXT"},
-          {name: "light_pref", type: "TEXT"},
-          {name: "water_pref", type: "TEXT"},
-          {name: "soil_type", type: "TEXT"},
-          {name: "species_id", type: "INTEGER"},
-          {name: "family_id", type: "INTEGER"},
-          {name: "genus_id", type: "INTEGER"},
+          { name: 'can_sell', type: 'INTEGER DEFAULT 0' },
+          { name: 'is_personal', type: 'INTEGER DEFAULT 1' },
+          { name: 'common_name', type: 'TEXT' },
+          { name: 'flower_color', type: 'TEXT' },
+          { name: 'variety', type: 'TEXT' },
+          { name: 'light_pref', type: 'TEXT' },
+          { name: 'water_pref', type: 'TEXT' },
+          { name: 'soil_type', type: 'TEXT' },
+          { name: 'species_id', type: 'INTEGER' },
+          { name: 'family_id', type: 'INTEGER' },
+          { name: 'genus_id', type: 'INTEGER' },
         ];
 
         for (const column of requiredColumns) {
@@ -326,7 +326,7 @@ try {
       }
     }
 
-    console.log("Step 4: Creating supporting application tables...");
+    console.log('Step 4: Creating supporting application tables...');
 
     // Create market_price table
     db.exec(`
@@ -385,41 +385,41 @@ try {
     `);
 
     // Re-enable foreign keys
-    db.pragma("foreign_keys = ON");
+    db.pragma('foreign_keys = ON');
 
-    console.log("Step 5: Verifying database integrity...");
+    console.log('Step 5: Verifying database integrity...');
 
     // Check for foreign key violations
     const foreignKeys = db.prepare(`PRAGMA foreign_key_check`).all();
     if (foreignKeys.length > 0) {
-      console.log("Foreign key constraint violations found:");
+      console.log('Foreign key constraint violations found:');
       console.log(foreignKeys);
-      throw new Error("Foreign key constraints are violated");
+      throw new Error('Foreign key constraints are violated');
     }
 
-    console.log("All foreign key constraints are valid!");
+    console.log('All foreign key constraints are valid!');
 
     // Final verification: ensure plants table has clean schema (no mixed old/new columns)
-    const finalPlantsColumns = db.prepare("PRAGMA table_info(plants)").all() as {name: string; type: string}[];
+    const finalPlantsColumns = db.prepare('PRAGMA table_info(plants)').all() as { name: string; type: string }[];
     const finalColumnNames = finalPlantsColumns.map((col) => col.name);
     const hasOldTextColumns =
-      finalColumnNames.includes("species") || finalColumnNames.includes("family") || finalColumnNames.includes("genus");
+      finalColumnNames.includes('species') || finalColumnNames.includes('family') || finalColumnNames.includes('genus');
 
     if (hasOldTextColumns) {
       console.log(
         "Warning: Plants table still has old text columns. Consider running 'npm run fix-plants-schema' to clean up."
       );
     } else {
-      console.log("✓ Plants table has clean foreign key schema");
+      console.log('✓ Plants table has clean foreign key schema');
     }
 
-    console.log("Database setup completed successfully with correct taxonomy structure!");
+    console.log('Database setup completed successfully with correct taxonomy structure!');
   });
 
   // Execute the setup transaction
   setup();
 
-  console.log("PlantKeeper database is ready for use!");
+  console.log('PlantKeeper database is ready for use!');
 } catch (error) {
   console.error(`Database setup failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);

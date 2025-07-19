@@ -2,8 +2,8 @@
  * API endpoint to get propagation records for a specific plant
  * GET /api/plants/[id]/propagation
  */
-import {db, nullToUndefined} from "~/server/utils/db";
-import type {H3Event} from "h3";
+import { db, nullToUndefined } from '~/server/utils/db';
+import type { H3Event } from 'h3';
 
 export default defineEventHandler(async (event: H3Event) => {
   try {
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: "Unauthorized",
+        message: 'Unauthorized',
       });
     }
 
@@ -21,17 +21,17 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!plantId) {
       throw createError({
         statusCode: 400,
-        message: "Plant ID is required",
+        message: 'Plant ID is required',
       });
     }
 
     // Verify user owns the plant
-    const plant = db.prepare("SELECT id FROM plants WHERE id = ? AND user_id = ?").get(plantId, user.id);
+    const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?').get(plantId, user.id);
 
     if (!plant) {
       throw createError({
         statusCode: 404,
-        message: "Plant not found or you do not have permission to access it",
+        message: 'Plant not found or you do not have permission to access it',
       });
     }
 
@@ -66,10 +66,10 @@ export default defineEventHandler(async (event: H3Event) => {
       data: propagations,
     };
   } catch (error) {
-    console.error("Error fetching plant propagation records:", error);
+    console.error('Error fetching plant propagation records:', error);
     throw createError({
       statusCode: 500,
-      message: "Error fetching plant propagation records",
+      message: 'Error fetching plant propagation records',
     });
   }
 });

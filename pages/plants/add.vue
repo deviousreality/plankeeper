@@ -3,20 +3,32 @@
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h3">Add New Plant</h1>
-      <v-btn color="primary" variant="outlined" prepend-icon="mdi-arrow-left" to="/plants"> Back to Plants </v-btn>
+      <v-btn
+        color="primary"
+        variant="outlined"
+        prepend-icon="mdi-arrow-left"
+        to="/plants">
+        Back to Plants
+      </v-btn>
     </div>
 
-    <v-form ref="form" @submit.prevent="savePlant">
+    <v-form
+      ref="form"
+      @submit.prevent="savePlant">
       <v-card>
         <v-card-text>
           <v-row>
             <!-- Left Column - Basic Plant Info -->
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <h2 class="text-h5 mb-4">Plant Details</h2>
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <v-text-field
                 v-model="plant.name"
                 label="Plant Name*"
@@ -25,7 +37,9 @@
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="4" md="2">
+            <v-col
+              cols="4"
+              md="2">
               <v-autocomplete
                 v-model="plant.family_id"
                 autocomplete="off"
@@ -36,7 +50,9 @@
                 item-value="id"
                 clearable />
             </v-col>
-            <v-col cols="4" md="2">
+            <v-col
+              cols="4"
+              md="2">
               <v-autocomplete
                 v-model="plant.genus_id"
                 autocomplete="off"
@@ -52,7 +68,9 @@
                 :disabled="!plant.family_id"
                 clearable />
             </v-col>
-            <v-col cols="4" md="2">
+            <v-col
+              cols="4"
+              md="2">
               <v-autocomplete
                 v-model="plant.species_id"
                 autocomplete="off"
@@ -70,7 +88,9 @@
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <v-text-field
                 v-model="plant.flower_color"
                 label="Flower Color"
@@ -79,7 +99,9 @@
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <v-text-field
                 v-model="plant.image_url"
                 label="Image URL"
@@ -93,10 +115,18 @@
                 auto-grow
                 rows="3" />
 
-              <v-switch v-model="plant.is_favorite" color="warning" label="Add to favorites" prepend-icon="mdi-star" />
+              <v-switch
+                v-model="plant.is_favorite"
+                color="warning"
+                label="Add to favorites"
+                prepend-icon="mdi-star" />
 
-              <v-dialog ref="dialog" v-model="datePickerModal" :close-on-content-click="false" width="auto">
-                <template #activator="{props}">
+              <v-dialog
+                ref="dialog"
+                v-model="datePickerModal"
+                :close-on-content-click="false"
+                width="auto">
+                <template #activator="{ props }">
                   <v-text-field
                     v-model="formattedDate"
                     label="Date Acquired"
@@ -106,7 +136,9 @@
                     clearable
                     @click:clear="plant.acquired_date = ''" />
                 </template>
-                <v-date-picker v-model="plant.acquired_date" @update:model-value="datePickerModal = false" />
+                <v-date-picker
+                  v-model="plant.acquired_date"
+                  @update:model-value="datePickerModal = false" />
               </v-dialog>
             </v-col>
           </v-row>
@@ -116,8 +148,17 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" @click="$router.push('/plants')"> Cancel </v-btn>
-          <v-btn color="success" type="submit" :loading="loading"> Save Plant </v-btn>
+          <v-btn
+            color="primary"
+            @click="$router.push('/plants')">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            type="submit"
+            :loading="loading">
+            Save Plant
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -125,7 +166,7 @@
 </template>
 
 <script lang="ts" setup>
-import type {PlantModel, PlantModelPost} from "~/types";
+import type { Plant } from '~/types/database';
 
 type FamilyOptions = {
   title: string;
@@ -145,8 +186,15 @@ type SpeciesOptions = {
   id: number;
 };
 
+type PlantFormData = Omit<Plant, 'id' | 'user_id' | 'created_at' | 'updated_at'> & {
+  id?: number;
+  user_id?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 const router = useRouter();
@@ -168,24 +216,23 @@ const selectedFamilyId = ref<number | undefined>(undefined);
 const selectedGenusId = ref<number | undefined>(undefined);
 
 // Plant data - using the correct Plant type from database
-const plant = ref<PlantModel>({
-  name: "",
+const plant = ref<PlantFormData>({
+  name: '',
+  species_id: undefined,
   family_id: undefined,
   genus_id: undefined,
-  species_id: undefined,
-  flower_color: undefined,
+  acquired_date: new Date().toISOString().split('T')[0],
   image_url: undefined,
   notes: undefined,
-  acquired_date: new Date().toISOString().split("T")[0],
   is_favorite: false,
   can_sell: false,
   is_personal: false,
+  common_name: undefined,
+  flower_color: undefined,
+  variety: undefined,
   light_pref: undefined,
   water_pref: undefined,
   soil_type: undefined,
-  common_name: undefined,
-  variety: undefined,
-  updated_at: new Date().toISOString().split("T")[0],
 });
 
 // Form options
@@ -193,7 +240,7 @@ const plant = ref<PlantModel>({
 
 // Format date for display
 const formattedDate = computed(() => {
-  if (!plant.value.acquired_date) return "";
+  if (!plant.value.acquired_date) return '';
 
   return new Date(plant.value.acquired_date).toLocaleDateString();
 });
@@ -201,7 +248,7 @@ const formattedDate = computed(() => {
 // Fetch initial family data
 async function fetchFamilies(): Promise<FamilyOptions[] | void> {
   try {
-    const response = await $fetch("/api/taxonomy");
+    const response = await $fetch('/api/taxonomy');
 
     // Transform families for v-autocomplete
     familyOptions.value = response.families.map((family) => ({
@@ -210,7 +257,7 @@ async function fetchFamilies(): Promise<FamilyOptions[] | void> {
       id: family.id,
     }));
   } catch (error) {
-    console.error("Error fetching families:", error);
+    console.error('Error fetching families:', error);
   }
 }
 
@@ -230,7 +277,7 @@ async function fetchGenera(familyId: number): Promise<GenusOptions[] | void> {
     speciesOptions.value = [];
     plant.value.species_id = undefined;
   } catch (error) {
-    console.error("Error fetching genera:", error);
+    console.error('Error fetching genera:', error);
     genusOptions.value = [];
   }
 }
@@ -247,7 +294,7 @@ async function fetchSpecies(familyId: number, genusId: number): Promise<SpeciesO
       id: species.id,
     }));
   } catch (error) {
-    console.error("Error fetching species:", error);
+    console.error('Error fetching species:', error);
     speciesOptions.value = [];
   }
 }
@@ -308,12 +355,12 @@ async function savePlant(): Promise<void> {
 
   try {
     // Check authentication first
-    console.log("Auth user:", auth.user.value);
-    console.log("Auth user ID:", auth.user.value?.id);
+    console.log('Auth user:', auth.user.value);
+    console.log('Auth user ID:', auth.user.value?.id);
 
     if (!auth.user.value?.id) {
-      alert("You must be logged in to add a plant.");
-      router.push("/login");
+      alert('You must be logged in to add a plant.');
+      router.push('/login');
       return;
     }
 
@@ -336,30 +383,30 @@ async function savePlant(): Promise<void> {
       light_pref: plant.value.light_pref,
       water_pref: plant.value.water_pref,
       soil_type: plant.value.soil_type,
-    } as PlantModelPost;
+    } as PlantFormData;
 
-    console.log("Plant form data:", JSON.stringify(plant.value, null, 2));
-    console.log("About to send plant data:", JSON.stringify(plantData, null, 2));
+    console.log('Plant form data:', JSON.stringify(plant.value, null, 2));
+    console.log('About to send plant data:', JSON.stringify(plantData, null, 2));
 
     // Save the plant
-    const response = await $fetch("/api/plants", {
-      method: "POST",
+    const response = await $fetch('/api/plants', {
+      method: 'POST',
       body: plantData,
     });
 
-    console.log("Received response:", response);
+    console.log('Received response:', response);
 
     // Redirect to the new plant's page
     const plantId = response?.id;
     if (!plantId) {
-      console.error("No plant ID in response:", response);
-      throw new Error("No plant ID returned from server");
+      console.error('No plant ID in response:', response);
+      throw new Error('No plant ID returned from server');
     }
 
     router.push(`/plants/${plantId}`);
   } catch (error) {
-    console.error("Error saving plant:", error);
-    alert("Failed to save plant. Please try again.");
+    console.error('Error saving plant:', error);
+    alert('Failed to save plant. Please try again.');
   } finally {
     loading.value = false;
   }

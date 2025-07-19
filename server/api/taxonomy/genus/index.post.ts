@@ -1,14 +1,14 @@
 // server/api/taxonomy/genus/index.post.ts
-import {db} from "~/server/utils/db";
+import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
 
-    if (!body.name || typeof body.name !== "string") {
+    if (!body.name || typeof body.name !== 'string') {
       throw createError({
         statusCode: 400,
-        message: "Genus name is required",
+        message: 'Genus name is required',
       });
     }
 
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     if (!familyId) {
       throw createError({
         statusCode: 400,
-        message: "Family ID is required",
+        message: 'Family ID is required',
       });
     }
 
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     if (!familyExists) {
       throw createError({
         statusCode: 400,
-        message: "Referenced family does not exist",
+        message: 'Referenced family does not exist',
       });
     }
 
@@ -52,10 +52,10 @@ export default defineEventHandler(async (event) => {
       familyId,
     };
   } catch (error) {
-    console.error("Error creating genus:", error);
+    console.error('Error creating genus:', error);
     throw createError({
       statusCode: 500,
-      message: "Server error creating genus",
+      message: 'Server error creating genus',
     });
   }
 });

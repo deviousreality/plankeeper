@@ -10,14 +10,14 @@
  */
 export function formatDate(dateStr?: string, options?: Intl.DateTimeFormatOptions): string {
   if (!dateStr) return 'N/A';
-  
+
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    ...options
+    ...options,
   };
-  
+
   try {
     const date = new Date(dateStr);
     return new Intl.DateTimeFormat('en-US', defaultOptions).format(date);
@@ -34,7 +34,7 @@ export function formatDate(dateStr?: string, options?: Intl.DateTimeFormatOption
  */
 export function formatRelativeTime(dateStr?: string): string {
   if (!dateStr) return 'N/A';
-  
+
   try {
     const date = new Date(dateStr);
     const now = new Date();
@@ -43,7 +43,7 @@ export function formatRelativeTime(dateStr?: string): string {
     const diffMins = Math.floor(diffSecs / 60);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffSecs < 60) {
       return 'just now';
     } else if (diffMins < 60) {

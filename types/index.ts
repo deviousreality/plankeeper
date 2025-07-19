@@ -5,8 +5,8 @@
  * Place shared types here to avoid duplication and ensure consistency.
  */
 
-export * from "./plant-models";
-export * from "./database";
+export * from './plant-models';
+export * from './database';
 
 /**
  * Common API response types
@@ -121,7 +121,7 @@ export type PlantInventory = {
 /**
  * Plant care related types
  */
-export type CareAction = "watering" | "fertilizing" | "repotting" | "pruning" | "other";
+export type CareAction = 'watering' | 'fertilizing' | 'repotting' | 'pruning' | 'other';
 
 export type CareEvent = {
   id: number;
@@ -151,9 +151,9 @@ export type PlantListItem = {
 /**
  * UI related types
  */
-export type ThemeMode = "light" | "dark" | "system";
+export type ThemeMode = 'light' | 'dark' | 'system';
 
-export type AlertType = "success" | "info" | "warning" | "error";
+export type AlertType = 'success' | 'info' | 'warning' | 'error';
 
 export type Alert = {
   type: AlertType;

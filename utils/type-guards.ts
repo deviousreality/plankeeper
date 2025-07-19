@@ -1,6 +1,6 @@
 /**
  * Type checking utilities for the PlantKeeper application
- * 
+ *
  * This module provides utility functions for type checking and validation
  * throughout the application.
  */
@@ -28,7 +28,7 @@ export const isDateString = (value: unknown): value is string => {
   if (typeof value !== 'string') {
     return false;
   }
-  
+
   const date = new Date(value);
   return !isNaN(date.getTime());
 };
@@ -49,7 +49,7 @@ export const ensureString = (value: unknown, defaultValue = ''): string => {
   if (value === null || value === undefined) {
     return defaultValue;
   }
-  
+
   return String(value);
 };
 
@@ -60,7 +60,7 @@ export const ensureNumber = (value: unknown, defaultValue = 0): number => {
   if (isNumeric(value)) {
     return Number(value);
   }
-  
+
   return defaultValue;
 };
 
@@ -71,7 +71,7 @@ export const ensureBoolean = (value: unknown, defaultValue = false): boolean => 
   if (typeof value === 'boolean') {
     return value;
   }
-  
+
   if (typeof value === 'string') {
     const lowercased = value.toLowerCase();
     if (lowercased === 'true' || lowercased === '1' || lowercased === 'yes') {
@@ -81,10 +81,10 @@ export const ensureBoolean = (value: unknown, defaultValue = false): boolean => 
       return false;
     }
   }
-  
+
   if (typeof value === 'number') {
     return value !== 0;
   }
-  
+
   return defaultValue;
 };

@@ -8,33 +8,29 @@ export default defineNuxtConfig({
     shim: false,
     tsConfig: {
       compilerOptions: {
-        verbatimModuleSyntax: true
-      }
-    }
+        verbatimModuleSyntax: true,
+      },
+    },
   },
   css: ['vuetify/styles'],
   build: {
     transpile: ['vuetify'],
   },
-  modules: [
-    '@nuxtjs/color-mode'
-  ],
+  modules: ['@nuxtjs/color-mode'],
   colorMode: {
     preference: 'system', // Default to system preference
-    dataValue: 'theme',   // activate data-theme in <html> tag
+    dataValue: 'theme', // activate data-theme in <html> tag
     classSuffix: '',
   },
   app: {
     head: {
       title: 'PlantKeeper',
-      meta: [
-        { name: 'description', content: 'Keep track of your plants with PlantKeeper' }
-      ],
-    }
+      meta: [{ name: 'description', content: 'Keep track of your plants with PlantKeeper' }],
+    },
   },
   runtimeConfig: {
     public: {
       weatherApiKey: process.env.WEATHER_API_KEY || 'your-weather-api-key', // Use environment variable in production
-    }
-  }
-})
+    },
+  },
+});

@@ -1,14 +1,14 @@
 // server/api/plants/[id].put.ts
-import {db, undefinedToNull} from "~/server/utils/db";
+import { db, undefinedToNull } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
-  const plantId = getRouterParam(event, "id");
+  const plantId = getRouterParam(event, 'id');
   const body = await readBody(event);
 
   if (!plantId || !body.name || !body.user_id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Invalid input. Plant ID, name, and user ID are required.",
+      statusMessage: 'Invalid input. Plant ID, name, and user ID are required.',
     });
   }
 
@@ -98,12 +98,12 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    return {success: true, id: plantId};
+    return { success: true, id: plantId };
   } catch (error) {
-    console.error("Error updating plant:", error);
+    console.error('Error updating plant:', error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Failed to update plant information.",
+      statusMessage: 'Failed to update plant information.',
     });
   }
 });

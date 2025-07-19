@@ -1,6 +1,6 @@
 // server/api/plants/[id].get.ts
-import {db, plantRowToPlant, nullToUndefined} from "~/server/utils/db";
-import type {PlantRow} from "~/types/database";
+import { db, plantRowToPlant, nullToUndefined } from '~/server/utils/db';
+import type { PlantRow } from '~/types/database';
 
 export default defineEventHandler(async (event) => {
   const id = event.context.params?.id;
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: "Plant ID is required",
+      message: 'Plant ID is required',
     });
   }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     if (!plantRow) {
       throw createError({
         statusCode: 404,
-        message: "Plant not found",
+        message: 'Plant not found',
       });
     }
 
@@ -67,10 +67,10 @@ export default defineEventHandler(async (event) => {
       careTips,
     };
   } catch (error) {
-    console.error("Error fetching plant details:", error);
+    console.error('Error fetching plant details:', error);
     throw createError({
       statusCode: 500,
-      message: "Server error fetching plant details",
+      message: 'Server error fetching plant details',
     });
   }
 });

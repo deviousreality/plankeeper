@@ -13,7 +13,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       });
     }
 
@@ -31,22 +31,22 @@ export default defineEventHandler(async (event: H3Event) => {
       JOIN plants p ON pp.plant_id = p.id
       WHERE p.user_id = ?
     `;
-    
+
     // Add plant filter if specified
     const params = [user.id];
     if (plantId) {
       sqlQuery += ` AND pp.plant_id = ?`;
       params.push(plantId);
     }
-    
+
     // Add order
     sqlQuery += ` ORDER BY pp.prop_date DESC`;
-    
+
     // Execute query
     const propagations = db.prepare(sqlQuery).all(...params);
 
     // Map DB column names to camelCase for frontend
-    const mappedPropagations = propagations.map(p => {
+    const mappedPropagations = propagations.map((p) => {
       const record = p as Record<string, any>;
       return {
         id: record.id,
@@ -61,19 +61,19 @@ export default defineEventHandler(async (event: H3Event) => {
         currentCount: record.current_count,
         transplantDate: record.transplant_date,
         notes: record.notes,
-        zeroCoutNotes: record.zero_cout_notes
+        zeroCoutNotes: record.zero_cout_notes,
       };
     });
 
     return {
       success: true,
-      data: mappedPropagations
+      data: mappedPropagations,
     };
   } catch (error) {
     const apiError = handleError(error, 'Error fetching propagation records');
     throw createError({
       statusCode: apiError.statusCode,
-      message: apiError.message
+      message: apiError.message,
     });
   }
 });

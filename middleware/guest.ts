@@ -4,6 +4,6 @@ export default defineNuxtRouteMiddleware(() => {
 
   // If user is authenticated, redirect to plants page
   if (auth.isAuthenticated.value) {
-    return navigateTo("/plants");
+    return navigateTo('/plants');
   }
 });

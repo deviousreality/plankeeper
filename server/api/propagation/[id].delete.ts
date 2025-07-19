@@ -12,7 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       });
     }
 
@@ -21,22 +21,26 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!id) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation ID is required'
+        message: 'Propagation ID is required',
       });
     }
 
     // Verify propagation record exists and user owns the plant
-    const existingPropagation = db.prepare(`
+    const existingPropagation = db
+      .prepare(
+        `
       SELECT pp.id
       FROM plant_propagation pp
       JOIN plants p ON pp.plant_id = p.id
       WHERE pp.id = ? AND p.user_id = ?
-    `).get(id, user.id);
+    `
+      )
+      .get(id, user.id);
 
     if (!existingPropagation) {
       throw createError({
         statusCode: 404,
-        message: 'Propagation record not found or you do not have permission to delete it'
+        message: 'Propagation record not found or you do not have permission to delete it',
       });
     }
 
@@ -45,13 +49,13 @@ export default defineEventHandler(async (event: H3Event) => {
 
     return {
       success: true,
-      message: 'Propagation record deleted successfully'
+      message: 'Propagation record deleted successfully',
     };
   } catch (error) {
     console.error('Error deleting propagation record:', error);
     throw createError({
       statusCode: 500,
-      message: 'Error deleting propagation record'
+      message: 'Error deleting propagation record',
     });
   }
 });

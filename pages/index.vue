@@ -5,10 +5,17 @@
 
     <v-row>
       <!-- Weather Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4">
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="info" class="me-2"> mdi-weather-partly-cloudy </v-icon>
+            <v-icon
+              color="info"
+              class="me-2">
+              mdi-weather-partly-cloudy
+            </v-icon>
             Weather
           </v-card-title>
           <v-card-text v-if="weatherLoading">
@@ -28,16 +35,27 @@
             </div>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="info" variant="tonal"> Weather data not available </v-alert>
+            <v-alert
+              type="info"
+              variant="tonal">
+              Weather data not available
+            </v-alert>
           </v-card-text>
         </v-card>
       </v-col>
 
       <!-- Plants Overview Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4">
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="success" class="me-2"> mdi-flower </v-icon>
+            <v-icon
+              color="success"
+              class="me-2">
+              mdi-flower
+            </v-icon>
             My Plants
           </v-card-title>
           <v-card-text v-if="plantsLoading">
@@ -53,24 +71,47 @@
                 :subtitle="plant.species || 'Unknown species'"
                 :to="`/plants/${plant.id}`" />
             </v-list>
-            <div v-if="plants.length > 5" class="text-center mt-2">
-              <v-btn color="secondary" variant="text" to="/plants" size="small"> View all plants </v-btn>
+            <div
+              v-if="plants.length > 5"
+              class="text-center mt-2">
+              <v-btn
+                color="secondary"
+                variant="text"
+                to="/plants"
+                size="small">
+                View all plants
+              </v-btn>
             </div>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="info" variant="tonal"> No plants added yet. Add your first plant! </v-alert>
+            <v-alert
+              type="info"
+              variant="tonal">
+              No plants added yet. Add your first plant!
+            </v-alert>
             <div class="text-center mt-4">
-              <v-btn color="primary" to="/plants/add"> Add Plant </v-btn>
+              <v-btn
+                color="primary"
+                to="/plants/add">
+                Add Plant
+              </v-btn>
             </div>
           </v-card-text>
         </v-card>
       </v-col>
 
       <!-- Tasks Card -->
-      <v-col cols="12" sm="6" md="4">
+      <v-col
+        cols="12"
+        sm="6"
+        md="4">
         <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
-            <v-icon color="warning" class="me-2"> mdi-calendar-check </v-icon>
+            <v-icon
+              color="warning"
+              class="me-2">
+              mdi-calendar-check
+            </v-icon>
             Upcoming Tasks
           </v-card-title>
           <v-card-text v-if="plantsLoading">
@@ -86,14 +127,18 @@
                 :to="`/plants/${task.plantId}`">
                 <template #prepend>
                   <v-icon :color="task.type === 'Watering' ? 'info' : 'success'">
-                    {{ task.type === "Watering" ? "mdi-water" : "mdi-fertilizer" }}
+                    {{ task.type === 'Watering' ? 'mdi-water' : 'mdi-fertilizer' }}
                   </v-icon>
                 </template>
               </v-list-item>
             </v-list>
           </v-card-text>
           <v-card-text v-else>
-            <v-alert type="success" variant="tonal"> No upcoming tasks! 🎉 </v-alert>
+            <v-alert
+              type="success"
+              variant="tonal">
+              No upcoming tasks! 🎉
+            </v-alert>
           </v-card-text>
         </v-card>
       </v-col>
@@ -102,11 +147,11 @@
 </template>
 
 <script setup lang="ts">
-import type {Plant} from "~/types/database";
-import type {WeatherInfo} from "~/types/index";
+import type { Plant } from '~/types/database';
+import type { WeatherInfo } from '~/types/index';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 // Type for plant with care schedule data
@@ -152,20 +197,20 @@ const upcomingTasks = computed((): DashboardTask[] => {
         const lastWatered = plant.last_watered ? new Date(plant.last_watered) : null;
         const lastFertilized = plant.last_fertilized ? new Date(plant.last_fertilized) : null;
 
-        let type = "Maintenance";
+        let type = 'Maintenance';
         if (lastWatered && lastFertilized) {
-          type = lastWatered > lastFertilized ? "Fertilizing" : "Watering";
+          type = lastWatered > lastFertilized ? 'Fertilizing' : 'Watering';
         } else if (lastWatered) {
-          type = "Fertilizing";
+          type = 'Fertilizing';
         } else if (lastFertilized) {
-          type = "Watering";
+          type = 'Watering';
         }
 
         tasks.push({
           plantId: plant.id,
           plantName: plant.name,
           type: type,
-          dueDate: daysUntil === 0 ? "Today" : `In ${daysUntil} days`,
+          dueDate: daysUntil === 0 ? 'Today' : `In ${daysUntil} days`,
           date: nextTask,
         });
       }
@@ -183,7 +228,7 @@ async function fetchPlants(): Promise<void> {
   try {
     plants.value = await $fetch<PlantWithCareSchedule[]>(`/api/plants?userId=${auth.user.value.id}`);
   } catch (error) {
-    console.error("Error fetching plants:", error);
+    console.error('Error fetching plants:', error);
   } finally {
     plantsLoading.value = false;
   }
@@ -201,7 +246,7 @@ async function fetchWeather(): Promise<void> {
     // Temporary placeholder
     weather.value = null;
   } catch (error) {
-    console.error("Error fetching weather data:", error);
+    console.error('Error fetching weather data:', error);
   } finally {
     weatherLoading.value = false;
   }

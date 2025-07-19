@@ -1,4 +1,4 @@
-import {db} from "~/server/utils/db";
+import { db } from '~/server/utils/db';
 
 type TaxonomyItem = {
   id: number;
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
 
     // Scenario 1: No IDs provided - return list of families
     if (!familyId && !genusId) {
-      console.log("Fetching all families");
+      console.log('Fetching all families');
       response.families = db
         .prepare(
           `
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
       if (!family) {
         throw createError({
           statusCode: 404,
-          message: "Family not found",
+          message: 'Family not found',
         });
       }
 
@@ -73,12 +73,12 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         WHERE id = ? AND family_id = ?
       `
         )
-        .get(genusId, familyId) as {id: number; name: string; family_id: number} | undefined;
+        .get(genusId, familyId) as { id: number; name: string; family_id: number } | undefined;
 
       if (!genus) {
         throw createError({
           statusCode: 404,
-          message: "Genus not found or does not belong to specified family",
+          message: 'Genus not found or does not belong to specified family',
         });
       }
 
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         .all(genusId) as TaxonomyItem[];
 
       response.family = family;
-      response.genus = {id: genus.id, name: genus.name};
+      response.genus = { id: genus.id, name: genus.name };
       response.species = species;
 
       return response;
@@ -119,7 +119,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
       if (!family) {
         throw createError({
           statusCode: 404,
-          message: "Family not found",
+          message: 'Family not found',
         });
       }
 
@@ -144,18 +144,18 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
     // If we get here, only genusId was provided (invalid scenario)
     throw createError({
       statusCode: 400,
-      message: "Invalid query parameters. Provide familyId alone, or familyId with genusId, or no parameters.",
+      message: 'Invalid query parameters. Provide familyId alone, or familyId with genusId, or no parameters.',
     });
   } catch (error) {
-    console.error("Error fetching taxonomy data:", error);
+    console.error('Error fetching taxonomy data:', error);
 
-    if (error && typeof error === "object" && "statusCode" in error) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error; // Re-throw createError errors
     }
 
     throw createError({
       statusCode: 500,
-      message: "Server error fetching taxonomy data",
+      message: 'Server error fetching taxonomy data',
     });
   }
 });

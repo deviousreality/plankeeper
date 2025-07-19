@@ -2,8 +2,8 @@
 import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
-  const id = parseInt(event.context.params.id);
-  
+  const id = parseInt(event.context.params?.['id'] as string);
+
   if (!id) {
     throw createError({
       statusCode: 400,
@@ -13,30 +13,55 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event);
-    
+
     if (!body.name || typeof body.name !== 'string') {
       throw createError({
         statusCode: 400,
         message: 'Species name is required',
       });
     }
-    
-    const result = db.prepare(`
+
+    const genusId = body.genusId ? parseInt(body.genusId) : null;
+
+    if (genusId) {
+      // Verify genus exists
+      const genusExists = db
+        .prepare(
+          `
+        SELECT 1 FROM plant_genus WHERE id = ?
+      `
+        )
+        .get(genusId);
+
+      if (!genusExists) {
+        throw createError({
+          statusCode: 400,
+          message: 'Referenced genus does not exist',
+        });
+      }
+    }
+
+    const result = db
+      .prepare(
+        `
       UPDATE plant_species 
-      SET name = ?
+      SET name = ?, genus_id = ?
       WHERE id = ?
-    `).run(body.name.trim(), id);
-    
+    `
+      )
+      .run(body.name.trim(), genusId, id);
+
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
         message: 'Species not found',
       });
     }
-    
+
     return {
       id,
       name: body.name.trim(),
+      genusId,
     };
   } catch (error) {
     console.error(`Error updating species ${id}:`, error);

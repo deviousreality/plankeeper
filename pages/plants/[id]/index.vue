@@ -2,35 +2,60 @@
 <template>
   <div>
     <v-row v-if="loading">
-      <v-col cols="12" class="text-center">
+      <v-col
+        cols="12"
+        class="text-center">
         <v-progress-circular indeterminate />
         <div class="mt-3">Loading plant details...</div>
       </v-col>
     </v-row>
 
-    <div v-else-if="error" class="text-center pa-5">
-      <v-alert type="error" title="Error Loading Plant">
+    <div
+      v-else-if="error"
+      class="text-center pa-5">
+      <v-alert
+        type="error"
+        title="Error Loading Plant">
         {{ error }}
       </v-alert>
-      <v-btn class="mt-4" color="primary" to="/plants"> Back to Plants </v-btn>
+      <v-btn
+        class="mt-4"
+        color="primary"
+        to="/plants">
+        Back to Plants
+      </v-btn>
     </div>
 
     <template v-else>
       <!-- Back button and actions bar -->
       <div class="d-flex justify-space-between align-center mb-6">
-        <v-btn color="primary" variant="outlined" prepend-icon="mdi-arrow-left" to="/plants"> Back to Plants </v-btn>
+        <v-btn
+          color="primary"
+          variant="outlined"
+          prepend-icon="mdi-arrow-left"
+          to="/plants">
+          Back to Plants
+        </v-btn>
         <div>
-          <v-btn color="warning" class="me-2" @click="toggleFavorite">
+          <v-btn
+            color="warning"
+            class="me-2"
+            @click="toggleFavorite">
             <v-icon>
-              {{ plant?.is_favorite ? "mdi-star" : "mdi-star-outline" }}
+              {{ plant?.is_favorite ? 'mdi-star' : 'mdi-star-outline' }}
             </v-icon>
-            {{ plant?.is_favorite ? "Favorite" : "Add to Favorites" }}
+            {{ plant?.is_favorite ? 'Favorite' : 'Add to Favorites' }}
           </v-btn>
-          <v-btn color="primary" class="me-2" :to="`/plants/${plant?.id}/edit`">
+          <v-btn
+            color="primary"
+            class="me-2"
+            :to="`/plants/${plant?.id}/edit`">
             <v-icon>mdi-pencil</v-icon>
             Edit
           </v-btn>
-          <v-btn color="error" @click="confirmDelete = true">
+          <v-btn
+            color="error"
+            @click="confirmDelete = true">
             <v-icon>mdi-delete</v-icon>
             Delete
           </v-btn>
@@ -39,12 +64,22 @@
 
       <v-row>
         <!-- Plant info -->
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6">
           <v-card class="mb-4">
-            <v-img :src="plant?.image_url || '/images/default-plant.jpg'" height="300" cover class="align-end">
+            <v-img
+              :src="plant?.image_url || '/images/default-plant.jpg'"
+              height="300"
+              cover
+              class="align-end">
               <template #placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-icon size="64" color="grey"> mdi-flower </v-icon>
+                  <v-icon
+                    size="64"
+                    color="grey">
+                    mdi-flower
+                  </v-icon>
                 </div>
               </template>
             </v-img>
@@ -61,7 +96,7 @@
                   </template>
                   <v-list-item-title>Species</v-list-item-title>
                   <v-list-item-subtitle>
-                    {{ plant?.species_id ? `Species ID: ${plant.species_id}` : "Unknown" }}
+                    {{ plant?.species_id ? `Species ID: ${plant.species_id}` : 'Unknown' }}
                   </v-list-item-subtitle>
                 </v-list-item>
 
@@ -71,7 +106,7 @@
                   </template>
                   <v-list-item-title>Acquired</v-list-item-title>
                   <v-list-item-subtitle>
-                    {{ plant?.acquired_date ? formatDate(plant.acquired_date) : "Unknown" }}
+                    {{ plant?.acquired_date ? formatDate(plant.acquired_date) : 'Unknown' }}
                   </v-list-item-subtitle>
                 </v-list-item>
 
@@ -108,11 +143,13 @@
                 -->
               </v-list>
 
-              <v-expansion-panels variant="accordion" class="mt-4">
+              <v-expansion-panels
+                variant="accordion"
+                class="mt-4">
                 <v-expansion-panel title="Notes">
                   <template #text>
                     <div class="py-2">
-                      {{ plant?.notes || "No notes yet." }}
+                      {{ plant?.notes || 'No notes yet.' }}
                     </div>
                   </template>
                 </v-expansion-panel>
@@ -122,7 +159,9 @@
         </v-col>
 
         <!-- Care history and actions -->
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6">
           <!-- Propagation widget -->
           <!-- TODO: Implement propagation API later
           <PropagationWidget :plant-id="plant?.id || 0" class="mb-4" @propagation-added="refreshPlantData" />
@@ -208,20 +247,34 @@
     </template>
 
     <!-- Delete confirmation dialog -->
-    <v-dialog v-model="confirmDelete" max-width="500px">
+    <v-dialog
+      v-model="confirmDelete"
+      max-width="500px">
       <v-card>
         <v-card-title class="text-h5"> Delete Plant </v-card-title>
         <v-card-text> Are you sure you want to delete {{ plant?.name }}? This action cannot be undone. </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" variant="text" @click="confirmDelete = false"> Cancel </v-btn>
-          <v-btn color="error" :loading="deleteLoading" @click="deletePlant"> Delete </v-btn>
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="confirmDelete = false">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deleteLoading"
+            @click="deletePlant">
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Care action dialog -->
-    <v-dialog v-model="showCareDialog" max-width="500px">
+    <v-dialog
+      v-model="showCareDialog"
+      max-width="500px">
       <v-card>
         <v-card-title>{{ formatCareAction(currentCareAction) }}</v-card-title>
         <v-card-text>
@@ -238,8 +291,18 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" variant="text" @click="showCareDialog = false"> Cancel </v-btn>
-          <v-btn color="success" :loading="careActionLoading === 'saving'" @click="saveCareAction"> Save </v-btn>
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="showCareDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            :loading="careActionLoading === 'saving'"
+            @click="saveCareAction">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -247,15 +310,15 @@
 </template>
 
 <script setup lang="ts">
-import type {Plant} from "~/types";
+import type { Plant } from '~/types/database';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 const route = useRoute();
 const router = useRouter();
-const plantId = route.params.id;
+const plantId = route.params['id'] as string;
 
 // Data
 const plant = ref<Plant | undefined>(undefined);
@@ -267,8 +330,8 @@ const error = ref<string | null>(null);
 const confirmDelete = ref(false);
 const deleteLoading = ref(false);
 const showCareDialog = ref(false);
-const currentCareAction = ref("");
-const careNotes = ref("");
+const currentCareAction = ref('');
+const careNotes = ref('');
 const careActionLoading = ref<string | null>(null);
 
 // Fetch plant data
@@ -286,8 +349,8 @@ async function fetchPlantData(): Promise<void> {
     // If there's a species_id, we might want to fetch additional species data
     // For now, we'll use the basic plant data
   } catch (e) {
-    console.error("Error fetching plant:", e);
-    error.value = "Failed to load plant data. Please try again.";
+    console.error('Error fetching plant:', e);
+    error.value = 'Failed to load plant data. Please try again.';
   } finally {
     loading.value = false;
   }
@@ -296,17 +359,17 @@ async function fetchPlantData(): Promise<void> {
 // Record care action
 function recordCareAction(action: string): void {
   currentCareAction.value = action;
-  careNotes.value = "";
+  careNotes.value = '';
   showCareDialog.value = true;
 }
 
 // Save care action to database
 async function saveCareAction(): Promise<void> {
-  careActionLoading.value = "saving";
+  careActionLoading.value = 'saving';
 
   try {
     await $fetch(`/api/plants/${plantId}/care`, {
-      method: "POST",
+      method: 'POST',
       body: {
         actionType: currentCareAction.value,
         notes: careNotes.value,
@@ -334,8 +397,8 @@ async function saveCareAction(): Promise<void> {
 
     showCareDialog.value = false;
   } catch (e) {
-    console.error("Error recording care action:", e);
-    alert("Failed to record care action. Please try again.");
+    console.error('Error recording care action:', e);
+    alert('Failed to record care action. Please try again.');
   } finally {
     careActionLoading.value = null;
   }
@@ -347,14 +410,14 @@ async function deletePlant(): Promise<void> {
 
   try {
     await $fetch(`/api/plants/${plantId}`, {
-      method: "DELETE",
+      method: 'DELETE',
     });
 
     confirmDelete.value = false;
-    router.push("/plants");
+    router.push('/plants');
   } catch (e) {
-    console.error("Error deleting plant:", e);
-    alert("Failed to delete plant. Please try again.");
+    console.error('Error deleting plant:', e);
+    alert('Failed to delete plant. Please try again.');
   } finally {
     deleteLoading.value = false;
   }
@@ -373,25 +436,25 @@ async function toggleFavorite(): Promise<void> {
 
     // Save to server
     await $fetch(`/api/plants/${plantId}`, {
-      method: "PUT",
+      method: 'PUT',
       body: updatedPlant,
     });
 
     // Update local state
     plant.value.is_favorite = !plant.value.is_favorite;
   } catch (e) {
-    console.error("Error updating favorite status:", e);
-    alert("Failed to update favorite status. Please try again.");
+    console.error('Error updating favorite status:', e);
+    alert('Failed to update favorite status. Please try again.');
   }
 }
 
 // Helper functions
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(date);
 }
 

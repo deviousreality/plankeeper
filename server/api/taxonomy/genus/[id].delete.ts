@@ -1,5 +1,5 @@
 // server/api/taxonomy/genus/[id].delete.ts
-import {db} from "~/server/utils/db";
+import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params.id);
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: "Genus ID is required",
+      message: 'Genus ID is required',
     });
   }
 
@@ -25,19 +25,19 @@ export default defineEventHandler(async (event) => {
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
-        message: "Genus not found",
+        message: 'Genus not found',
       });
     }
 
     return {
       success: true,
-      message: "Genus deleted successfully",
+      message: 'Genus deleted successfully',
     };
   } catch (error) {
-    console.error("Error deleting genus:", error);
+    console.error('Error deleting genus:', error);
     throw createError({
       statusCode: 500,
-      message: "Server error deleting genus",
+      message: 'Server error deleting genus',
     });
   }
 });

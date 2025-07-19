@@ -1,14 +1,14 @@
 // server/api/plants/[id]/care.post.ts
-import {db, undefinedToNull} from "../../../utils/db";
+import { db, undefinedToNull } from '../../../utils/db';
 
 export default defineEventHandler(async (event) => {
-  const plantId = getRouterParam(event, "id");
+  const plantId = getRouterParam(event, 'id');
   const body = await readBody(event);
 
   if (!plantId || !body.actionType) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Plant ID and action type are required.",
+      statusMessage: 'Plant ID and action type are required.',
     });
   }
 
@@ -31,10 +31,10 @@ export default defineEventHandler(async (event) => {
       .run(logData.plant_id, logData.action_type, logData.notes);
 
     // If it's watering or fertilizing, update the last_watered or last_fertilized dates
-    if (body.actionType === "watering" || body.actionType === "fertilizing") {
-      const today = new Date().toISOString().split("T")[0];
+    if (body.actionType === 'watering' || body.actionType === 'fertilizing') {
+      const today = new Date().toISOString().split('T')[0];
 
-      const fieldToUpdate = body.actionType === "watering" ? "last_watered" : "last_fertilized";
+      const fieldToUpdate = body.actionType === 'watering' ? 'last_watered' : 'last_fertilized';
 
       db.prepare(
         `
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
             SET next_task_date = ?
             WHERE plant_id = ?
           `
-          ).run(nextTaskDate.toISOString().split("T")[0], plantId);
+          ).run(nextTaskDate.toISOString().split('T')[0], plantId);
         }
       }
     }
@@ -102,10 +102,10 @@ export default defineEventHandler(async (event) => {
       id: logResult.lastInsertRowid,
     };
   } catch (error) {
-    console.error("Error recording care action:", error);
+    console.error('Error recording care action:', error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Failed to record care action.",
+      statusMessage: 'Failed to record care action.',
     });
   }
 });

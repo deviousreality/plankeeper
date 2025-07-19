@@ -1,10 +1,10 @@
 // plugins/vuetify.ts
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import { aliases, mdi } from 'vuetify/iconsets/mdi'
-import '@mdi/font/css/materialdesignicons.css'
-import 'vuetify/styles'
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+import { aliases, mdi } from 'vuetify/iconsets/mdi';
+import '@mdi/font/css/materialdesignicons.css';
+import 'vuetify/styles';
 
 export default defineNuxtPlugin((nuxtApp) => {
   const vuetify = createVuetify({
@@ -23,7 +23,7 @@ export default defineNuxtPlugin((nuxtApp) => {
             warning: '#FF9800',
             info: '#2196F3',
             success: '#4CAF50',
-          }
+          },
         },
         dark: {
           dark: true,
@@ -35,8 +35,8 @@ export default defineNuxtPlugin((nuxtApp) => {
             warning: '#FFB74D',
             info: '#64B5F6',
             success: '#81C784',
-          }
-        }
+          },
+        },
       },
     },
     icons: {
@@ -46,7 +46,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         mdi,
       },
     },
-  })
+  });
 
-  nuxtApp.vueApp.use(vuetify)
-})
+  nuxtApp.vueApp.use(vuetify);
+});

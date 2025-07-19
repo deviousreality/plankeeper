@@ -12,7 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       });
     }
 
@@ -21,12 +21,14 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!id) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation ID is required'
+        message: 'Propagation ID is required',
       });
     }
 
     // Fetch propagation record with plant information
-    const propagation = db.prepare(`
+    const propagation = db
+      .prepare(
+        `
       SELECT 
         pp.*,
         p.name as plantName,
@@ -34,12 +36,14 @@ export default defineEventHandler(async (event: H3Event) => {
       FROM plant_propagation pp
       JOIN plants p ON pp.plant_id = p.id
       WHERE pp.id = ? AND p.user_id = ?
-    `).get(id, user.id);
+    `
+      )
+      .get(id, user.id);
 
     if (!propagation) {
       throw createError({
         statusCode: 404,
-        message: 'Propagation record not found'
+        message: 'Propagation record not found',
       });
     }
 
@@ -58,18 +62,18 @@ export default defineEventHandler(async (event: H3Event) => {
       currentCount: record.current_count,
       transplantDate: record.transplant_date,
       notes: record.notes,
-      zeroCoutNotes: record.zero_cout_notes
+      zeroCoutNotes: record.zero_cout_notes,
     };
 
     return {
       success: true,
-      data: mappedPropagation
+      data: mappedPropagation,
     };
   } catch (error) {
     console.error('Error fetching propagation record:', error);
     throw createError({
       statusCode: 500,
-      message: 'Error fetching propagation record'
+      message: 'Error fetching propagation record',
     });
   }
 });

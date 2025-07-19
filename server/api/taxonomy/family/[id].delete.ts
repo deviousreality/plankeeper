@@ -3,7 +3,7 @@ import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params.id);
-  
+
   if (!id) {
     throw createError({
       statusCode: 400,
@@ -13,21 +13,25 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Delete the family record
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       DELETE FROM plant_family
       WHERE id = ?
-    `).run(id);
-    
+    `
+      )
+      .run(id);
+
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
         message: 'Family not found',
       });
     }
-    
+
     return {
       success: true,
-      message: 'Family deleted successfully'
+      message: 'Family deleted successfully',
     };
   } catch (error) {
     console.error(`Error deleting family ${id}:`, error);

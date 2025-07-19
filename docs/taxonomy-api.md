@@ -1,12 +1,15 @@
 # Taxonomy API Endpoint
 
 ## Overview
+
 The taxonomy API endpoint provides flexible querying of plant taxonomy data based on the hierarchical structure: Family → Genus → Species. All responses use a normalized structure for consistent client consumption.
 
 ## Endpoint
+
 `GET /api/taxonomy`
 
 ## Query Parameters
+
 - `familyId` (optional): Integer ID of the plant family
 - `geniusId` (optional): Integer ID of the plant genus
 
@@ -32,7 +35,9 @@ type TaxonomyItem = {
 ## Usage Scenarios
 
 ### 1. Get All Families
+
 **Request:** `GET /api/taxonomy`
+
 ```json
 {
   "families": [
@@ -41,7 +46,7 @@ type TaxonomyItem = {
       "name": "Araceae"
     },
     {
-      "id": 2, 
+      "id": 2,
       "name": "Asparagaceae"
     }
   ],
@@ -51,7 +56,9 @@ type TaxonomyItem = {
 ```
 
 ### 2. Get Family and Its Genera
+
 **Request:** `GET /api/taxonomy?familyId=1`
+
 ```json
 {
   "families": [],
@@ -74,7 +81,9 @@ type TaxonomyItem = {
 ```
 
 ### 3. Get Family, Genus, and Species
+
 **Request:** `GET /api/taxonomy?familyId=1&geniusId=1`
+
 ```json
 {
   "families": [],
@@ -99,8 +108,10 @@ type TaxonomyItem = {
 ## Error Handling
 
 ### Invalid Parameters
+
 **Request:** `GET /api/taxonomy?geniusId=1` (geniusId without familyId)
 **Response:** `400 Bad Request`
+
 ```json
 {
   "statusCode": 400,
@@ -109,8 +120,10 @@ type TaxonomyItem = {
 ```
 
 ### Not Found
+
 **Request:** `GET /api/taxonomy?familyId=999`
 **Response:** `404 Not Found`
+
 ```json
 {
   "statusCode": 404,
@@ -149,6 +162,7 @@ CREATE TABLE plant_species (
 ## Client Usage Examples
 
 ### JavaScript/TypeScript
+
 ```typescript
 // Get all families
 const response = await fetch('/api/taxonomy');
@@ -167,6 +181,7 @@ const data = await response.json();
 ```
 
 ### Handling Optional Fields
+
 ```typescript
 // Check if specific family data is present
 if (data.family) {
@@ -179,7 +194,7 @@ if (data.genus) {
 }
 
 // Arrays are always present (empty when not applicable)
-data.families.forEach(family => {
+data.families.forEach((family) => {
   console.log(`Family: ${family.name}`);
 });
 ```

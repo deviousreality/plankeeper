@@ -3,29 +3,49 @@
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h3">Edit Plant</h1>
-      <v-btn color="primary" variant="outlined" prepend-icon="mdi-arrow-left" :to="`/plants/${plantId}`">
+      <v-btn
+        color="primary"
+        variant="outlined"
+        prepend-icon="mdi-arrow-left"
+        :to="`/plants/${plantId}`">
         Back to Plant
       </v-btn>
     </div>
 
-    <v-card v-if="loading" class="text-center pa-5">
+    <v-card
+      v-if="loading"
+      class="text-center pa-5">
       <v-progress-circular indeterminate />
       <div class="mt-3">Loading plant data...</div>
     </v-card>
 
-    <div v-else-if="error" class="text-center pa-5">
-      <v-alert type="error" title="Error Loading Plant">
+    <div
+      v-else-if="error"
+      class="text-center pa-5">
+      <v-alert
+        type="error"
+        title="Error Loading Plant">
         {{ error }}
       </v-alert>
-      <v-btn class="mt-4" color="primary" to="/plants"> Back to Plants </v-btn>
+      <v-btn
+        class="mt-4"
+        color="primary"
+        to="/plants">
+        Back to Plants
+      </v-btn>
     </div>
 
-    <v-form v-else ref="form" @submit.prevent="savePlant">
+    <v-form
+      v-else
+      ref="form"
+      @submit.prevent="savePlant">
       <v-card>
         <v-card-text>
           <v-row>
             <!-- Left Column - Basic Plant Info -->
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <h2 class="text-h5 mb-4">Plant Details</h2>
 
               <v-text-field
@@ -34,7 +54,10 @@
                 required
                 :rules="[(v) => !!v || 'Name is required']" />
 
-              <v-text-field v-model="plant.species" label="Species" hint="E.g., Monstera deliciosa" />
+              <v-text-field
+                v-model="plant.species"
+                label="Species"
+                hint="E.g., Monstera deliciosa" />
 
               <v-text-field
                 v-model="plant.image_url"
@@ -49,8 +72,12 @@
                 auto-grow
                 rows="3" />
 
-              <v-dialog ref="dialog" v-model="datePickerModal" :close-on-content-click="false" width="auto">
-                <template #activator="{props}">
+              <v-dialog
+                ref="dialog"
+                v-model="datePickerModal"
+                :close-on-content-click="false"
+                width="auto">
+                <template #activator="{ props }">
                   <v-text-field
                     v-model="formattedDate"
                     label="Date Acquired"
@@ -60,12 +87,16 @@
                     clearable
                     @click:clear="clearAcquiredDate()" />
                 </template>
-                <v-date-picker v-model="plant.acquired_date" @update:model-value="datePickerModal = false" />
+                <v-date-picker
+                  v-model="plant.acquired_date"
+                  @update:model-value="datePickerModal = false" />
               </v-dialog>
             </v-col>
 
             <!-- Right Column - Care Details -->
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6">
               <h2 class="text-h5 mb-4">Care Details</h2>
 
               <v-select
@@ -76,7 +107,9 @@
                 hint="Select the light requirement for this plant" />
 
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model.number="plant.watering_interval"
                     label="Watering Interval (days)"
@@ -85,7 +118,9 @@
                     hint="Days between waterings" />
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model.number="plant.fertilizing_interval"
                     label="Fertilizing Interval (days)"
@@ -96,13 +131,15 @@
               </v-row>
 
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-dialog
                     ref="wateringDialog"
                     v-model="wateringDateModal"
                     :close-on-content-click="false"
                     width="auto">
-                    <template #activator="{props}">
+                    <template #activator="{ props }">
                       <v-text-field
                         v-model="lastWateredFormatted"
                         label="Last Watered"
@@ -112,17 +149,21 @@
                         clearable
                         @click:clear="plant.last_watered = null" />
                     </template>
-                    <v-date-picker :model-value="plant.last_watered || null" @update:model-value="updateLastWatered" />
+                    <v-date-picker
+                      :model-value="plant.last_watered || null"
+                      @update:model-value="updateLastWatered" />
                   </v-dialog>
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-dialog
                     ref="fertilizingDialog"
                     v-model="fertilizingDateModal"
                     :close-on-content-click="false"
                     width="auto">
-                    <template #activator="{props}">
+                    <template #activator="{ props }">
                       <v-text-field
                         v-model="lastFertilizedFormatted"
                         label="Last Fertilized"
@@ -146,8 +187,17 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" :to="`/plants/${plantId}`"> Cancel </v-btn>
-          <v-btn color="success" type="submit" :loading="saving"> Save Changes </v-btn>
+          <v-btn
+            color="primary"
+            :to="`/plants/${plantId}`">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            type="submit"
+            :loading="saving">
+            Save Changes
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -155,26 +205,26 @@
 </template>
 
 <script setup lang="ts">
-import type {Plant} from "~/types/database";
-import type {LocationQueryValue} from "vue-router";
+import type { Plant } from '~/types/database';
+import type { LocationQueryValue } from 'vue-router';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 // Helper function to safely get route parameter
 function getRouteParam(param: LocationQueryValue | LocationQueryValue[] | undefined): string {
-  if (typeof param === "string") {
+  if (typeof param === 'string') {
     return param;
   }
-  throw new Error("Invalid route parameter");
+  throw new Error('Invalid route parameter');
 }
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuth();
 const form = ref<any>(null);
-const plantId = getRouteParam(route.params["id"]);
+const plantId = getRouteParam(route.params['id']);
 const loading = ref(true);
 const saving = ref(false);
 const error = ref<string | null>(null);
@@ -198,7 +248,7 @@ type PlantEditData = Plant & {
 const plant = ref<PlantEditData>({
   id: 0,
   user_id: 0,
-  name: "",
+  name: '',
   species_id: undefined,
   family_id: undefined,
   genus_id: undefined,
@@ -206,8 +256,8 @@ const plant = ref<PlantEditData>({
   image_url: undefined,
   notes: undefined,
   is_favorite: false,
-  created_at: "",
-  updated_at: "",
+  created_at: '',
+  updated_at: '',
   can_sell: false,
   is_personal: false,
   common_name: undefined,
@@ -216,8 +266,8 @@ const plant = ref<PlantEditData>({
   light_pref: undefined,
   water_pref: undefined,
   soil_type: undefined,
-  species: "",
-  light_needs: "Medium Light",
+  species: '',
+  light_needs: 'Medium Light',
   watering_interval: 7,
   fertilizing_interval: 30,
   last_watered: null,
@@ -225,7 +275,7 @@ const plant = ref<PlantEditData>({
 });
 
 // Form options
-const lightOptions = ["Low Light", "Medium Light", "Bright Indirect Light", "Full Sun"];
+const lightOptions = ['Low Light', 'Medium Light', 'Bright Indirect Light', 'Full Sun'];
 
 // Clear acquired date helper
 function clearAcquiredDate(): void {
@@ -251,17 +301,17 @@ function updateLastFertilized(value: string | null | undefined): void {
 
 // Format dates for display
 const formattedDate = computed(() => {
-  if (!plant.value.acquired_date) return "";
+  if (!plant.value.acquired_date) return '';
   return new Date(plant.value.acquired_date).toLocaleDateString();
 });
 
 const lastWateredFormatted = computed(() => {
-  if (!plant.value.last_watered) return "";
+  if (!plant.value.last_watered) return '';
   return new Date(plant.value.last_watered).toLocaleDateString();
 });
 
 const lastFertilizedFormatted = computed(() => {
-  if (!plant.value.last_fertilized) return "";
+  if (!plant.value.last_fertilized) return '';
   return new Date(plant.value.last_fertilized).toLocaleDateString();
 });
 
@@ -273,10 +323,10 @@ async function fetchPlantData(): Promise<void> {
   try {
     const plantData = await $fetch<PlantEditData>(`/api/plants/${plantId}`);
     // The API returns the plant data directly, not nested
-    plant.value = {...plant.value, ...plantData};
+    plant.value = { ...plant.value, ...plantData };
   } catch (e) {
-    console.error("Error fetching plant:", e);
-    error.value = "Failed to load plant data. Please try again.";
+    console.error('Error fetching plant:', e);
+    error.value = 'Failed to load plant data. Please try again.';
   } finally {
     loading.value = false;
   }
@@ -286,7 +336,7 @@ async function fetchPlantData(): Promise<void> {
 async function savePlant(): Promise<void> {
   if (!form.value?.validate()) return;
   if (!auth.user.value) {
-    error.value = "Authentication required";
+    error.value = 'Authentication required';
     return;
   }
 
@@ -301,15 +351,15 @@ async function savePlant(): Promise<void> {
 
     // Update the plant
     await $fetch(`/api/plants/${plantId}`, {
-      method: "PUT",
+      method: 'PUT',
       body: plantData,
     });
 
     // Redirect back to the plant's page
     router.push(`/plants/${plantId}`);
   } catch (error) {
-    console.error("Error updating plant:", error);
-    alert("Failed to update plant. Please try again.");
+    console.error('Error updating plant:', error);
+    alert('Failed to update plant. Please try again.');
   } finally {
     saving.value = false;
   }

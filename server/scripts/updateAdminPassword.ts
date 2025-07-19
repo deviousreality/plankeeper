@@ -14,16 +14,14 @@ if (!newPassword) {
 async function updateAdminPassword() {
   try {
     console.log('Updating admin password...');
-    
+
     // Hash the new password
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(newPassword, saltRounds);
-    
+
     // Update the admin user's password
-    const result = db.prepare(
-      'UPDATE users SET password = ? WHERE username = ?'
-    ).run(passwordHash, 'admin');
-    
+    const result = db.prepare('UPDATE users SET password = ? WHERE username = ?').run(passwordHash, 'admin');
+
     if (result.changes > 0) {
       console.log('Admin password updated successfully!');
     } else {

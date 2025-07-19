@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
-    "strict": true,                  // Enable all strict type-checking options
-    "noImplicitAny": true,           // Raise error on expressions and declarations with an implied 'any' type
-    "strictNullChecks": true,        // Enable strict null checks
-    "strictFunctionTypes": true,     // Enable strict checking of function types
-    "strictBindCallApply": true,     // Enable strict 'bind', 'call', and 'apply' methods on functions
+    "strict": true, // Enable all strict type-checking options
+    "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type
+    "strictNullChecks": true, // Enable strict null checks
+    "strictFunctionTypes": true, // Enable strict checking of function types
+    "strictBindCallApply": true, // Enable strict 'bind', 'call', and 'apply' methods on functions
     "strictPropertyInitialization": true, // Ensure class properties are initialized in the constructor
-    "noImplicitThis": true,          // Raise error on 'this' expressions with an implied 'any' type
-    "alwaysStrict": true,            // Parse in strict mode and emit "use strict" for each source file
-    "noUnusedLocals": true,          // Report errors on unused locals
-    "noUnusedParameters": true,      // Report errors on unused parameters
+    "noImplicitThis": true, // Raise error on 'this' expressions with an implied 'any' type
+    "alwaysStrict": true, // Parse in strict mode and emit "use strict" for each source file
+    "noUnusedLocals": true, // Report errors on unused locals
+    "noUnusedParameters": true, // Report errors on unused parameters
     "exactOptionalPropertyTypes": true, // Enable strict checking of optional property assignments
-    "noImplicitReturns": true,       // Report error when not all code paths in function return a value
+    "noImplicitReturns": true, // Report error when not all code paths in function return a value
     "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statement
-    "useUnknownInCatchVariables": true,  // Type catch clause variables as 'unknown' instead of 'any'
-    "verbatimModuleSyntax": true,    // Enforce explicit type imports and prevent import elision
+    "useUnknownInCatchVariables": true, // Type catch clause variables as 'unknown' instead of 'any'
+    "verbatimModuleSyntax": true, // Enforce explicit type imports and prevent import elision
     "noUncheckedIndexedAccess": true, // Add 'undefined' to a type when accessed using an index
     "noPropertyAccessFromIndexSignature": true, // Require undeclared properties to be accessed via element access
     "plugins": [

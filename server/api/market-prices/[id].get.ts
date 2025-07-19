@@ -3,7 +3,7 @@ import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const plantId = parseInt(event.context.params.id);
-  
+
   if (!plantId) {
     throw createError({
       statusCode: 400,
@@ -13,15 +13,18 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Get all price records for this plant
-    const priceRecords = db.prepare(`
+    const priceRecords = db
+      .prepare(
+        `
       SELECT id, plant_id as plantId, date_checked as dateChecked, price
       FROM market_price
       WHERE plant_id = ?
       ORDER BY date_checked DESC
-    `).all(plantId);
-    
+    `
+      )
+      .all(plantId);
+
     return priceRecords;
-    
   } catch (error) {
     console.error(`Error fetching price records for plant ${plantId}:`, error);
     throw createError({

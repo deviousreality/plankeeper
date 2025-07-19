@@ -4,30 +4,24 @@
     <v-row v-if="loading">
       <v-col
         cols="12"
-        class="text-center"
-      >
+        class="text-center">
         <v-progress-circular indeterminate />
-        <div class="mt-3">
-          Loading propagation details...
-        </div>
+        <div class="mt-3">Loading propagation details...</div>
       </v-col>
     </v-row>
 
     <div
       v-else-if="error"
-      class="text-center pa-5"
-    >
+      class="text-center pa-5">
       <v-alert
         type="error"
-        title="Error Loading Propagation Record"
-      >
+        title="Error Loading Propagation Record">
         {{ error }}
       </v-alert>
       <v-btn
         class="mt-4"
         color="primary"
-        to="/propagation"
-      >
+        to="/propagation">
         Back to Propagation Manager
       </v-btn>
     </div>
@@ -39,23 +33,20 @@
           color="primary"
           variant="outlined"
           prepend-icon="mdi-arrow-left"
-          to="/propagation"
-        >
+          to="/propagation">
           Back to Propagation Manager
         </v-btn>
         <div>
           <v-btn
             color="primary"
             class="me-2"
-            @click="openEditDialog"
-          >
+            @click="openEditDialog">
             <v-icon>mdi-pencil</v-icon>
             Edit
           </v-btn>
           <v-btn
             color="error"
-            @click="confirmDelete = true"
-          >
+            @click="confirmDelete = true">
             <v-icon>mdi-delete</v-icon>
             Delete
           </v-btn>
@@ -66,19 +57,16 @@
         <!-- Plant and Propagation Info -->
         <v-col
           cols="12"
-          md="6"
-        >
+          md="6">
           <v-card class="mb-4">
             <div class="d-flex align-center pa-4">
               <div>
                 <v-avatar
                   size="80"
-                  class="me-4"
-                >
+                  class="me-4">
                   <v-img
                     :src="plant?.image_url || '/images/default-plant.jpg'"
-                    alt="Plant Image"
-                  />
+                    alt="Plant Image" />
                 </v-avatar>
               </div>
               <div>
@@ -94,8 +82,7 @@
             <v-card-text>
               <v-chip
                 color="primary"
-                class="mb-4"
-              >
+                class="mb-4">
                 {{ getPropTypeName(propagation.propType) }}
               </v-chip>
 
@@ -138,8 +125,7 @@
                   <v-list-item-subtitle>
                     <v-chip
                       :color="getSuccessRateColor()"
-                      text-color="white"
-                    >
+                      text-color="white">
                       {{ propagation.currentCount }} ({{ getSuccessRateText() }})
                     </v-chip>
                   </v-list-item-subtitle>
@@ -172,21 +158,18 @@
         <!-- Notes and Timeline -->
         <v-col
           cols="12"
-          md="6"
-        >
+          md="6">
           <v-card class="mb-4">
             <v-card-title>Notes</v-card-title>
             <v-card-text>
               <div
                 v-if="propagation.notes"
-                class="mb-4"
-              >
+                class="mb-4">
                 <p v-html="formatNotes(propagation.notes)" />
               </div>
               <p
                 v-else
-                class="text-medium-emphasis"
-              >
+                class="text-medium-emphasis">
                 No notes available.
               </p>
             </v-card-text>
@@ -196,11 +179,8 @@
           <v-card
             v-if="propagation.currentCount === 0 && propagation.zeroCoutNotes"
             class="mb-4"
-            color="error"
-          >
-            <v-card-title class="text-white">
-              Failure Notes
-            </v-card-title>
+            color="error">
+            <v-card-title class="text-white"> Failure Notes </v-card-title>
             <v-card-text class="text-white">
               <p v-html="formatNotes(propagation.zeroCoutNotes)" />
             </v-card-text>
@@ -214,16 +194,14 @@
                 <v-timeline-item
                   dot-color="primary"
                   :icon="getPropTypeIcon()"
-                  size="small"
-                >
+                  size="small">
                   <div class="mb-2">
                     <strong>Started Propagation</strong>
                   </div>
                   <div>{{ formatDate(propagation.propDate) }}</div>
                   <div
                     v-if="propagation.initialCount"
-                    class="text-caption"
-                  >
+                    class="text-caption">
                     Initial count: {{ propagation.initialCount }}
                   </div>
                 </v-timeline-item>
@@ -232,8 +210,7 @@
                   v-if="propagation.transplantDate"
                   dot-color="success"
                   icon="mdi-tree"
-                  size="small"
-                >
+                  size="small">
                   <div class="mb-2">
                     <strong>Transplanted</strong>
                   </div>
@@ -244,15 +221,13 @@
                   v-if="propagation.currentCount === 0"
                   dot-color="error"
                   icon="mdi-alert-circle"
-                  size="small"
-                >
+                  size="small">
                   <div class="mb-2">
                     <strong>Failed Propagation</strong>
                   </div>
                   <div
                     v-if="propagation.zeroCoutNotes"
-                    class="text-caption"
-                  >
+                    class="text-caption">
                     {{ propagation.zeroCoutNotes }}
                   </div>
                 </v-timeline-item>
@@ -266,8 +241,7 @@
     <!-- Edit Propagation Dialog -->
     <v-dialog
       v-model="editDialog"
-      max-width="600px"
-    >
+      max-width="600px">
       <v-card>
         <v-card-title>
           <span class="text-h5">Edit Propagation Record</span>
@@ -276,83 +250,72 @@
           <v-form
             ref="form"
             v-model="valid"
-            @submit.prevent="savePropagation"
-          >
+            @submit.prevent="savePropagation">
             <v-select
               v-model="editPropagation.plantId"
               :items="plantsOptions"
               label="Plant"
               required
-              :rules="[v => !!v || 'Plant is required']"
-            />
-            
+              :rules="[(v) => !!v || 'Plant is required']" />
+
             <v-select
               v-model="editPropagation.propType"
               :items="propTypeOptions"
               label="Propagation Type"
               required
-              :rules="[v => !!v || 'Propagation type is required']"
-            />
-            
+              :rules="[(v) => !!v || 'Propagation type is required']" />
+
             <v-text-field
               v-if="editPropagation.propType === 1"
               v-model="editPropagation.seedSource"
               Seed
               label="Seed Source"
-              hint="Where did you get the seeds from?"
-            />
-            
+              hint="Where did you get the seeds from?" />
+
             <v-text-field
               v-if="editPropagation.propType === 2"
               v-model="editPropagation.cuttingSource"
               Cutting
               label="Cutting Source"
-              hint="Where did you get the cutting from?"
-            />
-            
+              hint="Where did you get the cutting from?" />
+
             <v-text-field
               v-model="editPropagation.propDate"
               type="date"
               label="Propagation Date"
               required
-              :rules="[v => !!v || 'Propagation date is required']"
-            />
-            
+              :rules="[(v) => !!v || 'Propagation date is required']" />
+
             <v-text-field
               v-model.number="editPropagation.initialCount"
               type="number"
               label="Initial Count"
-              hint="How many plants/seeds did you start with?"
-            />
-            
+              hint="How many plants/seeds did you start with?" />
+
             <v-text-field
               v-model.number="editPropagation.currentCount"
               type="number"
               label="Current Count"
-              hint="How many plants survived/are growing?"
-            />
-            
+              hint="How many plants survived/are growing?" />
+
             <v-text-field
               v-model="editPropagation.transplantDate"
               type="date"
               label="Transplant Date"
-              hint="When did you transplant (if applicable)?"
-            />
-            
+              hint="When did you transplant (if applicable)?" />
+
             <v-textarea
               v-model="editPropagation.notes"
               label="Notes"
               hint="Any additional information about this propagation"
-              rows="3"
-            />
-            
+              rows="3" />
+
             <v-textarea
               v-if="editPropagation.currentCount === 0"
               v-model="editPropagation.zeroCoutNotes"
               label="Failure Notes"
               hint="What happened to the propagation?"
-              rows="3"
-            />
+              rows="3" />
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -360,16 +323,14 @@
           <v-btn
             color="blue-darken-1"
             variant="text"
-            @click="closeEditDialog"
-          >
+            @click="closeEditDialog">
             Cancel
           </v-btn>
           <v-btn
             color="blue-darken-1"
             variant="text"
             :disabled="!valid"
-            @click="savePropagation"
-          >
+            @click="savePropagation">
             Save
           </v-btn>
         </v-card-actions>
@@ -379,30 +340,24 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog
       v-model="confirmDelete"
-      max-width="500px"
-    >
+      max-width="500px">
       <v-card>
-        <v-card-title class="text-h5">
-          Confirm Delete
-        </v-card-title>
+        <v-card-title class="text-h5"> Confirm Delete </v-card-title>
         <v-card-text>
-          Are you sure you want to delete this propagation record?
-          This action cannot be undone.
+          Are you sure you want to delete this propagation record? This action cannot be undone.
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn
             color="blue-darken-1"
             variant="text"
-            @click="confirmDelete = false"
-          >
+            @click="confirmDelete = false">
             Cancel
           </v-btn>
           <v-btn
             color="error"
             variant="text"
-            @click="deletePropagation"
-          >
+            @click="deletePropagation">
             Delete
           </v-btn>
         </v-card-actions>
@@ -429,7 +384,7 @@ const confirmDelete = ref(false);
 const valid = ref(false);
 const form = ref(null);
 const editPropagation = ref<PlantPropagation>({} as PlantPropagation);
-const plantsOptions = ref<Array<{ title: string, value: number }>>([]);
+const plantsOptions = ref<Array<{ title: string; value: number }>>([]);
 
 // Props options
 const propTypeOptions = [
@@ -457,9 +412,9 @@ async function savePropagation() {
   try {
     await $fetch(`/api/propagation/${propagation.value.id}`, {
       method: 'PUT',
-      body: editPropagation.value
+      body: editPropagation.value,
     });
-    
+
     closeEditDialog();
     fetchPropagationDetails();
   } catch (error) {
@@ -471,7 +426,7 @@ async function savePropagation() {
 async function deletePropagation() {
   try {
     await $fetch(`/api/propagation/${propagation.value.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
     navigateTo('/propagation');
   } catch (error) {
@@ -482,14 +437,14 @@ async function deletePropagation() {
 
 function getPropTypeName(type?: PropagationType): string {
   if (!type) return 'Unknown';
-  
-  const found = propTypeOptions.find(option => option.value === type);
+
+  const found = propTypeOptions.find((option) => option.value === type);
   return found ? found.title : 'Unknown';
 }
 
 function getPropTypeIcon(): string {
   if (!propagation.value.propType) return 'mdi-sprout-outline';
-  
+
   switch (propagation.value.propType) {
     case PropagationType.Seed:
       return 'mdi-seed';
@@ -509,9 +464,9 @@ function getPropTypeIcon(): string {
 function getSuccessRateText(): string {
   const initial = propagation.value.initialCount || 0;
   const current = propagation.value.currentCount || 0;
-  
+
   if (initial === 0) return 'N/A';
-  
+
   const rate = Math.round((current / initial) * 100);
   return `${rate}% success`;
 }
@@ -519,11 +474,11 @@ function getSuccessRateText(): string {
 function getSuccessRateColor(): string {
   const initial = propagation.value.initialCount || 0;
   const current = propagation.value.currentCount || 0;
-  
+
   if (initial === 0) return 'grey';
-  
+
   const rate = (current / initial) * 100;
-  
+
   if (rate === 0) return 'red';
   if (rate < 25) return 'red-darken-1';
   if (rate < 50) return 'orange';
@@ -543,7 +498,7 @@ async function fetchPlants() {
     const response = await $fetch('/api/plants');
     plantsOptions.value = response.data.map((plant: any) => ({
       title: plant.name,
-      value: plant.id
+      value: plant.id,
     }));
   } catch (error) {
     console.error('Error fetching plants:', error);
@@ -554,11 +509,11 @@ async function fetchPlants() {
 async function fetchPropagationDetails() {
   loading.value = true;
   error.value = null;
-  
+
   try {
     const response = await $fetch(`/api/propagation/${propagationId.value}`);
     propagation.value = response.data;
-    
+
     // Fetch plant details
     if (propagation.value.plantId) {
       const plantResponse = await $fetch(`/api/plants/${propagation.value.plantId}`);
@@ -574,9 +529,6 @@ async function fetchPropagationDetails() {
 
 // Lifecycle hooks
 onMounted(async () => {
-  await Promise.all([
-    fetchPlants(),
-    fetchPropagationDetails()
-  ]);
+  await Promise.all([fetchPlants(), fetchPropagationDetails()]);
 });
 </script>

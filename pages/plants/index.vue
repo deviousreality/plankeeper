@@ -1,14 +1,19 @@
-<!-- pages/plants/index.vue -                  <v-col cols="12" sm="6" md="4">
-                    <v-select v-model="filters.species" :items="speciesOptions" label="Common Name" />
-                  </v-col>
+<!-- pages/plants/index.vue -->
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h3">My Plants</h1>
-      <v-btn color="primary" prepend-icon="mdi-plus" to="/plants/add"> Add Plant </v-btn>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        to="/plants/add">
+        Add Plant
+      </v-btn>
     </div>
 
-    <v-card v-if="loading" class="text-center pa-5">
+    <v-card
+      v-if="loading"
+      class="text-center pa-5">
       <v-progress-circular indeterminate />
       <div class="mt-3">Loading plants...</div>
     </v-card>
@@ -29,33 +34,49 @@
             <v-expansion-panel title="Filters">
               <template #text>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-select v-model="filters.species" :items="speciesOptions" label="Species" clearable />
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4">
+                    <v-select
+                      v-model="filters.species"
+                      :items="speciesOptions"
+                      label="Species"
+                      clearable />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4">
                     <v-select
                       v-model="filters.needsWater"
                       :items="[
-                        {title: 'All', value: null},
-                        {title: 'Needs Water Soon', value: true},
+                        { title: 'All', value: null },
+                        { title: 'Needs Water Soon', value: true },
                       ]"
                       label="Watering Status" />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4">
                     <v-select
                       v-model="filters.needsFertilizer"
                       :items="[
-                        {title: 'All', value: null},
-                        {title: 'Needs Fertilizer Soon', value: true},
+                        { title: 'All', value: null },
+                        { title: 'Needs Fertilizer Soon', value: true },
                       ]"
                       label="Fertilizing Status" />
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4">
                     <v-select
                       v-model="filters.favorite"
                       :items="[
-                        {title: 'All Plants', value: null},
-                        {title: 'Favorites Only', value: true},
+                        { title: 'All Plants', value: null },
+                        { title: 'Favorites Only', value: true },
                       ]"
                       label="Favorite Status" />
                   </v-col>
@@ -67,28 +88,60 @@
       </v-card>
 
       <!-- No plants message -->
-      <v-card v-if="!filteredPlants.length" class="text-center pa-5">
-        <v-icon size="64" color="grey" class="mb-4"> mdi-sprout </v-icon>
+      <v-card
+        v-if="!filteredPlants.length"
+        class="text-center pa-5">
+        <v-icon
+          size="64"
+          color="grey"
+          class="mb-4">
+          mdi-sprout
+        </v-icon>
         <h2 class="text-h5 mb-2">No Plants Found</h2>
         <p class="mb-4">
-          {{ plants.length ? "Try changing your filters." : "Start by adding your first plant!" }}
+          {{ plants.length ? 'Try changing your filters.' : 'Start by adding your first plant!' }}
         </p>
-        <v-btn color="primary" to="/plants/add"> Add Plant </v-btn>
+        <v-btn
+          color="primary"
+          to="/plants/add">
+          Add Plant
+        </v-btn>
       </v-card>
 
       <!-- Plants grid -->
       <v-row v-else>
-        <v-col v-for="plant in filteredPlants" :key="plant.id" cols="12" sm="6" md="4" lg="3">
-          <v-card :to="`/plants/${plant.id}`" class="h-100">
-            <v-img :src="plant.image_url || '/images/default-plant.jpg'" height="200" cover class="align-end">
+        <v-col
+          v-for="plant in filteredPlants"
+          :key="plant.id"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3">
+          <v-card
+            :to="`/plants/${plant.id}`"
+            class="h-100">
+            <v-img
+              :src="plant.image_url || '/images/default-plant.jpg'"
+              height="200"
+              cover
+              class="align-end">
               <template #placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-icon size="64" color="grey"> mdi-flower </v-icon>
+                  <v-icon
+                    size="64"
+                    color="grey">
+                    mdi-flower
+                  </v-icon>
                 </div>
               </template>
               <v-card-title class="text-white bg-black bg-opacity-50">
                 <div class="d-flex align-center">
-                  <v-icon v-if="plant.is_favorite" color="amber" class="me-2"> mdi-star </v-icon>
+                  <v-icon
+                    v-if="plant.is_favorite"
+                    color="amber"
+                    class="me-2">
+                    mdi-star
+                  </v-icon>
                   {{ plant.name }}
                 </div>
               </v-card-title>
@@ -96,7 +149,7 @@
 
             <v-card-text>
               <div class="text-subtitle-1">
-                {{ plant.species || "Unknown Species" }}
+                {{ plant.species || 'Unknown Species' }}
               </div>
 
               <!-- Status indicators -->
@@ -121,10 +174,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Plant } from "~/types/database";
+import type { Plant } from '~/types/database';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 // Type for plant with care schedule data
@@ -149,7 +202,7 @@ type FilterOptions = {
 const auth = useAuth();
 const plants = ref<PlantWithCareSchedule[]>([]);
 const loading = ref(true);
-const search = ref("");
+const search = ref('');
 const filters = ref<FilterOptions>({
   species: null,
   needsWater: null,
@@ -160,8 +213,8 @@ const filters = ref<FilterOptions>({
 // Computed for filter options
 const speciesOptions = computed(() => {
   const uniqueSpecies = new Set(plants.value.map((p) => p.common_name).filter((name): name is string => Boolean(name)));
-  const options = [{title: "All", value: null}];
-  uniqueSpecies.forEach((species) => options.push({title: species, value: species}));
+  const options = [{ title: 'All', value: null }];
+  uniqueSpecies.forEach((species) => options.push({ title: species, value: species }));
   return options;
 });
 
@@ -225,14 +278,14 @@ function isNextTaskWatering(plant: PlantWithCareSchedule): boolean {
 }
 
 function getTaskIcon(plant: PlantWithCareSchedule): string {
-  return isNextTaskWatering(plant) ? "mdi-water" : "mdi-fertilizer";
+  return isNextTaskWatering(plant) ? 'mdi-water' : 'mdi-fertilizer';
 }
 
 function getTaskText(plant: PlantWithCareSchedule): string {
   const days = daysTillNextTask(plant);
-  const taskType = isNextTaskWatering(plant) ? "Water" : "Fertilize";
+  const taskType = isNextTaskWatering(plant) ? 'Water' : 'Fertilize';
 
-  if (days === null) return "No schedule";
+  if (days === null) return 'No schedule';
   if (days < 0) {
     return `${taskType} overdue`;
   } else if (days === 0) {
@@ -250,7 +303,7 @@ async function fetchPlants(): Promise<void> {
   try {
     plants.value = await $fetch<PlantWithCareSchedule[]>(`/api/plants?userId=${auth.user.value.id}`);
   } catch (error) {
-    console.error("Error fetching plants:", error);
+    console.error('Error fetching plants:', error);
   } finally {
     loading.value = false;
   }

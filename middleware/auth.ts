@@ -14,7 +14,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // Double check with localStorage as fallback
   if (!auth.isAuthenticated.value) {
-    const storedUser = localStorage.getItem("plankeeper_user");
+    const storedUser = localStorage.getItem('plankeeper_user');
     if (storedUser) {
       try {
         auth.initAuth();
@@ -22,7 +22,7 @@ export default defineNuxtRouteMiddleware((to) => {
           return;
         }
       } catch (e) {
-        console.error("Error in auth middleware:", e);
+        console.error('Error in auth middleware:', e);
       }
     }
   }

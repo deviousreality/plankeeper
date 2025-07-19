@@ -12,48 +12,49 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       });
     }
 
     // Parse request body
     const body = await readBody(event);
-    
+
     // Validate required fields
     if (!body.plantId) {
       throw createError({
         statusCode: 400,
-        message: 'Plant ID is required'
+        message: 'Plant ID is required',
       });
     }
-    
+
     if (!body.propType) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation type is required'
+        message: 'Propagation type is required',
       });
     }
-    
+
     if (!body.propDate) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation date is required'
+        message: 'Propagation date is required',
       });
     }
-    
+
     // Verify user owns the plant
-    const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?')
-      .get(body.plantId, user.id);
-      
+    const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?').get(body.plantId, user.id);
+
     if (!plant) {
       throw createError({
         statusCode: 403,
-        message: 'You do not have permission to add propagation records for this plant'
+        message: 'You do not have permission to add propagation records for this plant',
       });
     }
-    
+
     // Insert propagation record
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       INSERT INTO plant_propagation (
         plant_id, 
         prop_type,
@@ -66,23 +67,24 @@ export default defineEventHandler(async (event: H3Event) => {
         notes,
         zero_cout_notes
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      body.plantId,
-      body.propType,
-      body.seedSource || null,
-      body.cuttingSource || null,
-      body.propDate,
-      body.initialCount || null,
-      body.currentCount || null,
-      body.transplantDate || null,
-      body.notes || null,
-      body.zeroCoutNotes || null
-    );
+    `
+      )
+      .run(
+        body.plantId,
+        body.propType,
+        body.seedSource || null,
+        body.cuttingSource || null,
+        body.propDate,
+        body.initialCount || null,
+        body.currentCount || null,
+        body.transplantDate || null,
+        body.notes || null,
+        body.zeroCoutNotes || null
+      );
 
     // Get the newly created record
-    const newPropagation = db.prepare('SELECT * FROM plant_propagation WHERE id = ?')
-      .get(result.lastInsertRowid);
-      
+    const newPropagation = db.prepare('SELECT * FROM plant_propagation WHERE id = ?').get(result.lastInsertRowid);
+
     // Map DB column names to camelCase for frontend
     const record = newPropagation as Record<string, any>;
     const mappedPropagation = {
@@ -96,18 +98,18 @@ export default defineEventHandler(async (event: H3Event) => {
       currentCount: record.current_count,
       transplantDate: record.transplant_date,
       notes: record.notes,
-      zeroCoutNotes: record.zero_cout_notes
+      zeroCoutNotes: record.zero_cout_notes,
     };
 
     return {
       success: true,
-      data: mappedPropagation
+      data: mappedPropagation,
     };
   } catch (error) {
     console.error('Error creating propagation record:', error);
     throw createError({
       statusCode: 500,
-      message: 'Error creating propagation record'
+      message: 'Error creating propagation record',
     });
   }
 });

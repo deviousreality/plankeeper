@@ -1,5 +1,5 @@
 // server/api/taxonomy/family/index.get.ts
-import {db} from "~/server/utils/db";
+import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -15,10 +15,10 @@ export default defineEventHandler(async (event) => {
 
     return families;
   } catch (error) {
-    console.error("Error fetching plant families:", error);
+    console.error('Error fetching plant families:', error);
     throw createError({
       statusCode: 500,
-      message: "Server error fetching plant families",
+      message: 'Server error fetching plant families',
     });
   }
 });

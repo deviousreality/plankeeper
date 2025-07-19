@@ -16,17 +16,20 @@ By participating in this project, you agree to:
 1. **Fork the repository** by clicking the "Fork" button at the top right of the repository page
 
 2. **Clone your fork**:
+
    ```bash
    git clone https://github.com/your-username/plankeeper.git
    cd plankeeper
    ```
 
 3. **Set up the upstream remote**:
+
    ```bash
    git remote add upstream https://github.com/original-owner/plankeeper.git
    ```
 
 4. **Install dependencies**:
+
    ```bash
    npm install
    # or
@@ -36,6 +39,7 @@ By participating in this project, you agree to:
 5. **Create a `.env` file** with required environment variables (see `.env.example`)
 
 6. **Initialize the database**:
+
    ```bash
    npm run reset-db
    # or
@@ -52,6 +56,7 @@ By participating in this project, you agree to:
 ## 💻 Development Workflow
 
 1. **Create a new branch** for your feature or fix:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -61,6 +66,7 @@ By participating in this project, you agree to:
 2. **Make your changes** following the code style guidelines
 
 3. **Commit your changes** with clear, descriptive commit messages:
+
    ```bash
    git commit -m "feat: add plant growth tracking feature"
    ```
@@ -75,12 +81,14 @@ By participating in this project, you agree to:
    - `chore:` for maintenance tasks
 
 4. **Stay updated** with the main repository:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 5. **Push your changes** to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```

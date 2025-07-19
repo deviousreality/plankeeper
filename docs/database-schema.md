@@ -5,7 +5,9 @@ This document outlines the database schema for the PlantKeeper application, incl
 ## Core Tables
 
 ### users
+
 User authentication and profile information.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `username` - TEXT - Unique username for login
 - `password` - TEXT - Encrypted password hash
@@ -14,7 +16,9 @@ User authentication and profile information.
 - `updated_at` - TIMESTAMP - When the user account was last updated
 
 ### plants
+
 Core plant information.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `user_id` - INTEGER - Foreign key to users.id
 - `name` - TEXT - Plant's name (given by user)
@@ -37,7 +41,9 @@ Core plant information.
 ## Care Tables
 
 ### care_schedules
+
 Plant care scheduling information.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `plant_id` - INTEGER - Foreign key to plants.id
 - `watering_interval` - INTEGER - Days between watering
@@ -48,7 +54,9 @@ Plant care scheduling information.
 - `next_task_date` - DATE - Next care task due date
 
 ### care_logs
+
 Historical record of care activities.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `plant_id` - INTEGER - Foreign key to plants.id
 - `action_type` - TEXT - Type of care action performed
@@ -56,7 +64,9 @@ Historical record of care activities.
 - `notes` - TEXT - Notes about the action
 
 ### care_tips
+
 Species-specific care tips.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `species` - TEXT - Plant species name
 - `tip` - TEXT - The care tip
@@ -66,18 +76,24 @@ Species-specific care tips.
 ## Taxonomy Tables
 
 ### plant_species
+
 Standardized plant species catalog.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Species name
 
 ### plant_genius
+
 Plant genus classification (taxonomic rank above species).
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Genus name
 - `species_id` - INTEGER - Foreign key to plant_species.id
 
 ### plant_family
+
 Plant family classification (taxonomic rank above genus).
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Family name
 - `genius_id` - INTEGER - Foreign key to plant_genius.id
@@ -86,14 +102,18 @@ Plant family classification (taxonomic rank above genus).
 ## Inventory & Production Tables
 
 ### market_price
+
 Tracking market prices for plants.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `plant_id` - INTEGER - Foreign key to plants.id
 - `date_checked` - DATE - When the price was checked
 - `price` - DECIMAL(5,2) - Price amount
 
 ### plant_propagation
+
 Tracking plant propagation efforts.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `plant_id` - INTEGER - Foreign key to plants.id
 - `prop_type` - INTEGER - Type of propagation (1=seed, 2=cutting, 3=division, etc.)
@@ -107,7 +127,9 @@ Tracking plant propagation efforts.
 - `zero_cout_notes` - TEXT - Notes for when count reaches zero
 
 ### plant_inventory
+
 Detailed plant inventory tracking.
+
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `plant_id` - INTEGER - Foreign key to plants.id
 - `quantity` - INTEGER - Number of plants

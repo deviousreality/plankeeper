@@ -5,23 +5,23 @@
  * for interacting with the SQLite database. It uses better-sqlite3 for efficient
  * and synchronous database operations.
  */
-import Database from "better-sqlite3";
-import fs from "fs";
-import path from "path";
-import type {Plant, PlantRow} from "~/types/database";
+import Database from 'better-sqlite3';
+import fs from 'fs';
+import path from 'path';
+import type { Plant, PlantRow } from '~/types/database';
 
 // Configuration
-const DATA_DIR = path.resolve(process.cwd(), "data");
-const DB_FILENAME = "plant-keeper.db";
+const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DB_FILENAME = 'plant-keeper.db';
 
 // Ensure the data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   try {
-    fs.mkdirSync(DATA_DIR, {recursive: true});
+    fs.mkdirSync(DATA_DIR, { recursive: true });
     console.log(`Created data directory at: ${DATA_DIR}`);
   } catch (error) {
     console.error(`Failed to create data directory: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error("Failed to initialize database storage directory");
+    throw new Error('Failed to initialize database storage directory');
   }
 }
 
@@ -34,7 +34,7 @@ try {
   console.log(`Connected to database at: ${dbPath}`);
 } catch (error) {
   console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error("Failed to connect to database");
+  throw new Error('Failed to connect to database');
 }
 
 /**
@@ -92,23 +92,23 @@ const initDb = (): void => {
 
   // Add columns to plants table if they don't exist
   try {
-    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as {name: string}[];
+    const plantsColumns = db.prepare(`PRAGMA table_info(plants)`).all() as { name: string }[];
     const existingColumns = new Set(plantsColumns.map((col) => col.name));
 
     // Add each new column if it doesn't exist
     const newColumns = [
-      {name: "is_favorite", type: "BOOLEAN DEFAULT 0"},
-      {name: "can_sell", type: "BOOLEAN DEFAULT 0"},
-      {name: "is_personal", type: "BOOLEAN DEFAULT 0"},
-      {name: "common_name", type: "TEXT"},
-      {name: "flower_color", type: "TEXT"},
-      {name: "variety", type: "TEXT"},
-      {name: "light_pref", type: "TEXT"},
-      {name: "water_pref", type: "TEXT"},
-      {name: "soil_type", type: "TEXT"},
-      {name: "family_id", type: "INTEGER"},
-      {name: "genus_id", type: "INTEGER"},
-      {name: "species_id", type: "INTEGER"},
+      { name: 'is_favorite', type: 'BOOLEAN DEFAULT 0' },
+      { name: 'can_sell', type: 'BOOLEAN DEFAULT 0' },
+      { name: 'is_personal', type: 'BOOLEAN DEFAULT 0' },
+      { name: 'common_name', type: 'TEXT' },
+      { name: 'flower_color', type: 'TEXT' },
+      { name: 'variety', type: 'TEXT' },
+      { name: 'light_pref', type: 'TEXT' },
+      { name: 'water_pref', type: 'TEXT' },
+      { name: 'soil_type', type: 'TEXT' },
+      { name: 'family_id', type: 'INTEGER' },
+      { name: 'genus_id', type: 'INTEGER' },
+      { name: 'species_id', type: 'INTEGER' },
     ];
 
     for (const column of newColumns) {
@@ -249,7 +249,7 @@ const initDb = (): void => {
   // Note: Removed duplicate table creation
   // Using plant_species, plant_genus, plant_family, market_price, plant_propagation, and plant_inventory instead
 
-  console.log("Database schema initialized successfully");
+  console.log('Database schema initialized successfully');
 };
 
 /**
@@ -304,24 +304,24 @@ export const plantRowToPlant = (row: PlantRow): Plant => {
  * @returns {Partial<PlantRow>} - Database-ready object with null values
  */
 export const plantToPlantRow = (plant: Partial<Plant>): Partial<PlantRow> => {
-  const result: any = {...plant};
+  const result: any = { ...plant };
 
   // No boolean conversion needed - SQLite handles booleans natively
 
   // Convert undefined to null for database storage
   const optionalFields = [
-    "species_id",
-    "family_id",
-    "genus_id",
-    "acquired_date",
-    "image_url",
-    "notes",
-    "common_name",
-    "flower_color",
-    "variety",
-    "light_pref",
-    "water_pref",
-    "soil_type",
+    'species_id',
+    'family_id',
+    'genus_id',
+    'acquired_date',
+    'image_url',
+    'notes',
+    'common_name',
+    'flower_color',
+    'variety',
+    'light_pref',
+    'water_pref',
+    'soil_type',
   ];
 
   optionalFields.forEach((field) => {
@@ -344,7 +344,7 @@ export const safelyPrepare = (sql: string): Database.Statement => {
   } catch (error) {
     console.error(`SQL preparation error: ${error instanceof Error ? error.message : String(error)}`);
     console.error(`Failed SQL: ${sql}`);
-    throw new Error("Failed to prepare SQL statement");
+    throw new Error('Failed to prepare SQL statement');
   }
 };
 
@@ -364,7 +364,7 @@ export const createTransaction = (fn: (...args: any[]) => any): ((...args: any[]
  */
 export const nullToUndefined = <T>(obj: T): T => {
   if (obj === null) return undefined as any;
-  if (typeof obj !== "object" || obj === undefined) return obj;
+  if (typeof obj !== 'object' || obj === undefined) return obj;
 
   if (Array.isArray(obj)) {
     return obj.map(nullToUndefined) as any;
@@ -384,7 +384,7 @@ export const nullToUndefined = <T>(obj: T): T => {
  */
 export const undefinedToNull = <T>(obj: T): T => {
   if (obj === undefined) return null as any;
-  if (typeof obj !== "object" || obj === null) return obj;
+  if (typeof obj !== 'object' || obj === null) return obj;
 
   if (Array.isArray(obj)) {
     return obj.map(undefinedToNull) as any;
@@ -403,7 +403,7 @@ try {
   initDb();
 } catch (error) {
   console.error(`Critical database initialization error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error("Failed to initialize database schema");
+  throw new Error('Failed to initialize database schema');
 }
 
-export {db, initDb};
+export { db, initDb };

@@ -6,7 +6,7 @@
 export type ApiError = Error & {
   statusCode: number;
   data?: Record<string, unknown>;
-}
+};
 
 /**
  * Check if an error object is an API error with status code
@@ -30,12 +30,12 @@ export function isApiError(error: unknown): error is ApiError {
  */
 export function handleError(err: unknown, defaultMessage = 'Server error'): ApiError {
   console.error('Error:', err);
-  
+
   // If it's already an API error, just return it
   if (isApiError(err)) {
     return err;
   }
-  
+
   // For regular Error objects, create an API error
   if (err instanceof Error) {
     const apiError: ApiError = new Error(err.message) as ApiError;
@@ -43,7 +43,7 @@ export function handleError(err: unknown, defaultMessage = 'Server error'): ApiE
     apiError.stack = err.stack ?? '';
     return apiError;
   }
-  
+
   // For anything else, create a generic error
   const apiError: ApiError = new Error(defaultMessage) as ApiError;
   apiError.statusCode = 500;

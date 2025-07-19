@@ -36,11 +36,13 @@ import { db, User } from '~/server/utils/db';
 ## Common Scenarios
 
 1. **Importing from type-only modules**:
+
    ```typescript
    import type { ApiResponse, ErrorResponse } from '~/types';
    ```
 
 2. **Mixed imports (values and types)**:
+
    ```typescript
    import { db } from '~/server/utils/db';
    import type { User, Plant } from '~/server/utils/db';

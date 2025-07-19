@@ -3,7 +3,7 @@ import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params.id);
-  
+
   if (!id) {
     throw createError({
       statusCode: 400,
@@ -13,21 +13,25 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Delete the species record
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       DELETE FROM plant_species
       WHERE id = ?
-    `).run(id);
-    
+    `
+      )
+      .run(id);
+
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
         message: 'Species not found',
       });
     }
-    
+
     return {
       success: true,
-      message: 'Species deleted successfully'
+      message: 'Species deleted successfully',
     };
   } catch (error) {
     console.error(`Error deleting species ${id}:`, error);

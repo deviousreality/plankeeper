@@ -1,5 +1,5 @@
 // server/api/taxonomy/family/[id].put.ts
-import {db} from "~/server/utils/db";
+import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const id = parseInt(event.context.params.id);
@@ -7,17 +7,17 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: "Family ID is required",
+      message: 'Family ID is required',
     });
   }
 
   try {
     const body = await readBody(event);
 
-    if (!body.name || typeof body.name !== "string") {
+    if (!body.name || typeof body.name !== 'string') {
       throw createError({
         statusCode: 400,
-        message: "Family name is required",
+        message: 'Family name is required',
       });
     }
 
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
       if (!genusExists) {
         throw createError({
           statusCode: 400,
-          message: "Referenced genus does not exist",
+          message: 'Referenced genus does not exist',
         });
       }
     }
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
       if (!speciesExists) {
         throw createError({
           statusCode: 400,
-          message: "Referenced species does not exist",
+          message: 'Referenced species does not exist',
         });
       }
     }
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
-        message: "Family not found",
+        message: 'Family not found',
       });
     }
 
@@ -87,7 +87,7 @@ export default defineEventHandler(async (event) => {
     console.error(`Error updating family ${id}:`, error);
     throw createError({
       statusCode: 500,
-      message: "Server error updating family",
+      message: 'Server error updating family',
     });
   }
 });

@@ -3,7 +3,7 @@ import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const species = event.context.params?.species;
-  
+
   if (!species) {
     throw createError({
       statusCode: 400,
@@ -12,12 +12,16 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const tips = db.prepare(`
+    const tips = db
+      .prepare(
+        `
       SELECT * FROM care_tips
       WHERE species = ?
       ORDER BY created_at DESC
-    `).all(species);
-    
+    `
+      )
+      .all(species);
+
     return tips;
   } catch (error) {
     console.error('Error fetching care tips:', error);

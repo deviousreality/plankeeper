@@ -4,7 +4,9 @@
     <h1 class="text-h3 mb-6">Care Schedule Manager</h1>
 
     <v-row>
-      <v-col cols="12" lg="4">
+      <v-col
+        cols="12"
+        lg="4">
         <v-card class="mb-4">
           <v-card-title>Plants</v-card-title>
           <v-card-text>
@@ -16,7 +18,10 @@
               hide-details
               class="mb-3" />
 
-            <v-list v-model:selected="selectedPlant" lines="two" select-strategy="single-independent">
+            <v-list
+              v-model:selected="selectedPlant"
+              lines="two"
+              select-strategy="single-independent">
               <v-list-item
                 v-for="plant in filteredPlants"
                 :key="plant.id"
@@ -30,7 +35,12 @@
                 </template>
 
                 <template #append>
-                  <v-chip v-if="getNextTaskInfo(plant).overdue" color="error" size="small"> Needs Care </v-chip>
+                  <v-chip
+                    v-if="getNextTaskInfo(plant).overdue"
+                    color="error"
+                    size="small">
+                    Needs Care
+                  </v-chip>
                 </template>
               </v-list-item>
             </v-list>
@@ -38,10 +48,19 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" lg="8">
-        <v-card v-if="!selectedPlant" class="mb-4 d-flex align-center justify-center" height="300">
+      <v-col
+        cols="12"
+        lg="8">
+        <v-card
+          v-if="!selectedPlant"
+          class="mb-4 d-flex align-center justify-center"
+          height="300">
           <div class="text-center pa-4">
-            <v-icon size="64" color="grey-lighten-1"> mdi-flower </v-icon>
+            <v-icon
+              size="64"
+              color="grey-lighten-1">
+              mdi-flower
+            </v-icon>
             <h3 class="mt-4">Select a plant to manage its care schedule</h3>
           </div>
         </v-card>
@@ -51,7 +70,9 @@
             <v-card-title>{{ currentPlant?.name }} Care Schedule</v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model="careSchedule.wateringInterval"
                     label="Watering Interval (days)"
@@ -60,7 +81,9 @@
                     :hint="`Water every ${careSchedule.wateringInterval} days`"
                     persistent-hint />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model="careSchedule.lastWatered"
                     label="Last Watered"
@@ -69,7 +92,9 @@
                     persistent-hint />
                 </v-col>
 
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model="careSchedule.fertilizingInterval"
                     label="Fertilizing Interval (days)"
@@ -78,7 +103,9 @@
                     :hint="`Fertilize every ${careSchedule.fertilizingInterval} days`"
                     persistent-hint />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6">
                   <v-text-field
                     v-model="careSchedule.lastFertilized"
                     label="Last Fertilized"
@@ -95,7 +122,11 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-btn color="primary" block :loading="savingSchedule" @click="saveCareSchedule">
+                  <v-btn
+                    color="primary"
+                    block
+                    :loading="savingSchedule"
+                    @click="saveCareSchedule">
                     Save Care Schedule
                   </v-btn>
                 </v-col>
@@ -107,12 +138,21 @@
             <v-card-title>Quick Actions</v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" sm="6">
-                  <v-btn color="primary" block prepend-icon="mdi-water" :loading="loggingWater" @click="logWatering">
+                <v-col
+                  cols="12"
+                  sm="6">
+                  <v-btn
+                    color="primary"
+                    block
+                    prepend-icon="mdi-water"
+                    :loading="loggingWater"
+                    @click="logWatering">
                     Log Watering
                   </v-btn>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col
+                  cols="12"
+                  sm="6">
                   <v-btn
                     color="success"
                     block
@@ -130,16 +170,20 @@
             <v-card-title>
               Care History
               <v-spacer />
-              <v-btn color="primary" variant="text" prepend-icon="mdi-plus" @click="addLogDialog = true">
+              <v-btn
+                color="primary"
+                variant="text"
+                prepend-icon="mdi-plus"
+                @click="addLogDialog = true">
                 Add Entry
               </v-btn>
             </v-card-title>
             <v-card-text>
               <v-data-table
                 :headers="[
-                  {title: 'Date', key: 'formattedDate'},
-                  {title: 'Action', key: 'action_type'},
-                  {title: 'Notes', key: 'notes'},
+                  { title: 'Date', key: 'formattedDate' },
+                  { title: 'Action', key: 'action_type' },
+                  { title: 'Notes', key: 'notes' },
                 ]"
                 :items="formattedCareLog"
                 :loading="loadingLogs" />
@@ -193,39 +237,62 @@
     </v-row>
 
     <!-- Add Care Log Dialog -->
-    <v-dialog v-model="addLogDialog" max-width="500px">
+    <v-dialog
+      v-model="addLogDialog"
+      max-width="500px">
       <v-card>
         <v-card-title>Add Care Log Entry</v-card-title>
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6">
+            <v-col
+              cols="12"
+              sm="6">
               <v-select
                 v-model="newLog.actionType"
                 label="Action Type"
                 :items="[
-                  {title: 'Watering', value: 'watering'},
-                  {title: 'Fertilizing', value: 'fertilizing'},
-                  {title: 'Repotting', value: 'repotting'},
-                  {title: 'Pruning', value: 'pruning'},
-                  {title: 'Pest Treatment', value: 'pest_treatment'},
-                  {title: 'Other', value: 'other'},
+                  { title: 'Watering', value: 'watering' },
+                  { title: 'Fertilizing', value: 'fertilizing' },
+                  { title: 'Repotting', value: 'repotting' },
+                  { title: 'Pruning', value: 'pruning' },
+                  { title: 'Pest Treatment', value: 'pest_treatment' },
+                  { title: 'Other', value: 'other' },
                 ]"
                 item-title="title"
                 item-value="value"
                 required />
             </v-col>
-            <v-col cols="12" sm="6">
-              <v-text-field v-model="newLog.actionDate" label="Date" type="date" required />
+            <v-col
+              cols="12"
+              sm="6">
+              <v-text-field
+                v-model="newLog.actionDate"
+                label="Date"
+                type="date"
+                required />
             </v-col>
             <v-col cols="12">
-              <v-textarea v-model="newLog.notes" label="Notes" rows="3" />
+              <v-textarea
+                v-model="newLog.notes"
+                label="Notes"
+                rows="3" />
             </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" variant="text" @click="addLogDialog = false"> Cancel </v-btn>
-          <v-btn color="primary" :loading="addingLog" @click="addCareLogEntry"> Save </v-btn>
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="addLogDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="addingLog"
+            @click="addCareLogEntry">
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -233,10 +300,10 @@
 </template>
 
 <script setup lang="ts">
-import type {Plant, CareLog} from "~/types/database";
+import type { Plant, CareLog } from '~/types/database';
 
 definePageMeta({
-  middleware: "auth",
+  middleware: 'auth',
 });
 
 // Types for the component
@@ -273,7 +340,7 @@ interface PlantWithNextTask extends Plant {
 }
 
 const auth = useAuth();
-const search = ref<string>("");
+const search = ref<string>('');
 const plants = ref<PlantWithNextTask[]>([]);
 const loading = ref<boolean>(true);
 const selectedPlant = ref<number | null>(null);
@@ -283,7 +350,7 @@ const careSchedule = ref<CareScheduleForm>({
   fertilizingInterval: 30,
   lastWatered: new Date().toISOString().substring(0, 10),
   lastFertilized: new Date().toISOString().substring(0, 10),
-  lightNeeds: "Medium Light",
+  lightNeeds: 'Medium Light',
 });
 const savingSchedule = ref<boolean>(false);
 const loggingWater = ref<boolean>(false);
@@ -294,9 +361,9 @@ const loadingLogs = ref<boolean>(false);
 // Dialog state
 const addLogDialog = ref<boolean>(false);
 const newLog = ref<CareLogForm>({
-  actionType: "watering",
+  actionType: 'watering',
   actionDate: new Date().toISOString().substring(0, 10),
-  notes: "",
+  notes: '',
 });
 const addingLog = ref<boolean>(false);
 
@@ -325,9 +392,9 @@ const formattedCareLog = computed<FormattedCareLog[]>(() => {
 });
 
 const upcomingTasks = computed<UpcomingTasks>(() => {
-  if (!currentPlant.value) return {watering: null, fertilizing: null};
+  if (!currentPlant.value) return { watering: null, fertilizing: null };
 
-  const tasks: UpcomingTasks = {watering: null, fertilizing: null};
+  const tasks: UpcomingTasks = { watering: null, fertilizing: null };
 
   // Calculate next watering date
   if (careSchedule.value.lastWatered && careSchedule.value.wateringInterval) {
@@ -357,14 +424,14 @@ const upcomingTasks = computed<UpcomingTasks>(() => {
 });
 
 const lastWateredHint = computed<string>(() => {
-  if (!careSchedule.value.lastWatered) return "No watering recorded";
+  if (!careSchedule.value.lastWatered) return 'No watering recorded';
 
   const days = daysSince(careSchedule.value.lastWatered);
   return `Last watered ${days} days ago`;
 });
 
 const lastFertilizedHint = computed<string>(() => {
-  if (!careSchedule.value.lastFertilized) return "No fertilizing recorded";
+  if (!careSchedule.value.lastFertilized) return 'No fertilizing recorded';
 
   const days = daysSince(careSchedule.value.lastFertilized);
   return `Last fertilized ${days} days ago`;
@@ -372,12 +439,12 @@ const lastFertilizedHint = computed<string>(() => {
 
 // Helper functions
 function formatDate(date: string | Date | null): string {
-  if (!date) return "N/A";
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+  if (!date) return 'N/A';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(dateObj);
 }
 
@@ -388,12 +455,12 @@ function daysSince(dateString: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-function getNextTaskInfo(plant: PlantWithNextTask): {date: Date | null; days: number | null; overdue: boolean} {
+function getNextTaskInfo(plant: PlantWithNextTask): { date: Date | null; days: number | null; overdue: boolean } {
   const today = new Date();
 
   // Default if no schedule
   if (!plant.next_task_date) {
-    return {date: null, days: null, overdue: false};
+    return { date: null, days: null, overdue: false };
   }
 
   const nextTaskDate = new Date(plant.next_task_date);
@@ -408,37 +475,37 @@ function getNextTaskInfo(plant: PlantWithNextTask): {date: Date | null; days: nu
 }
 
 function getTaskColor(task: TaskInfo | null): string {
-  if (!task) return "grey";
+  if (!task) return 'grey';
 
   if (task.overdue) {
-    return "error";
+    return 'error';
   }
 
-  if (!task.date) return "grey";
+  if (!task.date) return 'grey';
 
   // Calculate days until due
   const diffDays = Math.ceil((task.date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 2) {
-    return "warning";
+    return 'warning';
   }
 
-  return "success";
+  return 'success';
 }
 
 function getRelativeDateText(date: Date | null): string {
-  if (!date) return "";
+  if (!date) return '';
 
   const today = new Date();
   const diffTime = date.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""}`;
+    return `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`;
   } else if (diffDays === 0) {
-    return "Due today";
+    return 'Due today';
   } else {
-    return `Due in ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
+    return `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
   }
 }
 
@@ -447,18 +514,18 @@ async function loadPlants(): Promise<void> {
   loading.value = true;
   try {
     if (!auth.user.value?.id) {
-      throw new Error("User not authenticated");
+      throw new Error('User not authenticated');
     }
 
     const response = await fetch(`/api/plants?userId=${auth.user.value.id}`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch plants");
+      throw new Error('Failed to fetch plants');
     }
 
     plants.value = await response.json();
   } catch (error) {
-    console.error("Error loading plants:", error);
+    console.error('Error loading plants:', error);
   } finally {
     loading.value = false;
   }
@@ -471,7 +538,7 @@ async function loadPlantCareSchedule(plantId: number): Promise<void> {
     const response = await fetch(`/api/care-schedules/${plantId}`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch care schedule");
+      throw new Error('Failed to fetch care schedule');
     }
 
     const schedule = await response.json();
@@ -486,7 +553,7 @@ async function loadPlantCareSchedule(plantId: number): Promise<void> {
         fertilizingInterval: schedule.fertilizing_interval || 30,
         lastWatered: schedule.last_watered || new Date().toISOString().substring(0, 10),
         lastFertilized: schedule.last_fertilized || new Date().toISOString().substring(0, 10),
-        lightNeeds: schedule.light_needs || "Medium Light",
+        lightNeeds: schedule.light_needs || 'Medium Light',
       };
     } else {
       // Default values
@@ -495,14 +562,14 @@ async function loadPlantCareSchedule(plantId: number): Promise<void> {
         fertilizingInterval: 30,
         lastWatered: new Date().toISOString().substring(0, 10),
         lastFertilized: new Date().toISOString().substring(0, 10),
-        lightNeeds: "Medium Light",
+        lightNeeds: 'Medium Light',
       };
     }
 
     // Load care logs
     loadCareLogs(plantId);
   } catch (error) {
-    console.error("Error loading care schedule:", error);
+    console.error('Error loading care schedule:', error);
   }
 }
 
@@ -512,12 +579,12 @@ async function loadCareLogs(plantId: number): Promise<void> {
     const response = await fetch(`/api/care-logs/${plantId}`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch care logs");
+      throw new Error('Failed to fetch care logs');
     }
 
     careLog.value = await response.json();
   } catch (error) {
-    console.error("Error loading care logs:", error);
+    console.error('Error loading care logs:', error);
   } finally {
     loadingLogs.value = false;
   }
@@ -530,9 +597,9 @@ async function saveCareSchedule(): Promise<void> {
 
   try {
     const response = await fetch(`/api/care-schedules/${currentPlant.value.id}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         wateringInterval: Number(careSchedule.value.wateringInterval) || null,
@@ -544,13 +611,13 @@ async function saveCareSchedule(): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to save care schedule");
+      throw new Error('Failed to save care schedule');
     }
 
     // Reload plants list to get updated next_task_date
     await loadPlants();
   } catch (error) {
-    console.error("Error saving care schedule:", error);
+    console.error('Error saving care schedule:', error);
   } finally {
     savingSchedule.value = false;
   }
@@ -564,16 +631,16 @@ async function logWatering(): Promise<void> {
   try {
     // Log the watering
     await addCareLog({
-      actionType: "watering",
+      actionType: 'watering',
       actionDate: new Date().toISOString().substring(0, 10),
-      notes: "Regular watering",
+      notes: 'Regular watering',
     });
 
     // Update the care schedule
     careSchedule.value.lastWatered = new Date().toISOString().substring(0, 10);
     await saveCareSchedule();
   } catch (error) {
-    console.error("Error logging watering:", error);
+    console.error('Error logging watering:', error);
   } finally {
     loggingWater.value = false;
   }
@@ -587,16 +654,16 @@ async function logFertilizing(): Promise<void> {
   try {
     // Log the fertilizing
     await addCareLog({
-      actionType: "fertilizing",
+      actionType: 'fertilizing',
       actionDate: new Date().toISOString().substring(0, 10),
-      notes: "Regular fertilizing",
+      notes: 'Regular fertilizing',
     });
 
     // Update the care schedule
     careSchedule.value.lastFertilized = new Date().toISOString().substring(0, 10);
     await saveCareSchedule();
   } catch (error) {
-    console.error("Error logging fertilizing:", error);
+    console.error('Error logging fertilizing:', error);
   } finally {
     loggingFertilizer.value = false;
   }
@@ -607,9 +674,9 @@ async function addCareLog(log: CareLogForm): Promise<void> {
 
   try {
     const response = await fetch(`/api/care-logs/${currentPlant.value.id}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         actionType: log.actionType,
@@ -619,13 +686,13 @@ async function addCareLog(log: CareLogForm): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to add care log");
+      throw new Error('Failed to add care log');
     }
 
     // Reload care logs
     await loadCareLogs(currentPlant.value.id);
   } catch (error) {
-    console.error("Error adding care log:", error);
+    console.error('Error adding care log:', error);
   }
 }
 
@@ -640,24 +707,24 @@ async function addCareLogEntry(): Promise<void> {
     await addCareLog(newLog.value);
 
     // Update care schedule if it's a watering or fertilizing entry
-    if (newLog.value.actionType === "watering") {
+    if (newLog.value.actionType === 'watering') {
       careSchedule.value.lastWatered = newLog.value.actionDate;
       await saveCareSchedule();
-    } else if (newLog.value.actionType === "fertilizing") {
+    } else if (newLog.value.actionType === 'fertilizing') {
       careSchedule.value.lastFertilized = newLog.value.actionDate;
       await saveCareSchedule();
     }
 
     // Reset and close dialog
     newLog.value = {
-      actionType: "watering",
+      actionType: 'watering',
       actionDate: new Date().toISOString().substring(0, 10),
-      notes: "",
+      notes: '',
     };
 
     addLogDialog.value = false;
   } catch (error) {
-    console.error("Error adding care log entry:", error);
+    console.error('Error adding care log entry:', error);
   } finally {
     addingLog.value = false;
   }

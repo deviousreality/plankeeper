@@ -4,7 +4,7 @@ import { db } from '~/server/utils/db';
 export default defineEventHandler(async (event) => {
   const plantId = parseInt(event.context.params.id);
   const priceId = parseInt(event.context.params.priceId);
-  
+
   if (!plantId || !priceId) {
     throw createError({
       statusCode: 400,
@@ -14,23 +14,26 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Delete the price record (making sure it belongs to this plant)
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       DELETE FROM market_price
       WHERE id = ? AND plant_id = ?
-    `).run(priceId, plantId);
-    
+    `
+      )
+      .run(priceId, plantId);
+
     if (result.changes === 0) {
       throw createError({
         statusCode: 404,
         message: 'Price record not found or does not belong to this plant',
       });
     }
-    
+
     return {
       success: true,
-      message: 'Price record deleted successfully'
+      message: 'Price record deleted successfully',
     };
-    
   } catch (error) {
     console.error(`Error deleting price record ${priceId} for plant ${plantId}:`, error);
     throw createError({

@@ -30,8 +30,10 @@ export default defineEventHandler(async (event) => {
   }
   try {
     // Check if user already exists
-    const existingUser = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(username, email || null) as ExistingUser | undefined;
-    
+    const existingUser = db
+      .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
+      .get(username, email || null) as ExistingUser | undefined;
+
     if (existingUser) {
       throw createError({
         statusCode: 409,
@@ -42,21 +44,24 @@ export default defineEventHandler(async (event) => {
     // Hash the password before storing
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    const result = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hashedPassword, email || null) as InsertResult;
-    
+
+    const result = db
+      .prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)')
+      .run(username, hashedPassword, email || null) as InsertResult;
+
     return {
       id: typeof result.lastInsertRowid === 'bigint' ? Number(result.lastInsertRowid) : result.lastInsertRowid,
       username,
-      email
-    };  } catch (err) {
+      email,
+    };
+  } catch (err) {
     console.error('Registration error:', err);
-    
+
     // If it's already an API error with status code, rethrow it
     if (isApiError(err)) {
       throw err;
     }
-    
+
     throw createError({
       statusCode: 500,
       message: 'Server error during registration',

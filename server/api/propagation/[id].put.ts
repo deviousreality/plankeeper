@@ -12,7 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Unauthorized',
       });
     }
 
@@ -21,65 +21,69 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!id) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation ID is required'
+        message: 'Propagation ID is required',
       });
     }
 
     // Parse request body
     const body = await readBody(event);
-    
+
     // Validate required fields
     if (!body.plantId) {
       throw createError({
         statusCode: 400,
-        message: 'Plant ID is required'
+        message: 'Plant ID is required',
       });
     }
-    
+
     if (!body.propType) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation type is required'
+        message: 'Propagation type is required',
       });
     }
-    
+
     if (!body.propDate) {
       throw createError({
         statusCode: 400,
-        message: 'Propagation date is required'
+        message: 'Propagation date is required',
       });
     }
 
     // Verify propagation record exists and user owns the plant
-    const existingPropagation = db.prepare(`
+    const existingPropagation = db
+      .prepare(
+        `
       SELECT pp.id
       FROM plant_propagation pp
       JOIN plants p ON pp.plant_id = p.id
       WHERE pp.id = ? AND p.user_id = ?
-    `).get(id, user.id);
+    `
+      )
+      .get(id, user.id);
 
     if (!existingPropagation) {
       throw createError({
         statusCode: 404,
-        message: 'Propagation record not found or you do not have permission to update it'
+        message: 'Propagation record not found or you do not have permission to update it',
       });
     }
 
     // Verify user owns the plant if plant ID has changed
     if (body.plantId) {
-      const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?')
-        .get(body.plantId, user.id);
-        
+      const plant = db.prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?').get(body.plantId, user.id);
+
       if (!plant) {
         throw createError({
           statusCode: 403,
-          message: 'You do not have permission to assign this plant'
+          message: 'You do not have permission to assign this plant',
         });
       }
     }
-    
+
     // Update propagation record
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE plant_propagation
       SET 
         plant_id = ?,
@@ -93,7 +97,8 @@ export default defineEventHandler(async (event: H3Event) => {
         notes = ?,
         zero_cout_notes = ?
       WHERE id = ?
-    `).run(
+    `
+    ).run(
       body.plantId,
       body.propType,
       body.seedSource || null,
@@ -108,7 +113,9 @@ export default defineEventHandler(async (event: H3Event) => {
     );
 
     // Get updated record
-    const updatedPropagation = db.prepare(`
+    const updatedPropagation = db
+      .prepare(
+        `
       SELECT 
         pp.*,
         p.name as plantName,
@@ -116,8 +123,10 @@ export default defineEventHandler(async (event: H3Event) => {
       FROM plant_propagation pp
       JOIN plants p ON pp.plant_id = p.id
       WHERE pp.id = ?
-    `).get(id);
-      
+    `
+      )
+      .get(id);
+
     // Map DB column names to camelCase for frontend
     const record = updatedPropagation as Record<string, any>;
     const mappedPropagation = {
@@ -133,18 +142,18 @@ export default defineEventHandler(async (event: H3Event) => {
       currentCount: record.current_count,
       transplantDate: record.transplant_date,
       notes: record.notes,
-      zeroCoutNotes: record.zero_cout_notes
+      zeroCoutNotes: record.zero_cout_notes,
     };
 
     return {
       success: true,
-      data: mappedPropagation
+      data: mappedPropagation,
     };
   } catch (error) {
     console.error('Error updating propagation record:', error);
     throw createError({
       statusCode: 500,
-      message: 'Error updating propagation record'
+      message: 'Error updating propagation record',
     });
   }
 });

@@ -43,12 +43,14 @@ A web application for plant enthusiasts to track care schedules, record history,
 ### Installation
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/yourusername/plankeeper.git
    cd plankeeper
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    # or
@@ -56,17 +58,19 @@ A web application for plant enthusiasts to track care schedules, record history,
    ```
 
 3. Create a `.env` file in the project root with your OpenWeatherMap API key:
+
    ```
    WEATHER_API_KEY=your_api_key_here
    ```
 
 4. Initialize the database with sample data:
+
    ```bash
    npm run reset-db
    # or
    yarn reset-db
    ```
-   
+
    This will create:
    - A sample admin user (username: `admin`, password: `password123`)
    - Plant care tips for common houseplants
@@ -92,6 +96,7 @@ npm run update-admin-password
 ### Development
 
 1. Start the development server:
+
    ```bash
    npm run dev
    # or
@@ -120,6 +125,7 @@ npm run lint:fix
 ### Security Note
 
 For production deployment, remember to:
+
 - Update the admin password using `npm run update-admin-password`
 - Use a secure, randomly generated JWT secret in your `.env` file
 
@@ -137,6 +143,7 @@ To use these tasks in VS Code, press `Ctrl+Shift+P` and select "Tasks: Run Task"
 ### Production Deployment
 
 1. Build for production:
+
    ```bash
    npm run build
    # or
@@ -144,6 +151,7 @@ To use these tasks in VS Code, press `Ctrl+Shift+P` and select "Tasks: Run Task"
    ```
 
 2. Start the production server:
+
    ```bash
    npm run preview
    # or
@@ -183,7 +191,7 @@ plankeeper/
 ├── server/               # Server-side code
 │   ├── api/              # API endpoints
 │   ├── scripts/          # Utility scripts
-│   └── utils/            # Server utilities 
+│   └── utils/            # Server utilities
 │       └── db.ts         # Database utilities
 ├── .env                  # Environment variables (create from .env.example)
 ├── .env.example          # Example environment variables

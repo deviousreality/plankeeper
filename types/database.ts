@@ -85,6 +85,8 @@ export interface PlantWithTaxonomy extends Plant {
 export interface Species {
   id: number;
   name: string;
+  genusId: number;
+  commonName?: string;
   created_at: string;
   updated_at: string;
 }
@@ -92,7 +94,7 @@ export interface Species {
 export interface Genus {
   id: number;
   name: string;
-  speciesId: number | null;
+  familyId: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -100,8 +102,6 @@ export interface Genus {
 export interface Family {
   id: number;
   name: string;
-  geniusId: number | null;
-  speciesId: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -219,9 +219,9 @@ export interface PlantFormData {
 // Utility Types
 // =====================================
 
-export type CreatePlant = Omit<Plant, "id" | "created_at" | "updated_at">;
-export type UpdatePlant = Partial<Omit<Plant, "id" | "created_at" | "updated_at">>;
+export type CreatePlant = Omit<Plant, 'id' | 'created_at' | 'updated_at'>;
+export type UpdatePlant = Partial<Omit<Plant, 'id' | 'created_at' | 'updated_at'>>;
 
-export type CreatePlantFamily = Omit<Family, "id" | "created_at" | "updated_at">;
-export type CreatePlantGenus = Omit<Genus, "id" | "created_at" | "updated_at">;
-export type CreatePlantSpecies = Omit<Species, "id" | "created_at" | "updated_at">;
+export type CreatePlantFamily = Omit<Family, 'id' | 'created_at' | 'updated_at'>;
+export type CreatePlantGenus = Omit<Genus, 'id' | 'created_at' | 'updated_at'>;
+export type CreatePlantSpecies = Omit<Species, 'id' | 'created_at' | 'updated_at'>;
