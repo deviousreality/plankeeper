@@ -75,15 +75,15 @@ const initDb = (): void => {
       is_favorite BOOLEAN DEFAULT 0,
       can_sell BOOLEAN DEFAULT 0,
       is_personal BOOLEAN DEFAULT 0,
-      common_name TEXT,
-      flower_color TEXT,
-      variety TEXT,
-      light_pref TEXT,
-      water_pref TEXT,
-      soil_type TEXT,
+      common_name VARCHAR(100),
+      flower_color VARCHAR(100),
+      variety VARCHAR(100),
+      light_pref VARCHAR(50),
+      water_pref VARCHAR(50),
+      soil_type VARCHAR(50),
       plant_use VARCHAR(50),
       has_fragrance BOOLEAN DEFAULT 0,
-      fragrance_description TEXT,
+      fragrance_description VARCHAR(100),
       is_petsafe BOOLEAN DEFAULT 0,
       plant_zones INTEGER,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -99,9 +99,9 @@ const initDb = (): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS plant_species (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
+      name VARCHAR(100) NOT NULL UNIQUE,
       genus_id INTEGER NOT NULL,
-      common_name TEXT,
+      common_name VARCHAR(100),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (genus_id) REFERENCES plant_genus(id)
@@ -112,7 +112,7 @@ const initDb = (): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS plant_genus (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
+      name VARCHAR(100) NOT NULL UNIQUE,
       family_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -124,7 +124,7 @@ const initDb = (): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS plant_family (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
+      name VARCHAR(100) NOT NULL UNIQUE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -137,6 +137,8 @@ const initDb = (): void => {
       plant_id INTEGER NOT NULL,
       date_checked DATE NOT NULL,
       price DECIMAL(5,2) NOT NULL,
+      location VARCHAR(100),
+      size VARCHAR(50),
       FOREIGN KEY (plant_id) REFERENCES plants(id)
     )
   `);
@@ -147,8 +149,8 @@ const initDb = (): void => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
       prop_type INTEGER,
-      seed_source TEXT,
-      cutting_source TEXT,
+      seed_source VARCHAR(100),
+      cutting_source VARCHAR(100),
       prop_date DATE,
       initial_count INTEGER,
       current_count INTEGER,
@@ -169,14 +171,14 @@ const initDb = (): void => {
       plant_size DECIMAL(5,2),
       last_watered_date DATE,
       last_fertilized_date DATE,
-      location TEXT,
+      location VARCHAR(100),
       notes TEXT,
       acquisition_date DATE,
-      status TEXT,
+      status VARCHAR(50),
       date_death DATE,
-      cause_of_death TEXT,
-      death_notes TEXT,
-      death_location TEXT,
+      cause_of_death VARCHAR(100),
+      death_notes       date_death DATE,
+      death_location VARCHAR(100),
       FOREIGN KEY (plant_id) REFERENCES plants(id)
     )
   `);
@@ -190,7 +192,7 @@ const initDb = (): void => {
       fertilizing_interval INTEGER,
       last_watered DATE,
       last_fertilized DATE,
-      light_needs TEXT,
+      light_needs VAR,
       next_task_date DATE,
       FOREIGN KEY (plant_id) REFERENCES plants(id)
     )

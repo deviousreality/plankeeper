@@ -46,9 +46,63 @@ async function addSampleData() {
 
     console.log(`Default admin credentials: username="admin", password="${defaultPassword}"`);
 
-    // Add sample plant species and care tips
-    const species = ['Monstera Deliciosa', 'Snake Plant', 'Pothos', 'Peace Lily', 'ZZ Plant'];
-
+    // Add sample taxonomy data
+    
+    // Sample plant families
+    const plantFamilies = [
+      { id: 1, name: 'Araceae' },        // Monstera, Pothos, Peace Lily
+      { id: 2, name: 'Asparagaceae' },   // Snake Plant
+      { id: 3, name: 'Araliaceae' }      // ZZ Plant
+    ];
+    
+    // Sample plant genera
+    const plantGenera = [
+      { id: 1, name: 'Monstera', family_id: 1 },
+      { id: 2, name: 'Dracaena', family_id: 2 }, // Modern classification of Snake Plant
+      { id: 3, name: 'Epipremnum', family_id: 1 }, // Pothos
+      { id: 4, name: 'Spathiphyllum', family_id: 1 }, // Peace Lily
+      { id: 5, name: 'Zamioculcas', family_id: 3 } // ZZ Plant
+    ];
+    
+    // Sample plant species
+    const plantSpecies = [
+      { id: 1, name: 'deliciosa', genus_id: 1, common_name: 'Swiss Cheese Plant' }, // Monstera deliciosa
+      { id: 2, name: 'trifasciata', genus_id: 2, common_name: 'Snake Plant' },      // Dracaena trifasciata (formerly Sansevieria)
+      { id: 3, name: 'aureum', genus_id: 3, common_name: 'Golden Pothos' },         // Epipremnum aureum
+      { id: 4, name: 'wallisii', genus_id: 4, common_name: 'Peace Lily' },          // Spathiphyllum wallisii
+      { id: 5, name: 'zamiifolia', genus_id: 5, common_name: 'ZZ Plant' }           // Zamioculcas zamiifolia
+    ];
+    
+    // Clear existing taxonomy data to prevent duplicates
+    const existingFamiliesCount = db.prepare('SELECT COUNT(*) as count FROM plant_family').get() as { count: number };
+    if (existingFamiliesCount.count > 0) {
+      db.prepare('DELETE FROM plant_species').run();
+      db.prepare('DELETE FROM plant_genus').run();
+      db.prepare('DELETE FROM plant_family').run();
+      console.log(`Cleared existing taxonomy data (${existingFamiliesCount.count} families)`);
+    }
+    
+    // Insert plant families
+    const familyInsert = db.prepare('INSERT OR IGNORE INTO plant_family (id, name) VALUES (?, ?)');
+    plantFamilies.forEach(family => {
+      familyInsert.run(family.id, family.name);
+    });
+    console.log(`Added ${plantFamilies.length} plant families`);
+    
+    // Insert plant genera
+    const genusInsert = db.prepare('INSERT OR IGNORE INTO plant_genus (id, name, family_id) VALUES (?, ?, ?)');
+    plantGenera.forEach(genus => {
+      genusInsert.run(genus.id, genus.name, genus.family_id);
+    });
+    console.log(`Added ${plantGenera.length} plant genera`);
+    
+    // Insert plant species
+    const speciesInsert = db.prepare('INSERT OR IGNORE INTO plant_species (id, name, genus_id, common_name) VALUES (?, ?, ?, ?)');
+    plantSpecies.forEach(species => {
+      speciesInsert.run(species.id, species.name, species.genus_id, species.common_name);
+    });
+    console.log(`Added ${plantSpecies.length} plant species`);
+    
     // Sample care tips
     const careTips = [
       {

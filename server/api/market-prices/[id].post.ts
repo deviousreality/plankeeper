@@ -37,11 +37,11 @@ export default defineEventHandler(async (event) => {
     const result = db
       .prepare(
         `
-      INSERT INTO market_price (plant_id, date_checked, price)
-      VALUES (?, ?, ?)
+      INSERT INTO market_price (plant_id, date_checked, price, location, size)
+      VALUES (?, ?, ?, ?, ?)
     `
       )
-      .run(plantId, body.dateChecked, body.price);
+      .run(plantId, body.dateChecked, body.price, body.location || null, body.size || null);
 
     return {
       success: true,

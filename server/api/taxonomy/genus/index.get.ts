@@ -6,9 +6,14 @@ export default defineEventHandler(async (event) => {
     const genus = db
       .prepare(
         `
-      SELECT id, name, family_id as familyId
-      FROM plant_genus
-      ORDER BY name
+      SELECT 
+        g.id, 
+        g.name, 
+        g.family_id as familyId,
+        f.name as familyName
+      FROM plant_genus g
+      JOIN plant_family f ON g.family_id = f.id
+      ORDER BY g.name
     `
       )
       .all();

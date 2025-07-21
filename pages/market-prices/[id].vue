@@ -74,6 +74,18 @@
                   type="date"
                   required />
               </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="newPrice.location"
+                  label="Location"
+                  placeholder="Store name or website" />
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="newPrice.size"
+                  label="Size"
+                  placeholder="4-inch pot, 1 gallon, etc." />
+              </v-col>
             </v-row>
             <v-btn
               color="primary"
@@ -111,6 +123,8 @@
             :headers="[
               { title: 'Date', key: 'formattedDate' },
               { title: 'Price', key: 'formattedPrice' },
+              { title: 'Location', key: 'location' },
+              { title: 'Size', key: 'size' },
               { title: 'Actions', key: 'actions', sortable: false },
             ]"
             :items="formattedPriceHistory"
@@ -182,9 +196,13 @@ let chart: Chart | null = null;
 const newPrice = ref<{
   price: string;
   dateChecked: string;
+  location: string;
+  size: string;
 }>({
   price: '',
   dateChecked: new Date().toISOString().substr(0, 10),
+  location: '',
+  size: '',
 });
 
 // Computed properties
@@ -328,6 +346,8 @@ async function addNewPrice() {
       body: JSON.stringify({
         price: parseFloat(newPrice.value.price),
         dateChecked: newPrice.value.dateChecked,
+        location: newPrice.value.location || null,
+        size: newPrice.value.size || null,
       }),
     });
 
@@ -339,6 +359,8 @@ async function addNewPrice() {
     newPrice.value = {
       price: '',
       dateChecked: new Date().toISOString().substr(0, 10),
+      location: '',
+      size: '',
     };
 
     await loadPlantData();

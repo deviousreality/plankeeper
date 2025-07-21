@@ -3,10 +3,12 @@ import { db } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Don't include genus_id and species_id since they create a circular reference
+    // and aren't used in the new taxonomy search functionality
     const families = db
       .prepare(
         `
-      SELECT id, name, genus_id as genusId, species_id as speciesId
+      SELECT id, name
       FROM plant_family
       ORDER BY name
     `

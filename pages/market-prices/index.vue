@@ -1,6 +1,14 @@
 <template>
   <div>
-    <h1 class="text-h3 mb-6">Market Price Tracker</h1>
+    <div class="d-flex justify-space-between align-center mb-6">
+      <h1 class="text-h3">Market Price Tracker</h1>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-currency-usd-circle"
+        to="/market-prices/add">
+        Add Market Price
+      </v-btn>
+    </div>
 
     <v-card class="mb-6">
       <v-card-text>
@@ -88,6 +96,18 @@
                   type="date"
                   required />
               </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="priceRecord.location"
+                  label="Location"
+                  placeholder="Store name or website" />
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="priceRecord.size"
+                  label="Size"
+                  placeholder="4-inch pot, 1 gallon, etc." />
+              </v-col>
             </v-row>
           </v-container>
         </v-card-text>
@@ -131,6 +151,8 @@ interface PlantDisplay extends Plant {
 interface PriceRecordForm {
   price: number | string;
   dateChecked: string;
+  location: string;
+  size: string;
 }
 
 const auth = useAuth();
@@ -144,6 +166,8 @@ const selectedPlant = ref<PlantDisplay | null>(null);
 const priceRecord = ref<PriceRecordForm>({
   price: 0,
   dateChecked: new Date().toISOString().substr(0, 10),
+  location: '',
+  size: '',
 });
 
 const headers = [
@@ -208,6 +232,8 @@ function openPriceDialog(plant: PlantDisplay): void {
   priceRecord.value = {
     price: 0,
     dateChecked: new Date().toISOString().substr(0, 10),
+    location: '',
+    size: '',
   };
   dialog.value = true;
 }
@@ -232,6 +258,8 @@ async function savePriceRecord(): Promise<void> {
       body: JSON.stringify({
         price: Number(priceRecord.value.price),
         dateChecked: priceRecord.value.dateChecked,
+        location: priceRecord.value.location || null,
+        size: priceRecord.value.size || null,
       }),
     });
 

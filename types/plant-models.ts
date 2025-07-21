@@ -27,6 +27,8 @@ export interface MarketPrice {
   plantId: number;
   dateChecked: string;
   price: number;
+  location?: string;
+  size?: string;
 }
 
 export enum PropagationType {

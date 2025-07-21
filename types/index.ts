@@ -82,6 +82,8 @@ export type MarketPrice = {
   plantId: number;
   dateChecked: string;
   price: number;
+  location?: string;
+  size?: string;
 };
 
 export type PropagationType = 1 | 2 | 3; // 1 = seed, 2 = cutting, 3 = division (or define an enum)

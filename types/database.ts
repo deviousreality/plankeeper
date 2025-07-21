@@ -156,6 +156,8 @@ export interface MarketPrice {
   plantId: number;
   price: number;
   dateChecked: string;
+  location?: string;
+  size?: string;
   created_at: string;
   updated_at: string;
 }

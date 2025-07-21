@@ -81,14 +81,20 @@ Standardized plant species catalog.
 
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Species name
+- `genus_id` - INTEGER - Foreign key to plant_genus.id
+- `common_name` - TEXT - Common name for the species
+- `created_at` - DATETIME - When the record was created
+- `updated_at` - DATETIME - When the record was last updated
 
-### plant_genius
+### plant_genus
 
 Plant genus classification (taxonomic rank above species).
 
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Genus name
-- `species_id` - INTEGER - Foreign key to plant_species.id
+- `family_id` - INTEGER - Foreign key to plant_family.id
+- `created_at` - DATETIME - When the record was created
+- `updated_at` - DATETIME - When the record was last updated
 
 ### plant_family
 
@@ -96,8 +102,8 @@ Plant family classification (taxonomic rank above genus).
 
 - `id` - INTEGER PRIMARY KEY - Unique identifier
 - `name` - TEXT - Family name
-- `genius_id` - INTEGER - Foreign key to plant_genius.id
-- `species_id` - INTEGER - Foreign key to plant_species.id
+- `created_at` - DATETIME - When the record was created
+- `updated_at` - DATETIME - When the record was last updated
 
 ## Inventory & Production Tables
 

@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
       .prepare(
         `
       SELECT p.*, 
-        (SELECT json_object('id', mp.id, 'price', mp.price, 'dateChecked', mp.date_checked) 
+        (SELECT json_object('id', mp.id, 'price', mp.price, 'dateChecked', mp.date_checked, 'location', mp.location, 'size', mp.size) 
          FROM market_price mp 
          WHERE mp.plant_id = p.id 
          ORDER BY mp.date_checked DESC 

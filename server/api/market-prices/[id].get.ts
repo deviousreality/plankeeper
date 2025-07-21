@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     const priceRecords = db
       .prepare(
         `
-      SELECT id, plant_id as plantId, date_checked as dateChecked, price
+      SELECT id, plant_id as plantId, date_checked as dateChecked, price, location, size
       FROM market_price
       WHERE plant_id = ?
       ORDER BY date_checked DESC
