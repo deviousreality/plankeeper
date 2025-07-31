@@ -2,7 +2,7 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h3">Add New Plant</h1>
+      <h1 class="text-h3">{{ isQuickAdd ? 'Quick Add Plant' : 'Add New Plant' }}</h1>
       <v-btn
         color="primary"
         variant="outlined"
@@ -12,161 +12,22 @@
       </v-btn>
     </div>
 
-    <v-form
-      ref="form"
-      @submit.prevent="savePlant">
-      <v-card>
-        <v-card-text>
-          <v-row>
-            <!-- Left Column - Basic Plant Info -->
-            <v-col
-              cols="12"
-              md="6">
-              <h2 class="text-h5 mb-4">Plant Details</h2>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col
-              cols="12"
-              md="6">
-              <v-text-field
-                v-model="plant.name"
-                label="Plant Name*"
-                required
-                :rules="[(v) => !!v || 'Name is required']" />
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col
-              cols="4"
-              md="2">
-              <v-autocomplete
-                v-model="plant.family_id"
-                autocomplete="off"
-                label="Family"
-                hint="Select a plant family first (e.g., Araceae, Asparagaceae)"
-                :items="familyOptions"
-                item-title="title"
-                item-value="id"
-                clearable />
-            </v-col>
-            <v-col
-              cols="4"
-              md="2">
-              <v-autocomplete
-                v-model="plant.genus_id"
-                autocomplete="off"
-                label="Genus"
-                :hint="
-                  plant.family_id
-                    ? 'Select a genus within the chosen family (e.g., Monstera, Sansevieria)'
-                    : 'Select a family first to see available genera'
-                "
-                :items="genusOptions"
-                item-title="title"
-                item-value="id"
-                :disabled="!plant.family_id"
-                clearable />
-            </v-col>
-            <v-col
-              cols="4"
-              md="2">
-              <v-autocomplete
-                v-model="plant.species_id"
-                autocomplete="off"
-                label="Species"
-                :hint="
-                  plant.genus_id
-                    ? 'Select a species within the chosen genus (e.g., M. deliciosa)'
-                    : 'Select a genus first to see available species'
-                "
-                :items="speciesOptions"
-                item-title="title"
-                item-value="id"
-                :disabled="!plant.genus_id"
-                clearable />
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col
-              cols="12"
-              md="6">
-              <v-text-field
-                v-model="plant.flower_color"
-                label="Flower Color"
-                hint="Primary color of the plant"
-                placeholder="e.g., Green, Variegated" />
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col
-              cols="12"
-              md="6">
-              <v-text-field
-                v-model="plant.image_url"
-                label="Image URL"
-                hint="Link to an image of your plant"
-                placeholder="https://example.com/image.jpg" />
-
-              <v-textarea
-                v-model="plant.notes"
-                label="Notes"
-                hint="Any additional information about your plant"
-                auto-grow
-                rows="3" />
-
-              <v-switch
-                v-model="plant.is_favorite"
-                color="warning"
-                label="Add to favorites"
-                prepend-icon="mdi-star" />
-
-              <v-dialog
-                ref="dialog"
-                v-model="datePickerModal"
-                :close-on-content-click="false"
-                width="auto">
-                <template #activator="{ props }">
-                  <v-text-field
-                    v-model="formattedDate"
-                    label="Date Acquired"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="props"
-                    clearable
-                    @click:clear="plant.acquired_date = ''" />
-                </template>
-                <v-date-picker
-                  v-model="plant.acquired_date"
-                  @update:model-value="datePickerModal = false" />
-              </v-dialog>
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-divider />
-
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            @click="$router.push('/plants')">
-            Cancel
-          </v-btn>
-          <v-btn
-            color="success"
-            type="submit"
-            :loading="loading">
-            Save Plant
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
+    <FormPlant
+      ref="formPlant"
+      v-model:plant="plantFormData"
+      :is-quick-add="isQuickAdd"
+      :loading="loading"
+      :family-options="familyOptions"
+      :genus-options="genusOptions"
+      :species-options="speciesOptions"
+      @submit="savePlant"
+      @cancel="$router.push('/plants')" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import type { Plant } from '~/types/database';
+import FormPlant from '~/components/form-plant.vue';
 
 type FamilyOptions = {
   title: string;
@@ -191,6 +52,7 @@ type PlantFormData = Omit<Plant, 'id' | 'user_id' | 'created_at' | 'updated_at'>
   user_id?: number;
   created_at?: string;
   updated_at?: string;
+  personal_count?: number; // For personal plant count
 };
 
 definePageMeta({
@@ -198,13 +60,12 @@ definePageMeta({
 });
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuth();
-const form = ref();
 const loading = ref(false);
-// const setInitialCare = ref(true);
-// const initialWatering = ref(true);
-// const initialFertilizing = ref(false);
-const datePickerModal = ref(false);
+
+// Quick add mode based on query parameter
+const isQuickAdd = computed(() => route.query.quick === 'true');
 
 // Taxonomy data
 const speciesOptions = ref<SpeciesOptions[]>([]);
@@ -216,7 +77,7 @@ const selectedFamilyId = ref<number | undefined>(undefined);
 const selectedGenusId = ref<number | undefined>(undefined);
 
 // Plant data - using the correct Plant type from database
-const plant = ref<PlantFormData>({
+const plantFormData = ref<PlantFormData>({
   name: '',
   species_id: undefined,
   family_id: undefined,
@@ -233,16 +94,42 @@ const plant = ref<PlantFormData>({
   light_pref: undefined,
   water_pref: undefined,
   soil_type: undefined,
+  plant_use: undefined,
+  has_fragrance: false,
+  fragrance_description: undefined,
+  is_petsafe: false,
+  plant_zones: undefined,
+  personal_count: undefined, // For personal plant count
 });
+
+// Personal plant count for the personal table
+const personalCount = ref<number>(1);
+
+// Form reference for validation
+const formPlant = ref();
 
 // Form options
 // const lightOptions = ["Low Light", "Medium Light", "Bright Indirect Light", "Full Sun"];
 
-// Format date for display
-const formattedDate = computed(() => {
-  if (!plant.value.acquired_date) return '';
+// Smart name generation and validation
+const suggestedName = computed(() => {
+  // Get the selected taxonomy names
+  const selectedFamily = familyOptions.value.find((f) => f.id === plantFormData.value.family_id);
+  const selectedGenus = genusOptions.value.find((g) => g.id === plantFormData.value.genus_id);
+  const selectedSpecies = speciesOptions.value.find((s) => s.id === plantFormData.value.species_id);
 
-  return new Date(plant.value.acquired_date).toLocaleDateString();
+  if (selectedSpecies) {
+    // If species is selected, use its name (e.g., "Monstera deliciosa")
+    return selectedSpecies.title;
+  } else if (selectedGenus) {
+    // If only genus is selected, use genus name (e.g., "Monstera")
+    return selectedGenus.title;
+  } else if (selectedFamily) {
+    // If only family is selected, use family name (e.g., "Araceae")
+    return selectedFamily.title;
+  }
+
+  return '';
 });
 
 // Fetch initial family data
@@ -275,7 +162,7 @@ async function fetchGenera(familyId: number): Promise<GenusOptions[] | void> {
 
     // Clear species when family changes
     speciesOptions.value = [];
-    plant.value.species_id = undefined;
+    plantFormData.value.species_id = undefined;
   } catch (error) {
     console.error('Error fetching genera:', error);
     genusOptions.value = [];
@@ -301,15 +188,15 @@ async function fetchSpecies(familyId: number, genusId: number): Promise<SpeciesO
 
 // Watch for family selection changes
 watch(
-  () => plant.value.family_id,
-  (newFamilyId) => {
+  () => plantFormData.value.family_id,
+  async (newFamilyId) => {
     if (newFamilyId) {
       selectedFamilyId.value = newFamilyId;
-      fetchGenera(newFamilyId);
+      await fetchGenera(newFamilyId);
 
       // Clear genus and species when family changes
-      plant.value.genus_id = undefined;
-      plant.value.species_id = undefined;
+      plantFormData.value.genus_id = undefined;
+      plantFormData.value.species_id = undefined;
       selectedGenusId.value = undefined;
     } else {
       // Clear everything when family is cleared
@@ -317,76 +204,73 @@ watch(
       selectedGenusId.value = undefined;
       genusOptions.value = [];
       speciesOptions.value = [];
-      plant.value.genus_id = undefined;
-      plant.value.species_id = undefined;
+      plantFormData.value.genus_id = undefined;
+      plantFormData.value.species_id = undefined;
     }
   }
 );
 
 // Watch for genus selection changes
 watch(
-  () => plant.value.genus_id,
+  () => plantFormData.value.genus_id,
   (newGenusId) => {
     if (newGenusId && selectedFamilyId.value) {
       selectedGenusId.value = newGenusId;
       fetchSpecies(selectedFamilyId.value, newGenusId);
 
       // Clear species when genus changes
-      plant.value.species_id = undefined;
+      plantFormData.value.species_id = undefined;
     } else {
       // Clear species when genus is cleared
       selectedGenusId.value = undefined;
       speciesOptions.value = [];
-      plant.value.species_id = undefined;
+      plantFormData.value.species_id = undefined;
     }
   }
 );
 
-// Fetch data when component mounts
-onMounted(() => {
-  fetchFamilies();
-});
-
 // Save plant to database
 async function savePlant(): Promise<void> {
-  if (!form.value.validate()) return;
+  if (!formPlant.value?.validate()) return;
 
   loading.value = true;
 
   try {
-    // Check authentication first
-    console.log('Auth user:', auth.user.value);
-    console.log('Auth user ID:', auth.user.value?.id);
-
     if (!auth.user.value?.id) {
       alert('You must be logged in to add a plant.');
       router.push('/login');
       return;
     }
 
+    // Use suggested name if plant name is empty and we have taxonomy selection
+    const finalPlantName = plantFormData.value.name.trim() || suggestedName.value;
+
     // Prepare data for API using the new schema
     const plantData = {
       user_id: auth.user.value.id,
-      name: plant.value.name,
-      species_id: plant.value.species_id,
-      family_id: plant.value.family_id,
-      genus_id: plant.value.genus_id,
-      acquired_date: plant.value.acquired_date,
-      image_url: plant.value.image_url,
-      notes: plant.value.notes,
-      is_favorite: plant.value.is_favorite,
-      is_personal: plant.value.is_personal,
-      can_sell: plant.value.can_sell,
-      common_name: plant.value.common_name,
-      variety: plant.value.variety,
-      flower_color: plant.value.flower_color,
-      light_pref: plant.value.light_pref,
-      water_pref: plant.value.water_pref,
-      soil_type: plant.value.soil_type,
+      name: finalPlantName,
+      species_id: plantFormData.value.species_id,
+      family_id: plantFormData.value.family_id,
+      genus_id: plantFormData.value.genus_id,
+      acquired_date: plantFormData.value.acquired_date,
+      image_url: plantFormData.value.image_url,
+      notes: plantFormData.value.notes,
+      is_favorite: plantFormData.value.is_favorite,
+      is_personal: plantFormData.value.is_personal,
+      can_sell: plantFormData.value.can_sell,
+      common_name: plantFormData.value.common_name,
+      variety: plantFormData.value.variety,
+      flower_color: plantFormData.value.flower_color,
+      light_pref: plantFormData.value.light_pref,
+      water_pref: plantFormData.value.water_pref,
+      soil_type: plantFormData.value.soil_type,
+      plant_use: plantFormData.value.plant_use,
+      has_fragrance: plantFormData.value.has_fragrance,
+      fragrance_description: plantFormData.value.fragrance_description,
+      is_petsafe: plantFormData.value.is_petsafe,
+      plant_zones: plantFormData.value.plant_zones,
+      personal_count: plantFormData.value.personal_count, // Use personal count if provided
     } as PlantFormData;
-
-    console.log('Plant form data:', JSON.stringify(plant.value, null, 2));
-    console.log('About to send plant data:', JSON.stringify(plantData, null, 2));
 
     // Save the plant
     const response = await $fetch('/api/plants', {
@@ -403,6 +287,26 @@ async function savePlant(): Promise<void> {
       throw new Error('No plant ID returned from server');
     }
 
+    // Create personal plant entry if is_personal is checked
+    if (plantFormData.value.is_personal && personalCount.value > 0) {
+      try {
+        const personalData = {
+          plant_id: plantId,
+          count: personalCount.value,
+        };
+
+        await $fetch('/api/personal', {
+          method: 'POST',
+          body: personalData,
+        });
+
+        console.log('Personal plant entry created successfully');
+      } catch (personalError) {
+        console.error('Error creating personal plant entry:', personalError);
+        // Don't fail the whole operation, just log the error
+      }
+    }
+
     router.push(`/plants/${plantId}`);
   } catch (error) {
     console.error('Error saving plant:', error);
@@ -411,4 +315,9 @@ async function savePlant(): Promise<void> {
     loading.value = false;
   }
 }
+
+// Fetch data when component mounts
+onMounted(() => {
+  fetchFamilies();
+});
 </script>

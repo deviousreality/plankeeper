@@ -12,62 +12,40 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const genusId = body.genusId ? parseInt(body.genusId) : null;
-    const speciesId = body.speciesId ? parseInt(body.speciesId) : null;
+    // Check if family already exists
+    const existingFamily = db
+      .prepare(
+        `
+      SELECT id FROM plant_family WHERE name = ?
+    `
+      )
+      .get(body.name.trim());
 
-    // Verify genus exists if specified
-    if (genusId) {
-      const genusExists = db
-        .prepare(
-          `
-        SELECT 1 FROM plant_genus WHERE id = ?
-      `
-        )
-        .get(genusId);
-
-      if (!genusExists) {
-        throw createError({
-          statusCode: 400,
-          message: 'Referenced genus does not exist',
-        });
-      }
-    }
-
-    // Verify species exists if specified
-    if (speciesId) {
-      const speciesExists = db
-        .prepare(
-          `
-        SELECT 1 FROM plant_species WHERE id = ?
-      `
-        )
-        .get(speciesId);
-
-      if (!speciesExists) {
-        throw createError({
-          statusCode: 400,
-          message: 'Referenced species does not exist',
-        });
-      }
+    if (existingFamily) {
+      throw createError({
+        statusCode: 409,
+        message: 'Family with this name already exists',
+      });
     }
 
     const result = db
       .prepare(
         `
-      INSERT INTO plant_family (name, genus_id, species_id)
-      VALUES (?, ?, ?)
+      INSERT INTO plant_family (name)
+      VALUES (?)
     `
       )
-      .run(body.name.trim(), genusId, speciesId);
+      .run(body.name.trim());
 
     return {
       id: result.lastInsertRowid,
       name: body.name.trim(),
-      genusId,
-      speciesId,
     };
   } catch (error) {
     console.error('Error creating plant family:', error);
+    if (error instanceof Error && 'statusCode' in error) {
+      throw error;
+    }
     throw createError({
       statusCode: 500,
       message: 'Server error creating plant family',

@@ -1,12 +1,12 @@
 // server/api/taxonomy/family/index.get.ts
 import { db } from '~/server/utils/db';
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const families = db
       .prepare(
         `
-      SELECT id, name, genus_id as genusId, species_id as speciesId
+      SELECT id, name
       FROM plant_family
       ORDER BY name
     `

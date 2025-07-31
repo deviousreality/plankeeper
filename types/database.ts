@@ -24,7 +24,8 @@ export interface User {
 // =====================================
 
 // Raw database type (as returned from SQLite)
-export interface PlantRow {
+
+export interface PlantTableRow {
   id: number;
   user_id: number;
   name: string;
@@ -50,6 +51,7 @@ export interface PlantRow {
   fragrance_description: string | null;
   is_petsafe: number; // 0 = false, 1 = true (SQLite boolean)
   plant_zones: number | null;
+  personal_count: number | null;
 }
 
 // Application type (for Vue/frontend with proper booleans)
@@ -63,11 +65,11 @@ export type Plant = {
   acquired_date: string | undefined;
   image_url: string | undefined;
   notes: string | undefined;
-  is_favorite: boolean;
+  is_favorite: boolean; // 0 = false, 1 = true (SQLite boolean)
   created_at: string;
   updated_at: string;
-  can_sell: boolean;
-  is_personal: boolean;
+  can_sell: boolean; // 0 = false, 1 = true (SQLite boolean)
+  is_personal: boolean; // 0 = false, 1 = true (SQLite boolean)
   common_name: string | undefined;
   flower_color: string | undefined;
   variety: string | undefined;
@@ -75,18 +77,12 @@ export type Plant = {
   water_pref: string | undefined;
   soil_type: string | undefined;
   plant_use: string | undefined;
-  has_fragrance: boolean;
+  has_fragrance: boolean; // 0 = false, 1 = true (SQLite boolean)
   fragrance_description: string | undefined;
-  is_petsafe: boolean;
+  is_petsafe: boolean; // 0 = false, 1 = true (SQLite boolean)
   plant_zones: number | undefined;
+  personal_count: number | undefined;
 };
-
-// Extended Plant type with taxonomy data (for display)
-export interface PlantWithTaxonomy extends Plant {
-  species?: Species;
-  family?: Family;
-  genus?: Genus;
-}
 
 // =====================================
 // Taxonomy Types

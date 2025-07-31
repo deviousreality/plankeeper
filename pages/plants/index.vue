@@ -3,12 +3,21 @@
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h3">My Plants</h1>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        to="/plants/add">
-        Add Plant
-      </v-btn>
+      <div class="d-flex gap-2">
+        <v-btn
+          color="success"
+          variant="elevated"
+          prepend-icon="mdi-lightning-bolt"
+          to="/plants/add?quick=true">
+          Quick Add
+        </v-btn>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          to="/plants/add">
+          Add Plant
+        </v-btn>
+      </div>
     </div>
 
     <v-card

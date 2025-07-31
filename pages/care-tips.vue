@@ -193,12 +193,12 @@ definePageMeta({
 });
 
 // Types for the component
-interface CareTipForm {
+type CareTipForm = {
   id?: number;
   species: string;
   tip: string;
   source: string;
-}
+};
 
 const auth = useAuth();
 const tips = ref<CareTip[]>([]);

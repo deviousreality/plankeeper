@@ -4,7 +4,9 @@
 import type { Plant } from '.';
 
 export type PlantModel = Omit<Plant, 'id' | 'user_id' | 'created_at'>;
-export type PlantModelPost = Omit<Plant, 'id' | 'created_at'>;
+export type PlantModelPost = Omit<Plant, 'id' | 'created_at'> & {
+  personal_count?: number;
+};
 
 export interface PlantSpecies {
   id: number;

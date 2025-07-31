@@ -119,19 +119,19 @@ definePageMeta({
 });
 
 // Types for the component
-interface PlantWithPrice extends Plant {
+type PlantWithPrice = {
   latestPrice?: MarketPrice;
-}
+} & Plant;
 
-interface PlantDisplay extends Plant {
+type PlantDisplay = {
   latestPrice: string;
   lastPriceUpdate: string;
-}
+} & Plant;
 
-interface PriceRecordForm {
+type PriceRecordForm = {
   price: number | string;
   dateChecked: string;
-}
+};
 
 const auth = useAuth();
 const loading = ref<boolean>(true);

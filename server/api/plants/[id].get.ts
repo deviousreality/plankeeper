@@ -1,9 +1,9 @@
 // server/api/plants/[id].get.ts
-import { db, plantRowToPlant, nullToUndefined } from '~/server/utils/db';
-import type { PlantRow } from '~/types/database';
+import { db, plantTableRowToPlant, nullToUndefined } from '~/server/utils/db';
+import type { PlantTableRow } from '~/types/database';
 
 export default defineEventHandler(async (event) => {
-  const id = event.context.params?.id;
+  const id = event.context.params?.['id'];
 
   if (!id) {
     throw createError({
@@ -13,19 +13,22 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const plantRow = db
+    const PlantTableRow = db
       .prepare(
         `
-      SELECT p.*, cs.watering_interval, cs.fertilizing_interval, 
-      cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date
+      SELECT p.*, 
+      --cs.watering_interval, cs.fertilizing_interval, 
+      --cs.last_watered, cs.last_fertilized, cs.light_needs, cs.next_task_date,
+      pp.count AS personal_count
       FROM plants p
-      LEFT JOIN care_schedules cs ON p.id = cs.plant_id
+      --LEFT JOIN care_schedules cs ON p.id = cs.plant_id
+      LEFT JOIN personal_plants pp ON p.id = pp.plant_id
       WHERE p.id = ?
     `
       )
-      .get(id) as PlantRow;
+      .get(id) as PlantTableRow;
 
-    if (!plantRow) {
+    if (!PlantTableRow) {
       throw createError({
         statusCode: 404,
         message: 'Plant not found',
@@ -33,7 +36,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Convert to application type
-    const plant = plantRowToPlant(plantRow);
+    const plant = plantTableRowToPlant(PlantTableRow);
+
+    console.log('Read Plant from database:', JSON.stringify(plant, null, 2));
 
     // Get care logs for this plant
     const careLogsRaw = db

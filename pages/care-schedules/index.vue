@@ -307,37 +307,37 @@ definePageMeta({
 });
 
 // Types for the component
-interface CareScheduleForm {
+type CareScheduleForm = {
   wateringInterval: number | string;
   fertilizingInterval: number | string;
   lastWatered: string;
   lastFertilized: string;
   lightNeeds: string;
-}
+};
 
-interface CareLogForm {
+type CareLogForm = {
   actionType: string;
   actionDate: string;
   notes: string;
-}
+};
 
-interface FormattedCareLog extends CareLog {
+type FormattedCareLog = {
   formattedDate: string;
-}
+} & CareLog;
 
-interface TaskInfo {
+type TaskInfo = {
   date: Date | null;
   overdue: boolean;
-}
+};
 
-interface UpcomingTasks {
+type UpcomingTasks = {
   watering: TaskInfo | null;
   fertilizing: TaskInfo | null;
-}
+};
 
-interface PlantWithNextTask extends Plant {
+type PlantWithNextTask = {
   next_task_date?: string;
-}
+} & Plant;
 
 const auth = useAuth();
 const search = ref<string>('');

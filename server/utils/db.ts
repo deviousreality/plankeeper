@@ -8,7 +8,7 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import type { Plant, PlantRow } from '~/types/database';
+import type { Plant, PlantTableRow } from '~/types/database';
 
 // Configuration
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -31,6 +31,8 @@ let db: Database.Database;
 
 try {
   db = new Database(dbPath);
+  // Enable foreign key constraints
+  db.pragma('foreign_keys = ON');
   console.log(`Connected to database at: ${dbPath}`);
 } catch (error) {
   console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
@@ -256,14 +258,17 @@ export const toCamelCase = <T extends Record<string, unknown>>(row: T): Record<s
 /**
  * Helper function to convert SQLite Plant row to application Plant type
  * Converts integer booleans (0/1) to actual booleans and null to undefined
- * @param {PlantRow} row - Database row with integer booleans and potential nulls
+ * @param {PlantTableRow} row - Database row with integer booleans and potential nulls
  * @returns {Plant} - Plant object with proper boolean types and undefined instead of null
  */
-export const plantRowToPlant = (row: PlantRow): Plant => {
+export const plantTableRowToPlant = (row: PlantTableRow): Plant => {
   return {
     id: row.id,
     user_id: row.user_id,
     name: row.name,
+    species_id: row.species_id ?? undefined,
+    family_id: row.family_id ?? undefined,
+    genus_id: row.genus_id ?? undefined,
     is_favorite: Boolean(row.is_favorite),
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -271,9 +276,6 @@ export const plantRowToPlant = (row: PlantRow): Plant => {
     is_personal: Boolean(row.is_personal),
     has_fragrance: Boolean(row.has_fragrance),
     is_petsafe: Boolean(row.is_petsafe),
-    species_id: row.species_id ?? undefined,
-    family_id: row.family_id ?? undefined,
-    genus_id: row.genus_id ?? undefined,
     acquired_date: row.acquired_date ?? undefined,
     image_url: row.image_url ?? undefined,
     notes: row.notes ?? undefined,
@@ -286,46 +288,8 @@ export const plantRowToPlant = (row: PlantRow): Plant => {
     plant_use: row.plant_use ?? undefined,
     fragrance_description: row.fragrance_description ?? undefined,
     plant_zones: row.plant_zones ?? undefined,
+    personal_count: row.personal_count ?? undefined,
   };
-};
-
-/**
- * Helper function to convert application Plant type to database-ready data
- * Converts undefined to null for database storage (SQLite handles booleans natively)
- * @param {Partial<Plant>} plant - Plant object with boolean types and undefined values
- * @returns {Partial<PlantRow>} - Database-ready object with null values
- */
-export const plantToPlantRow = (plant: Partial<Plant>): Partial<PlantRow> => {
-  const result: any = { ...plant };
-
-  // No boolean conversion needed - SQLite handles booleans natively
-
-  // Convert undefined to null for database storage
-  const optionalFields = [
-    'species_id',
-    'family_id',
-    'genus_id',
-    'acquired_date',
-    'image_url',
-    'notes',
-    'common_name',
-    'flower_color',
-    'variety',
-    'light_pref',
-    'water_pref',
-    'soil_type',
-    'plant_use',
-    'fragrance_description',
-    'plant_zones',
-  ];
-
-  optionalFields.forEach((field) => {
-    if (result[field] === undefined) {
-      result[field] = null;
-    }
-  });
-
-  return result;
 };
 
 /**
