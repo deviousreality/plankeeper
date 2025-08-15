@@ -1,5 +1,7 @@
 // server/api/plants/[id].put.ts
+import { plantPhotosDataObject } from '~/server/scripts/imageToTable';
 import { db, undefinedToNull } from '~/server/utils/db';
+import { PlantPhotos } from '~/types';
 import type { PlantModelPost } from '~/types/plant-models';
 
 export default defineEventHandler(async (event) => {
@@ -39,7 +41,7 @@ export default defineEventHandler(async (event) => {
       can_sell: body.can_sell ? 1 : 0,
     });
 
-    const values = Object.values(plantData);
+    const plantsValues = Object.values(plantData);
 
     db.prepare(
       `
@@ -69,7 +71,7 @@ export default defineEventHandler(async (event) => {
       updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
       `
-    ).run(...values, plantId, body.user_id);
+    ).run(...plantsValues, plantId, body.user_id);
 
     db.prepare(
       `

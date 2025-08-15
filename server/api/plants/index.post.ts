@@ -1,10 +1,11 @@
 // server/api/plants/index.post.ts
-import { db, plantTableRowToPlant } from '~/server/utils/db';
+import { db, handleDataTableTransactionError, plantTableRowToPlant } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
 import type { PlantModelPost } from '~/types/plant-models';
 
 export default defineEventHandler(async (event) => {
   const body = (await readBody(event)) as PlantModelPost;
+  const context = 'plants';
   console.log('Received plant data:', JSON.stringify(body, null, 2));
 
   // const {
@@ -218,20 +219,6 @@ export default defineEventHandler(async (event) => {
 
     return plant;
   } catch (error) {
-    // Only rollback if a transaction is actually active
-    try {
-      db.exec('ROLLBACK');
-    } catch (rollbackError) {
-      // Transaction was already rolled back, that's fine
-      console.log('Transaction was already rolled back');
-    }
-
-    console.error('Error creating plant:', error);
-    console.error('Original request body:', JSON.stringify(body, null, 2));
-    console.error('Full error details:', error);
-    throw createError({
-      statusCode: 500,
-      message: `Server error creating plant: ${error instanceof Error ? error.message : String(error)}`,
-    });
+    handleDataTableTransactionError(db, error, context, body);
   }
 });

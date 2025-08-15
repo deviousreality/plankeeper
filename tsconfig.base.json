@@ -15,6 +15,7 @@
     "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statement
     "useUnknownInCatchVariables": true, // Type catch clause variables as 'unknown' instead of 'any'
     "noUncheckedIndexedAccess": true, // Add 'undefined' to a type when accessed using an index
-    "noPropertyAccessFromIndexSignature": true // Require undeclared properties to be accessed via element access
+    "noPropertyAccessFromIndexSignature": true, // Require undeclared properties to be accessed via element access
+    "lib": ["ESNext", "DOM"]
   }
 }

@@ -236,6 +236,27 @@ export interface PlantFormData {
   plant_zones?: number;
 }
 
+export enum PlantPhotosSizeType {
+  Original = 1,
+  Medium = 2,
+  Small = 3,
+}
+
+export interface PlantPhotosTableRow {
+  id: number;
+  plant_id: number;
+  filename: string;
+  image: File;
+  mime_type: string;
+  size_type: PlantPhotosSizeType;
+  created_at: string;
+}
+
+export type PlantPhotos = Omit<PlantPhotosTableRow, 'id'>;
+export type PlantPhotosPost = {
+  plant_id: number;
+  file: File;
+};
 // =====================================
 // Utility Types
 // =====================================

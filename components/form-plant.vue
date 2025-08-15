@@ -191,11 +191,54 @@
           <v-col
             cols="12"
             md="6">
-            <v-text-field
+            <input-file-upload
+              :max-file-size="2000000"
+              :max-width="1024"
+              :max-height="1024"
+              :thumb-width="100"
+              :thumb-height="100"
+              @processed="handleProcessedImages" />
+
+            <h2>Processed Results</h2>
+            <p
+              v-if="processedImages.length === 0"
+              class="grey--text">
+              Results will appear here after processing.
+            </p>
+            <div v-else>
+              <v-card
+                v-for="(img, index) in processedImages"
+                :key="index"
+                class="mb-4"
+                outlined>
+                <v-card-title class="text-subtitle-1">{{ img.originalFile.name }}</v-card-title>
+                <v-card-text class="d-flex align-center">
+                  <v-img
+                    :src="img.thumbnail.base64"
+                    max-width="100"
+                    max-height="100"
+                    contain
+                    class="mr-4 grey lighten-2"></v-img>
+                  <div>
+                    <strong>Main Image:</strong> {{ img.main.sizeKB.toFixed(2) }} KB <br />
+                    <strong>Thumbnail:</strong> {{ img.thumbnail.sizeKB.toFixed(2) }} KB
+                    <div class="mt-2">
+                      <v-btn
+                        small
+                        color="primary"
+                        @click="postToServer(img)"
+                        >POST TO SERVER</v-btn
+                      >
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </div>
+            <!-- <v-text-field
               v-model="plant.image_url"
               label="Image URL"
               hint="Link to a photo of your plant"
-              placeholder="https://example.com/image.jpg" />
+              placeholder="https://example.com/image.jpg" /> -->
           </v-col>
         </v-row>
 
@@ -453,6 +496,23 @@ const formattedDate = computed(() => {
 const validate = () => {
   return form.value?.validate() ?? false;
 };
+
+const processedImages = ref<unknown[]>([]);
+const handleProcessedImages = (images: unknown[]) => {
+  console.log('Received processed data:', images);
+  processedImages.value = images;
+};
+
+function postToServer(imageObject: any) {
+  console.log('Posting this object to the server:', {
+    fileName: imageObject.originalFile.name,
+    mainImageBase64: imageObject.main.base64,
+    thumbnailBase64: imageObject.thumbnail.base64,
+  });
+  // In a real app, you would use axios or fetch here:
+  // axios.post('/api/upload', { ... });
+  alert(`Check the console for the data payload for ${imageObject.originalFile.name}!`);
+}
 
 defineExpose({
   validate,

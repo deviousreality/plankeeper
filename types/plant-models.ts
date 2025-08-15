@@ -1,11 +1,12 @@
 /**
  * Extended Plant model that includes the new fields
  */
-import type { Plant } from '.';
+import type { Plant, PlantPhotos } from '.';
 
 export type PlantModel = Omit<Plant, 'id' | 'user_id' | 'created_at'>;
 export type PlantModelPost = Omit<Plant, 'id' | 'created_at'> & {
   personal_count?: number;
+  photos: PlantPhotos[];
 };
 
 export interface PlantSpecies {

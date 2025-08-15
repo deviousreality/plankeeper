@@ -235,6 +235,19 @@ const initDb = (): void => {
     )
   `);
 
+  // Plant Photos table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS plant_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      image BLOB,
+      mime_type VARCHAR(100) NOT NULL,
+      size_type INTEGER, 
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    )
+  `);
+
   // Note: Removed duplicate table creation
   // Using plant_species, plant_genus, plant_family, market_price, plant_propagation, and plant_inventory instead
 
@@ -288,7 +301,8 @@ export const plantTableRowToPlant = (row: PlantTableRow): Plant => {
     plant_use: row.plant_use ?? undefined,
     fragrance_description: row.fragrance_description ?? undefined,
     plant_zones: row.plant_zones ?? undefined,
-    personal_count: row.personal_count ?? undefined,
+    personal_count: row.personal_count,
+    photos: undefined,
   };
 };
 
@@ -355,6 +369,29 @@ export const undefinedToNull = <T>(obj: T): T => {
     result[key] = value === undefined ? null : undefinedToNull(value);
   }
   return result;
+};
+
+export const handleDataTableTransactionError = (
+  db: Database.Database,
+  error: unknown | string,
+  context: string,
+  body: unknown
+) => {
+  // Only rollback if a transaction is actually active
+  try {
+    db.exec('ROLLBACK');
+  } catch (rollbackError) {
+    // Transaction was already rolled back, that's fine
+    console.log('Transaction was already rolled back');
+  }
+
+  console.error(`Error creating ${context}:`, error);
+  console.error('Original request body:', JSON.stringify(body, null, 2));
+  console.error('Full error details:', error);
+  throw createError({
+    statusCode: 500,
+    message: `Server error creating ${context}: ${error instanceof Error ? error.message : String(error)}`,
+  });
 };
 
 // Initialize the database
