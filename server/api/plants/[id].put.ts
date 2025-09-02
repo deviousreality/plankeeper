@@ -1,47 +1,30 @@
 // server/api/plants/[id].put.ts
-import { plantPhotosDataObject } from '~/server/scripts/imageToTable';
 import { db, undefinedToNull } from '~/server/utils/db';
-import { PlantPhotos } from '~/types';
+import { mapPlantBodyToDbFields, validateFieldName, validateTaxonomyIds } from '~/server/utils/plants.db';
 import type { PlantModelPost } from '~/types/plant-models';
 
 export default defineEventHandler(async (event) => {
+  const context = 'plants';
   const plantId = getRouterParam(event, 'id');
   const body = (await readBody(event)) as PlantModelPost;
 
-  if (!plantId || !body.name || !body.user_id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid input. Plant ID, name, and user ID are required.',
-    });
-  }
+  console.log('Received plant data:', JSON.stringify(body, null, 2));
+
+  validateFieldName(body);
+
+  validateFieldName(body);
+
+  validateTaxonomyIds(body);
 
   try {
-    // Convert undefined to null for database storage
-    const plantData = undefinedToNull({
-      name: body.name,
-      species_id: body.species_id,
-      family_id: body.family_id,
-      genus_id: body.genus_id,
-      common_name: body.common_name,
-      variety: body.variety,
-      flower_color: body.flower_color,
-      is_personal: body.is_personal ? 1 : 0,
-      is_favorite: body.is_favorite ? 1 : 0,
-      acquired_date: body.acquired_date,
-      image_url: body.image_url,
-      notes: body.notes,
-      light_pref: body.light_pref,
-      water_pref: body.water_pref,
-      soil_type: body.soil_type,
-      plant_zones: body.plant_zones,
-      plant_use: body.plant_use,
-      has_fragrance: body.has_fragrance ? 1 : 0,
-      fragrance_description: body.fragrance_description,
-      is_petsafe: body.is_petsafe ? 1 : 0,
-      can_sell: body.can_sell ? 1 : 0,
-    });
+    // Use transaction to ensure both tables are updated
+    db.exec('BEGIN TRANSACTION');
 
-    const plantsValues = Object.values(plantData);
+    const plantData = mapPlantBodyToDbFields(body);
+
+    console.log('Processed plant data for database:', JSON.stringify(plantData, null, 2));
+
+    const values = Object.values(plantData);
 
     db.prepare(
       `
@@ -71,15 +54,25 @@ export default defineEventHandler(async (event) => {
       updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
       `
-    ).run(...plantsValues, plantId, body.user_id);
+    ).run(...values, plantId, body.user_id);
 
-    db.prepare(
-      `
+    console.log('Updated plant ID:', plantId);
+
+    if (plantData.is_personal) {
+      const personalData = undefinedToNull({
+        plant_id: plantId,
+        count: body.personal_count,
+      });
+      db.prepare(
+        `
       UPDATE personal_plants
       set count = ?
       WHERE plant_id = ?
       `
-    ).run(body.personal_count, plantId);
+      ).run(personalData.count, personalData.plant_id);
+    }
+
+    db.exec('COMMIT');
 
     // Update care schedule if provided
     // if (
@@ -116,10 +109,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, id: plantId };
   } catch (error) {
-    console.error('Error updating plant:', error);
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to update plant information.',
-    });
+    handleDataTableTransactionError(db, error, context, body);
   }
 });

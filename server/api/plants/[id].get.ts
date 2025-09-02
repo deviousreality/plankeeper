@@ -1,5 +1,5 @@
 // server/api/plants/[id].get.ts
-import { db, plantTableRowToPlant, nullToUndefined } from '~/server/utils/db';
+import { db, nullToUndefined } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
 
 export default defineEventHandler(async (event) => {

@@ -8,7 +8,6 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import type { Plant, PlantTableRow } from '~/types/database';
 
 // Configuration
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -156,7 +155,7 @@ const initDb = (): void => {
       current_count INTEGER,
       transplant_date DATE,
       notes TEXT,
-      zero_cout_notes TEXT,
+      zero_count_notes TEXT,
       FOREIGN KEY (plant_id) REFERENCES plants(id)
     )
   `);
@@ -244,7 +243,7 @@ const initDb = (): void => {
       image BLOB,
       mime_type VARCHAR(100) NOT NULL,
       size_type INTEGER, 
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -266,44 +265,6 @@ export const toCamelCase = <T extends Record<string, unknown>>(row: T): Record<s
     result[camelKey] = row[key];
   }
   return result;
-};
-
-/**
- * Helper function to convert SQLite Plant row to application Plant type
- * Converts integer booleans (0/1) to actual booleans and null to undefined
- * @param {PlantTableRow} row - Database row with integer booleans and potential nulls
- * @returns {Plant} - Plant object with proper boolean types and undefined instead of null
- */
-export const plantTableRowToPlant = (row: PlantTableRow): Plant => {
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    name: row.name,
-    species_id: row.species_id ?? undefined,
-    family_id: row.family_id ?? undefined,
-    genus_id: row.genus_id ?? undefined,
-    is_favorite: Boolean(row.is_favorite),
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    can_sell: Boolean(row.can_sell),
-    is_personal: Boolean(row.is_personal),
-    has_fragrance: Boolean(row.has_fragrance),
-    is_petsafe: Boolean(row.is_petsafe),
-    acquired_date: row.acquired_date ?? undefined,
-    image_url: row.image_url ?? undefined,
-    notes: row.notes ?? undefined,
-    common_name: row.common_name ?? undefined,
-    flower_color: row.flower_color ?? undefined,
-    variety: row.variety ?? undefined,
-    light_pref: row.light_pref ?? undefined,
-    water_pref: row.water_pref ?? undefined,
-    soil_type: row.soil_type ?? undefined,
-    plant_use: row.plant_use ?? undefined,
-    fragrance_description: row.fragrance_description ?? undefined,
-    plant_zones: row.plant_zones ?? undefined,
-    personal_count: row.personal_count,
-    photos: undefined,
-  };
 };
 
 /**
@@ -392,6 +353,16 @@ export const handleDataTableTransactionError = (
     statusCode: 500,
     message: `Server error creating ${context}: ${error instanceof Error ? error.message : String(error)}`,
   });
+};
+
+export const validateFieldId = (id?: number) => {
+  if (!id) {
+    console.error('Validation failed - invalid id:', id);
+    throw createError({
+      statusCode: 400,
+      message: 'Valid plant ID is required',
+    });
+  }
 };
 
 // Initialize the database

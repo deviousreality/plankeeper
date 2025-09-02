@@ -16,4 +16,27 @@ type Image = {
   error: string;
 };
 
-export { FileState, type Image };
+interface UploadFile {
+  file: File;
+  name: string;
+  size: string;
+  filetype: string;
+  thumb: string;
+  isLoading: boolean;
+  filestatus: string;
+  message?: string;
+}
+
+interface ProcessedImageResult {
+  originalFile: File;
+  main: {
+    base64: string;
+    sizeKB: number;
+  };
+  thumbnail: {
+    base64: string;
+    sizeKB: number;
+  };
+}
+
+export { FileState, type Image, type UploadFile, type ProcessedImageResult };

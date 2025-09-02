@@ -5,8 +5,9 @@ import type { Plant, PlantPhotos } from '.';
 
 export type PlantModel = Omit<Plant, 'id' | 'user_id' | 'created_at'>;
 export type PlantModelPost = Omit<Plant, 'id' | 'created_at'> & {
+  user_id?: number; // Make user_id explicit and optional
   personal_count?: number;
-  photos: PlantPhotos[];
+  photos?: PlantPhotos[]; // Make photos optional as well
 };
 
 export interface PlantSpecies {

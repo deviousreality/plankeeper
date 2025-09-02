@@ -2,7 +2,7 @@
 <template>
   <v-form
     ref="form"
-    @submit.prevent="$emit('submit')">
+    @submit.prevent="savePlant">
     <v-card>
       <v-card-text>
         <v-row>
@@ -197,43 +197,9 @@
               :max-height="1024"
               :thumb-width="100"
               :thumb-height="100"
-              @processed="handleProcessedImages" />
+              @processed="handleProcessedImages"
+              @delete="handleImageDelete" />
 
-            <h2>Processed Results</h2>
-            <p
-              v-if="processedImages.length === 0"
-              class="grey--text">
-              Results will appear here after processing.
-            </p>
-            <div v-else>
-              <v-card
-                v-for="(img, index) in processedImages"
-                :key="index"
-                class="mb-4"
-                outlined>
-                <v-card-title class="text-subtitle-1">{{ img.originalFile.name }}</v-card-title>
-                <v-card-text class="d-flex align-center">
-                  <v-img
-                    :src="img.thumbnail.base64"
-                    max-width="100"
-                    max-height="100"
-                    contain
-                    class="mr-4 grey lighten-2"></v-img>
-                  <div>
-                    <strong>Main Image:</strong> {{ img.main.sizeKB.toFixed(2) }} KB <br />
-                    <strong>Thumbnail:</strong> {{ img.thumbnail.sizeKB.toFixed(2) }} KB
-                    <div class="mt-2">
-                      <v-btn
-                        small
-                        color="primary"
-                        @click="postToServer(img)"
-                        >POST TO SERVER</v-btn
-                      >
-                    </div>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </div>
             <!-- <v-text-field
               v-model="plant.image_url"
               label="Image URL"
@@ -349,20 +315,22 @@
         <v-spacer />
         <v-btn
           color="primary"
-          @click="$emit('cancel')">
+          @click="$emit('cancel')"
+          :disabled="isSaving">
           Cancel
         </v-btn>
         <v-btn
           color="success"
           type="submit"
-          :loading="loading">
-          Save Plant
+          :loading="loading || isSaving">
+          {{ isSaving ? 'Saving...' : 'Save Plant' }}
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-form>
 </template>
 <script lang="ts" setup>
+import { useRouter } from 'vue-router';
 import type { Plant } from '~/types/database';
 
 type FamilyOptions = {
@@ -497,12 +465,250 @@ const validate = () => {
   return form.value?.validate() ?? false;
 };
 
-const processedImages = ref<unknown[]>([]);
-const handleProcessedImages = (images: unknown[]) => {
+const processedImages = ref<any[]>([]);
+const handleProcessedImages = (images: any[]) => {
   console.log('Received processed data:', images);
-  processedImages.value = images;
+
+  // Ensure each image has the correct structure
+  const validatedImages = images.map((img) => {
+    // If the image already has the correct structure, use it
+    if (img.originalFile && img.main && img.thumbnail) {
+      return img;
+    }
+
+    // If it's an UploadFile instead, convert it to the expected structure
+    if (img.file && img.thumb) {
+      return {
+        originalFile: img.file,
+        name: img.name || img.file.name,
+        main: {
+          base64: img.thumb,
+          sizeKB: (img.thumb.length * (3 / 4)) / 1024,
+        },
+        thumbnail: {
+          base64: img.thumb,
+          sizeKB: (img.thumb.length * (3 / 4)) / 1024,
+        },
+      };
+    }
+
+    // Return the image as is if we can't determine its structure
+    return img;
+  });
+
+  processedImages.value = validatedImages;
 };
 
+// Handle image deletion from the upload component
+function handleImageDelete(imageData: any) {
+  // Find the image in the processedImages array by file name
+  const fileName = imageData.originalFile?.name || imageData.name;
+
+  // Find the image in the processedImages array
+  const index = processedImages.value.findIndex((img: any) => img.originalFile && img.originalFile.name === fileName);
+
+  if (index !== -1) {
+    // Remove the image from the processed images array
+    processedImages.value.splice(index, 1);
+    console.log(`Removed image ${fileName} from processedImages`);
+
+    // Also clean up the upload status if it exists
+    if (uploadStatus.value[fileName]) {
+      delete uploadStatus.value[fileName];
+    }
+  }
+}
+
+// Track the saving process state
+const isSaving = ref(false);
+const uploadStatus = ref<{ [key: string]: string }>({});
+const router = useRouter();
+
+// Helper function to determine upload status chip color
+function getUploadStatusColor(fileName: string): string {
+  const status = uploadStatus.value[fileName];
+  if (!status) return 'default';
+
+  switch (status) {
+    case 'Complete':
+      return 'success';
+    case 'Failed':
+      return 'error';
+    case 'Uploading...':
+      return 'info';
+    default:
+      return 'default';
+  }
+}
+
+// Main function to save the plant and its images
+async function savePlant() {
+  // Validate form first
+  if (!validate()) {
+    return;
+  }
+
+  try {
+    isSaving.value = true;
+
+    // First save the plant data
+    const plantResponse = await saveNewPlant();
+
+    if (!plantResponse || !plantResponse.id) {
+      throw new Error('Failed to save plant: No plant ID returned');
+    }
+
+    const plantId = plantResponse.id;
+
+    // If we have images, upload them one by one
+    if (processedImages.value.length > 0) {
+      await uploadAllImages(plantId);
+      // Now that all images have been uploaded successfully, redirect to the plant page
+      router.push(`/plants/${plantId}`);
+    } else {
+      // No images to upload, redirect immediately
+      router.push(`/plants/${plantId}`);
+    }
+  } catch (error) {
+    console.error('Error saving plant:', error);
+    alert(`Failed to save plant: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+// Function to save the plant data
+async function saveNewPlant() {
+  // Emit the submit event to notify parent components
+  emit('submit');
+
+  console.log('Saving plant data:', plant.value);
+
+  // POST the plant data to the server
+  const response = await $fetch('/api/plants', {
+    method: 'POST',
+    body: plant.value,
+  });
+
+  console.log('Plant saved successfully:', response);
+  return response;
+}
+
+// Function to upload all images
+async function uploadAllImages(plantId: number) {
+  const uploadPromises = [];
+  const errors = [];
+
+  // Upload each image one by one, collecting results
+  for (const [index, image] of processedImages.value.entries()) {
+    try {
+      const imageObject = image as any;
+      await uploadSingleImage(imageObject, plantId, index + 1);
+    } catch (error) {
+      errors.push(error);
+      console.error(`Error uploading image ${index + 1}:`, error);
+    }
+  }
+
+  // If any uploads failed, throw an error to prevent redirect
+  if (errors.length > 0) {
+    throw new Error(`Failed to upload ${errors.length} images. Please check the upload status and try again.`);
+  }
+}
+
+// Function to upload a single image
+async function uploadSingleImage(imageObject: any, plantId: number, position: number) {
+  // Get the file name safely, with fallbacks
+  let fileName = '';
+
+  if (imageObject.originalFile && imageObject.originalFile.name) {
+    fileName = imageObject.originalFile.name;
+  } else if (imageObject.name) {
+    fileName = imageObject.name;
+  } else if (imageObject.file && imageObject.file.name) {
+    fileName = imageObject.file.name;
+  } else {
+    // Generate a fallback name if no name can be found
+    fileName = `image-${position}.jpg`;
+  }
+
+  try {
+    // Update status
+    uploadStatus.value[fileName] = 'Uploading...';
+
+    console.log(`Uploading image ${fileName} for plant ${plantId}`);
+
+    // Get the file object from the image data
+    const originalFile = imageObject.originalFile || (imageObject.file ? imageObject.file : null);
+
+    if (!originalFile) {
+      throw new Error('No valid file data found');
+    }
+
+    // Get the image data from main or thumbnail
+    let imageData = null;
+    let mimeType = originalFile.type || 'image/jpeg';
+
+    // Try to get image data from the imageObject
+    if (imageObject.main && imageObject.main.base64) {
+      // Convert base64 to binary data
+      const base64Data = imageObject.main.base64.split(',')[1]; // Remove the data:image/xyz;base64, prefix
+      imageData = atob(base64Data);
+    } else if (imageObject.thumbnail && imageObject.thumbnail.base64) {
+      // Use thumbnail as fallback
+      const base64Data = imageObject.thumbnail.base64.split(',')[1];
+      imageData = atob(base64Data);
+    }
+
+    if (!imageData) {
+      // If we couldn't get image data from base64, use the file directly
+      console.log('Using original file directly');
+    }
+
+    // Create a FormData object
+    const formData = new FormData();
+    formData.append('plant_id', plantId.toString());
+
+    // Add the file - either from base64 data or original file
+    if (imageData) {
+      // Convert binary string to Uint8Array
+      const byteArrays = [];
+      for (let i = 0; i < imageData.length; i++) {
+        byteArrays.push(imageData.charCodeAt(i));
+      }
+      const byteArray = new Uint8Array(byteArrays);
+
+      // Create Blob and File from binary data
+      const blob = new Blob([byteArray], { type: mimeType });
+      const file = new File([blob], fileName, { type: mimeType });
+      formData.append('file', file);
+    } else {
+      // Use original file
+      formData.append('file', originalFile);
+    }
+
+    // Debug the form data
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File(${value.name}, ${value.type}, ${value.size}B)` : value}`);
+    }
+
+    // POST to the plant_photos endpoint
+    const response = await $fetch('/api/plant_photos', {
+      method: 'POST',
+      body: formData,
+    });
+
+    uploadStatus.value[fileName] = 'Complete';
+    console.log(`Image ${fileName} uploaded successfully:`, response);
+
+    return response;
+  } catch (error) {
+    uploadStatus.value[fileName] = 'Failed';
+    console.error(`Error uploading image ${fileName}:`, error);
+    throw error;
+  }
+}
 function postToServer(imageObject: any) {
   console.log('Posting this object to the server:', {
     fileName: imageObject.originalFile.name,
