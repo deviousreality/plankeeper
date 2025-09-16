@@ -17,9 +17,10 @@ type Image = {
 };
 
 interface UploadFile {
-  file: File;
-  name: string;
-  size: string;
+  file?: File;
+  file64?: string;
+  filename: string;
+  size?: string;
   filetype: string;
   thumb: string;
   isLoading: boolean;
@@ -28,7 +29,7 @@ interface UploadFile {
 }
 
 interface ProcessedImageResult {
-  originalFile: File;
+  originalFile: UploadFile;
   main: {
     base64: string;
     sizeKB: number;

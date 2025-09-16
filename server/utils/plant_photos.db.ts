@@ -1,5 +1,11 @@
 import sharp from 'sharp';
-import { PlantPhotos, PlantPhotosPost, PlantPhotosSizeType } from '~/types';
+import {
+  PlantPhotos,
+  PlantPhotosTableRowInsert,
+  PlantPhotosMockFile,
+  PlantPhotosSizeType,
+  PlantPhotosTableRow,
+} from '~/types';
 import { undefinedToNull } from '~/server/utils/db';
 
 type SizeOptions = {
@@ -24,7 +30,7 @@ const resizeImage = async (
 };
 
 // Resize image files to multiple sizes
-const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; name: PlantPhotosSizeType }[]> => {
+const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; sizeType: PlantPhotosSizeType }[]> => {
   try {
     console.log('Processing file:', file.name, file.type);
 
@@ -48,7 +54,7 @@ const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; na
       sizes.map(async (size) => {
         try {
           const resizedBuffer = await resizeImage(buffer, size);
-          return { buffer: resizedBuffer, name: size.name };
+          return { buffer: resizedBuffer, sizeType: size.name };
         } catch (err) {
           console.error(`Error resizing to ${size.name}:`, err);
           throw err;
@@ -63,21 +69,60 @@ const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; na
 };
 
 // Process Plant Photos Data
-const plantPhotosDataObject = async (photo: PlantPhotosPost): Promise<PlantPhotos[]> => {
+const plantPhotosDataObject = async (photo: PlantPhotosMockFile): Promise<PlantPhotosTableRowInsert[]> => {
   const buffers = await resizeImageFilesToSizes(photo.file);
-  return buffers.map((buffer) => {
-    return undefinedToNull({
+  return buffers.map((bufferObj, index: number) => {
+    // Don't use undefinedToNull on the Buffer as it corrupts it
+    const photoData = {
+      id: undefined,
+      created_at: undefined,
       plant_id: photo.plant_id,
       filename: photo.file.name,
-      image: buffer.name,
+      image: bufferObj.buffer, // Keep the actual Buffer object
       mime_type: photo.file.type,
-      size_type: buffer.name,
-      created_at: new Date().toISOString(),
-    });
-  }) as unknown as Promise<PlantPhotos[]>;
+      size_type:
+        index === 0
+          ? PlantPhotosSizeType.Small
+          : index === 1
+            ? PlantPhotosSizeType.Medium
+            : PlantPhotosSizeType.Original,
+    } as PlantPhotosTableRowInsert;
+
+    // Only apply undefinedToNull to non-Buffer fields
+    return {
+      ...photoData,
+      plant_id: undefinedToNull(photoData.plant_id),
+      filename: undefinedToNull(photoData.filename),
+      mime_type: undefinedToNull(photoData.mime_type),
+      size_type: undefinedToNull(photoData.size_type),
+      // Keep image as-is since it's a Buffer
+    };
+  });
 };
 
-const validatePlantPhotoData = async (body: PlantPhotosPost): Promise<PlantPhotos[]> => {
+const plantPhotosTableRowsToPlantPhotos = (rows: PlantPhotosTableRow[]): PlantPhotos[] => {
+  return rows.map((row) => {
+    let imageData = '';
+    if (Buffer.isBuffer(row.image)) {
+      // Convert Blob to object URL
+      imageData = `data:${row.mime_type};base64,${row.image.toString('base64')}`;
+    } else {
+      // Fallback for unknown types
+      imageData = '';
+    }
+    return {
+      id: row.id,
+      plant_id: row.plant_id,
+      filename: row.filename,
+      image: imageData,
+      mime_type: row.mime_type,
+      size_type: row.size_type,
+      created_at: row.created_at,
+    };
+  });
+};
+
+const validatePlantPhotoData = async (body: PlantPhotosMockFile): Promise<PlantPhotosTableRowInsert[]> => {
   try {
     console.log('Validating plant photo data:', {
       plant_id: body.plant_id,
@@ -129,4 +174,4 @@ const validatePlantPhotoData = async (body: PlantPhotosPost): Promise<PlantPhoto
   }
 };
 
-export { plantPhotosDataObject, validatePlantPhotoData };
+export { plantPhotosDataObject, plantPhotosTableRowsToPlantPhotos, validatePlantPhotoData };

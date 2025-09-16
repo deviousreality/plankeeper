@@ -7,6 +7,7 @@ import type { PlantModelPost } from '~/types/plant-models';
 export default defineEventHandler(async (event) => {
   const context = 'plants';
   const body = (await readBody(event)) as PlantModelPost;
+  // const user = event.context.user;
 
   console.log('Received plant data:', JSON.stringify(body, null, 2));
 
@@ -17,13 +18,6 @@ export default defineEventHandler(async (event) => {
   try {
     // Use transaction to ensure both tables are updated
     db.exec('BEGIN TRANSACTION');
-
-    // For simplicity, we'll default to user ID 1 (usually admin)
-    // In a production app, you would extract this from the auth session
-    const userId = 1;
-
-    // Add user_id to the body object
-    body.user_id = userId;
 
     const plantData = mapPlantBodyToDbFields(body);
 

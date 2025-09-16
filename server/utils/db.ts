@@ -355,6 +355,14 @@ export const handleDataTableTransactionError = (
   });
 };
 
+export const handleDatatableFetchError = (context: string, error: unknown) => {
+  console.error(`Error fetching ${context}:`, error);
+  throw createError({
+    statusCode: 500,
+    message: `Server error fetching ${context}: ${error instanceof Error ? error.message : String(error)}`,
+  });
+};
+
 export const validateFieldId = (id?: number) => {
   if (!id) {
     console.error('Validation failed - invalid id:', id);

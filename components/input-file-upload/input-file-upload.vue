@@ -2,19 +2,23 @@
   <v-card>
     <v-card-text>
       <v-file-input
-        v-model="selectedFiles"
+        ref="fileInput"
         :multiple="multiple"
         :label="label"
         :rules="fileRules"
         accept="image/*"
+        :model-value="modelValueFill"
         prepend-icon="mdi-image-multiple"
         show-size
         counter
         variant="outlined"
-        density="compact"></v-file-input>
+        density="compact"
+        @update:model-value="processModelValueFiles" />
 
       <!-- Use the list component to display uploaded files -->
       <input-file-upload-list
+        v-if="uploadedFiles.length > 0"
+        class="mt-4"
         :files="uploadedFiles"
         @delete="handleDelete" />
     </v-card-text>
@@ -22,14 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import InputFileUploadList from './input-file-upload-list.vue';
 import type { UploadFile, ProcessedImageResult } from '../../types/input-file-upload';
+import type { PlantPhotos } from '~/types';
 
-type SelectedFiles = File | File[] | null;
-interface ProcessingStatus {
+type SelectedFiles = File | File[] | Blob | Blob[] | null;
+type ProcessingStatus = {
   [key: string]: string;
-}
+};
 
 const props = defineProps({
   multiple: { type: Boolean, default: true },
@@ -42,14 +47,18 @@ const props = defineProps({
   thumbHeight: { type: Number, default: 200 },
   thumbQuality: { type: Number, default: 0.6 },
   acceptedTypes: { type: Array, default: () => ['image/jpeg', 'image/png', 'image/gif'] },
+  modelValue: { type: Array as PropType<PlantPhotos[]>, default: () => [] },
 });
 
-const emit = defineEmits(['processed', 'delete']);
+const emit = defineEmits<{
+  delete: [file: File];
+  processed: [files: UploadFile[]];
+}>();
 
-const selectedFiles = ref<SelectedFiles>(null);
-const isProcessing = ref(false);
 const processingStatus = ref<ProcessingStatus>({});
 const uploadedFiles = ref<UploadFile[]>([]);
+
+const modelValueFill = ref<undefined>();
 
 const fileRules = computed(() => [
   (files: SelectedFiles) => {
@@ -88,21 +97,17 @@ function processFiles() {
   processingStatus.value = {};
 
   // Process all files that are in the uploadedFiles array and marked as queued or need processing
-  const filesToProcess = uploadedFiles.value
-    .filter((item) => item.filestatus === 'queued' || item.filestatus === 'processing')
-    .map((item) => item.file);
+  const filesToProcess = uploadedFiles.value.filter(
+    (item) => item.filestatus === 'queued' || item.filestatus === 'processing'
+  ) as UploadFile[];
 
   if (filesToProcess.length === 0) {
     return;
   }
 
-  // Update UI to show global processing state
-  const totalFiles = filesToProcess.length;
-  let completedFiles = 0;
-
   // Update all files to show they're being processed
   for (const file of filesToProcess) {
-    const fileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
+    const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
     if (fileIndex !== -1) {
       uploadedFiles.value[fileIndex].isLoading = true;
       uploadedFiles.value[fileIndex].filestatus = 'processing';
@@ -110,31 +115,25 @@ function processFiles() {
     }
   }
 
-  const processPromises = filesToProcess.map(async (file: File) => {
-    processingStatus.value[file.name] = 'processing...';
+  const processPromises = filesToProcess.map(async (file: UploadFile) => {
+    processingStatus.value[file.filename] = 'processing...';
     try {
       const result = await _processSingleFile(file);
-      processingStatus.value[file.name] = 'done';
-
-      // Update progress count
-      completedFiles++;
+      processingStatus.value[file.filename] = 'done';
 
       return result as ProcessedImageResult;
     } catch (error) {
-      processingStatus.value[file.name] = 'error';
-      console.error(`Failed to process ${file.name}:`, error);
+      processingStatus.value[file.filename] = 'error';
+      console.error(`Failed to process ${file.filename}:`, error);
 
       // Update UI to show error for this file
-      const fileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
+      const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
       if (fileIndex !== -1) {
         uploadedFiles.value[fileIndex].isLoading = false;
         uploadedFiles.value[fileIndex].filestatus = 'error';
         uploadedFiles.value[fileIndex].message =
           `Error: ${error instanceof Error ? error.message : 'Processing failed'}`;
       }
-
-      // Update progress count
-      completedFiles++;
 
       return null;
     }
@@ -147,16 +146,10 @@ function processFiles() {
       // Process the results and add to uploadedFiles
       handleProcessedImages(validResults);
 
-      // Emit processed event for parent component with proper structure
-      // Map each uploadedFile to a format compatible with what form-plant.vue expects
-      const mappedResults = validResults.map((result) => ({
-        originalFile: result.originalFile,
-        name: result.originalFile.name,
-        main: result.main,
-        thumbnail: result.thumbnail,
-      }));
-
-      emit('processed', mappedResults);
+      emit(
+        'processed',
+        validResults.map((r) => r.originalFile)
+      );
 
       // No need to clear selectedFiles here as we already cleared it in the watch handler
     })
@@ -168,11 +161,13 @@ function processFiles() {
 
 function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
   for (const processedFile of processedFiles) {
-    const file = processedFile.originalFile;
+    const file = processedFile.originalFile.file;
+    if (!file) continue;
+
     const validationResult = validateFile(file);
 
     // Check if we already have this file in our list from the preview
-    const existingFileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
+    const existingFileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.name);
 
     if (existingFileIndex !== -1) {
       // Update the existing entry with optimized thumbnail
@@ -193,7 +188,7 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
       // Create a new entry if it doesn't exist (rare case if file wasn't in the preview)
       const newUploadFile: UploadFile = {
         file: file,
-        name: file.name,
+        filename: file.name,
         size: formatFileSize(file.size),
         filetype: file.type,
         thumb: processedFile.thumbnail.base64,
@@ -210,7 +205,7 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
     // Wait a little longer to make the loading state visible to the user
     Promise.resolve().then(() => {
       setTimeout(() => {
-        const fileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
+        const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.name);
         if (fileIndex !== -1) {
           // Update loading state and final status together
           uploadedFiles.value[fileIndex].isLoading = false;
@@ -224,48 +219,20 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
 
 function handleDelete(file: UploadFile): void {
   // Remove file from local array
-  const index = uploadedFiles.value.findIndex((f) => f.name === file.name);
+  const index = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
   if (index !== -1) {
     uploadedFiles.value.splice(index, 1);
 
-    // Create properly structured objects for the remaining files
-    const remainingProcessedFiles = uploadedFiles.value.map((file) => ({
-      originalFile: file.file,
-      name: file.name,
-      main: {
-        base64: file.thumb,
-        sizeKB: file.thumb ? (file.thumb.length * (3 / 4)) / 1024 : 0,
-      },
-      thumbnail: {
-        base64: file.thumb,
-        sizeKB: file.thumb ? (file.thumb.length * (3 / 4)) / 1024 : 0,
-      },
-    }));
-
     // Update processed files list
-    emit('processed', remainingProcessedFiles);
+    emit('processed', uploadedFiles.value);
   }
-
-  // Pass the full file object with all its data up to the parent component
-  emit('delete', {
-    originalFile: file.file,
-    name: file.name,
-    main: {
-      base64: file.thumb, // Use thumbnail as main if that's all we have
-      sizeKB: file.thumb ? (file.thumb.length * (3 / 4)) / 1024 : 0,
-    },
-    thumbnail: {
-      base64: file.thumb,
-      sizeKB: file.thumb ? (file.thumb.length * (3 / 4)) / 1024 : 0,
-    },
-  });
 }
 
-function _processSingleFile(file: File): Promise<unknown> {
+async function _processSingleFile(uploadFile: UploadFile): Promise<ProcessedImageResult> {
   return new Promise((resolve, reject) => {
     // Update the file status in the UI to show more detailed processing status
     const updateFileStatus = (message: string) => {
-      const fileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
+      const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === uploadFile.filename);
       if (fileIndex !== -1) {
         uploadedFiles.value[fileIndex].message = message;
       }
@@ -275,7 +242,7 @@ function _processSingleFile(file: File): Promise<unknown> {
     updateFileStatus('Reading file...');
 
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(new Blob([uploadFile.file as File], { type: uploadFile.file?.type }));
 
     reader.onload = (readerEvent) => {
       updateFileStatus('Creating optimized version...');
@@ -364,7 +331,7 @@ function _processSingleFile(file: File): Promise<unknown> {
 
         updateFileStatus('Finalizing...');
         resolve({
-          originalFile: file,
+          originalFile: uploadFile,
           main: {
             base64: mainBase64,
             sizeKB: getKbSize(mainBase64),
@@ -373,7 +340,7 @@ function _processSingleFile(file: File): Promise<unknown> {
             base64: thumbBase64,
             sizeKB: getKbSize(thumbBase64),
           },
-        });
+        } as ProcessedImageResult);
       };
 
       image.onerror = (e) => {
@@ -389,162 +356,102 @@ function _processSingleFile(file: File): Promise<unknown> {
   });
 }
 
-// Helper to convert base64 to File
-function base64ToFile(base64: string, filename: string, mime = 'image/jpeg') {
-  const arr = base64.split(','),
-    bstr = atob(arr[1]),
-    n = bstr.length,
-    u8arr = new Uint8Array(n);
-  for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
-  return new File([u8arr], filename, { type: mime });
-}
+const fileInput = ref();
+async function processModelValueFiles(files: SelectedFiles): Promise<void> {
+  const fileArray = Array.isArray(files) ? files : [files];
+  if (fileArray.length === 0) return;
 
-// Watch for changes to selectedFiles and automatically process them
-watch(selectedFiles, async (newFiles) => {
-  if (!newFiles) return;
-
-  // Store the files we need to process
-  const fileArray = Array.isArray(newFiles) ? newFiles : [newFiles];
-
-  // Clear selectedFiles immediately to allow for more selections
-  // This needs to be done early so the UI is responsive
-  const filesToProcess = [...fileArray]; // Create a copy before clearing
-  selectedFiles.value = null;
-
-  // Add a counter to track how many files have been previewed
   let previewsGenerated = 0;
-  const totalFiles = filesToProcess.length;
+  const totalFiles = fileArray.length;
 
-  // Create quick previews first
-  for (const file of filesToProcess) {
-    try {
-      // Check if this file is already in our list
-      const existingFileIndex = uploadedFiles.value.findIndex((f) => f.name === file.name);
-      if (existingFileIndex !== -1) {
-        // File already exists, just update its status
-        uploadedFiles.value[existingFileIndex].isLoading = true;
-        uploadedFiles.value[existingFileIndex].filestatus = 'queued';
-        uploadedFiles.value[existingFileIndex].message = 'Preparing to process...';
+  function addFileToUploadList(file: File, thumb: string, status: string, message: string, isLoading: boolean) {
+    uploadedFiles.value.push({
+      file,
+      filename: file.name,
+      size: formatFileSize(file.size),
+      filetype: file.type,
+      thumb,
+      isLoading,
+      filestatus: status,
+      message,
+    });
+  }
 
-        // Count this as previewed
-        previewsGenerated++;
-        continue;
-      }
-
-      // Validate the file first
-      const validationResult = validateFile(file);
-
-      // If the file is invalid, add it with error status and skip processing
-      if (validationResult.status !== 'success') {
-        uploadedFiles.value.push({
-          file: file,
-          name: file.name,
-          size: formatFileSize(file.size),
-          filetype: file.type,
-          thumb: '', // No preview for invalid files
-          isLoading: false,
-          filestatus: 'error',
-          message: validationResult.message || 'Invalid file',
-        });
-
-        // Count this as previewed
-        previewsGenerated++;
-        continue;
-      }
-
-      // Create a quick base64 preview for valid files
-      const reader = new FileReader();
-
-      reader.onload = (e) => {
-        if (typeof e.target?.result === 'string') {
-          // Add to upload list with temporary preview
-          const newUploadFile: UploadFile = {
-            file: file,
-            name: file.name,
-            size: formatFileSize(file.size),
-            filetype: file.type,
-            thumb: e.target.result, // Use the full-size image initially
-            isLoading: true, // Mark as loading until optimization is complete
-            filestatus: 'queued', // Initial status is queued
-            message: 'Preparing for optimization...',
-          };
-
-          uploadedFiles.value.push(newUploadFile);
-
-          // Increment counter and check if we should start processing
-          previewsGenerated++;
-          if (previewsGenerated === totalFiles) {
-            // All previews are done, start processing
-            setTimeout(() => {
-              processFiles();
-            }, 100);
-          }
-        }
-      };
-
-      reader.onerror = () => {
-        // Handle preview generation errors
-        uploadedFiles.value.push({
-          file: file,
-          name: file.name,
-          size: formatFileSize(file.size),
-          filetype: file.type,
-          thumb: '', // No preview available
-          isLoading: false,
-          filestatus: 'error',
-          message: 'Failed to generate preview',
-        });
-
-        // Increment counter and check if we should start processing
-        previewsGenerated++;
-        if (previewsGenerated === totalFiles) {
-          // All previews are done, start processing (valid files only)
-          setTimeout(() => {
-            processFiles();
-          }, 100);
-        }
-      };
-
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error(`Error creating preview for ${file.name}:`, error);
-
-      // Add the file with error status
-      uploadedFiles.value.push({
-        file: file,
-        name: file.name,
-        size: formatFileSize(file.size),
-        filetype: file.type,
-        thumb: '', // No preview available
-        isLoading: false,
-        filestatus: 'error',
-        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
-
-      // Increment counter and check if we should start processing
-      previewsGenerated++;
-      if (previewsGenerated === totalFiles) {
-        // All previews are done, start processing (valid files only)
-        setTimeout(() => {
-          processFiles();
-        }, 100);
-      }
+  function previewDone() {
+    previewsGenerated++;
+    if (previewsGenerated === totalFiles) {
+      setTimeout(() => processFiles(), 100);
     }
   }
 
-  // Fallback in case something goes wrong with the counters
-  // Set a maximum wait time before starting processing regardless
+  for (const file of fileArray as File[]) {
+    // Check if already exists
+    if (uploadedFiles.value.some((f) => f.filename === file.name)) {
+      previewDone();
+      continue;
+    }
+    const validationResult = validateFile(file);
+    if (validationResult.status !== 'success') {
+      addFileToUploadList(file, '', 'error', validationResult.message ?? 'Invalid file', false);
+      previewDone();
+      continue;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (typeof e.target?.result === 'string') {
+        addFileToUploadList(file, e.target.result, 'queued', 'Preparing for optimization...', true);
+      } else {
+        addFileToUploadList(file, '', 'error', 'Failed to generate preview', false);
+      }
+      previewDone();
+    };
+    reader.onerror = () => {
+      addFileToUploadList(file, '', 'error', 'Failed to generate preview', false);
+      previewDone();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  modelValueFill.value = undefined;
+  await fileInput.value?.reset();
+  await fileInput.value?.resetValidation();
+  // Fallback: ensure processFiles runs even if some previews hang
   setTimeout(() => {
     if (previewsGenerated < totalFiles) {
       console.warn(`Not all previews were generated (${previewsGenerated}/${totalFiles}), proceeding anyway`);
       processFiles();
     }
   }, 2000);
-});
+}
 
-// Expose necessary functions and data
-defineExpose({
-  processFiles,
-  uploadedFiles,
+async function processModelValuePlantPhotos(plantPhotos: PlantPhotos[]): Promise<UploadFile[]> {
+  return plantPhotos.map((photo) => {
+    return {
+      file64: photo.image,
+      filename: photo.filename,
+      size: formatFileSize(photo.size_type),
+      filetype: photo.mime_type,
+      thumb: '', // No preview available
+      isLoading: false,
+      filestatus: 'queued',
+      message: 'Preparing for upload...',
+    } as UploadFile;
+  });
+}
+
+// Watch for changes to selectedFiles and automatically process them
+watch(
+  () => props.modelValue,
+  async (newFiles) => {
+    if (!newFiles) return;
+    uploadedFiles.value = await processModelValuePlantPhotos(newFiles);
+  }
+);
+
+onMounted(async () => {
+  // Initial processing if modelValue is pre-filled
+  if (props.modelValue) {
+    uploadedFiles.value = await processModelValuePlantPhotos(props.modelValue);
+  }
 });
 </script>

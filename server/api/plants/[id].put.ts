@@ -1,16 +1,20 @@
 // server/api/plants/[id].put.ts
-import { db, undefinedToNull } from '~/server/utils/db';
+import { db } from '~/server/utils/db';
 import { mapPlantBodyToDbFields, validateFieldName, validateTaxonomyIds } from '~/server/utils/plants.db';
 import type { PlantModelPost } from '~/types/plant-models';
+import type { H3Event } from 'h3';
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: H3Event) => {
   const context = 'plants';
-  const plantId = getRouterParam(event, 'id');
   const body = (await readBody(event)) as PlantModelPost;
+  const user = event.context;
+  const plantId = body.id;
+
+  console.log('user', JSON.stringify(user, null, 2));
 
   console.log('Received plant data:', JSON.stringify(body, null, 2));
 
-  validateFieldName(body);
+  validateFieldId(plantId);
 
   validateFieldName(body);
 
@@ -25,7 +29,9 @@ export default defineEventHandler(async (event) => {
     console.log('Processed plant data for database:', JSON.stringify(plantData, null, 2));
 
     const values = Object.values(plantData);
-
+    // console.log('values for database:', JSON.stringify(values, null, 2));
+    console.log('more data', plantId);
+    console.log('more data user', user.id);
     db.prepare(
       `
       UPDATE plants 
@@ -54,23 +60,23 @@ export default defineEventHandler(async (event) => {
       updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
       `
-    ).run(...values, plantId, body.user_id);
+    ).run(...values, plantId, user.id);
 
     console.log('Updated plant ID:', plantId);
 
-    if (plantData.is_personal) {
-      const personalData = undefinedToNull({
-        plant_id: plantId,
-        count: body.personal_count,
-      });
-      db.prepare(
-        `
-      UPDATE personal_plants
-      set count = ?
-      WHERE plant_id = ?
-      `
-      ).run(personalData.count, personalData.plant_id);
-    }
+    // if (plantData.is_personal) {
+    //   const personalData = undefinedToNull({
+    //     plant_id: plantId,
+    //     count: body.personal_count,
+    //   });
+    //   db.prepare(
+    //     `
+    //   UPDATE personal_plants
+    //   set count = ?
+    //   WHERE plant_id = ?
+    //   `
+    //   ).run(personalData.count, personalData.plant_id);
+    // }
 
     db.exec('COMMIT');
 
@@ -109,6 +115,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, id: plantId };
   } catch (error) {
-    handleDataTableTransactionError(db, error, context, body);
+    return handleDataTableTransactionError(db, error, context, body);
   }
 });

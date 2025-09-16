@@ -11,49 +11,39 @@
         Back to Plants
       </v-btn>
     </div>
-
-    <FormPlant
-      ref="formPlant"
-      v-model:plant="plantFormData"
-      :is-quick-add="isQuickAdd"
-      :loading="loading"
-      :family-options="familyOptions"
-      :genus-options="genusOptions"
-      :species-options="speciesOptions"
-      @submit="savePlant"
-      @cancel="$router.push('/plants')" />
+    <v-card>
+      <v-card-text>
+        <FormPlant
+          ref="formPlant"
+          v-model="plantFormData"
+          :is-quick-add="isQuickAdd"
+          @images="handleImages" />
+      </v-card-text>
+      <v-divider />
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          color="primary"
+          :disabled="isSaving"
+          @click="$emit('cancel')">
+          Cancel
+        </v-btn>
+        <v-btn
+          color="success"
+          type="submit"
+          :loading="loading || isSaving"
+          @click="savePlant">
+          {{ isSaving ? 'Saving...' : 'Save Plant' }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { Plant } from '~/types/database';
 import FormPlant from '~/components/form-plant.vue';
-
-type FamilyOptions = {
-  title: string;
-  value: string;
-  id: number;
-};
-
-type GenusOptions = {
-  title: string;
-  value: string;
-  id: number;
-};
-
-type SpeciesOptions = {
-  title: string;
-  value: string;
-  id: number;
-};
-
-type PlantFormData = Omit<Plant, 'id' | 'user_id' | 'created_at' | 'updated_at'> & {
-  id?: number;
-  user_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  personal_count?: number; // For personal plant count
-};
+import type { UploadFile } from '~/types/input-file-upload';
+import type { PlantModelPost } from '~/types/plant-models';
 
 definePageMeta({
   middleware: 'auth',
@@ -63,21 +53,15 @@ const router = useRouter();
 const route = useRoute();
 const auth = useAuth();
 const loading = ref(false);
-
+const isSaving = ref(false);
+const formPlant = ref<InstanceType<typeof FormPlant>>();
 // Quick add mode based on query parameter
 const isQuickAdd = computed(() => route.query.quick === 'true');
 
-// Taxonomy data
-const speciesOptions = ref<SpeciesOptions[]>([]);
-const familyOptions = ref<FamilyOptions[]>([]);
-const genusOptions = ref<GenusOptions[]>([]);
-
-// Track selected taxonomy IDs for API calls
-const selectedFamilyId = ref<number | undefined>(undefined);
-const selectedGenusId = ref<number | undefined>(undefined);
-
 // Plant data - using the correct Plant type from database
-const plantFormData = ref<PlantFormData>({
+const plantFormData = ref<PlantModelPost>({
+  user_id: auth.user.value?.id as number,
+  id: undefined,
   name: '',
   species_id: undefined,
   family_id: undefined,
@@ -99,141 +83,21 @@ const plantFormData = ref<PlantFormData>({
   fragrance_description: undefined,
   is_petsafe: false,
   plant_zones: undefined,
-  personal_count: undefined, // For personal plant count
+  personal_count: undefined,
+  created_at: '',
+  updated_at: '',
 });
+const imageFormData = ref<UploadFile[]>([]);
 
 // Personal plant count for the personal table
 const personalCount = ref<number>(1);
 
-// Form reference for validation
-const formPlant = ref();
-
-// Form options
-// const lightOptions = ["Low Light", "Medium Light", "Bright Indirect Light", "Full Sun"];
-
-// Smart name generation and validation
-const suggestedName = computed(() => {
-  // Get the selected taxonomy names
-  const selectedFamily = familyOptions.value.find((f) => f.id === plantFormData.value.family_id);
-  const selectedGenus = genusOptions.value.find((g) => g.id === plantFormData.value.genus_id);
-  const selectedSpecies = speciesOptions.value.find((s) => s.id === plantFormData.value.species_id);
-
-  if (selectedSpecies) {
-    // If species is selected, use its name (e.g., "Monstera deliciosa")
-    return selectedSpecies.title;
-  } else if (selectedGenus) {
-    // If only genus is selected, use genus name (e.g., "Monstera")
-    return selectedGenus.title;
-  } else if (selectedFamily) {
-    // If only family is selected, use family name (e.g., "Araceae")
-    return selectedFamily.title;
-  }
-
-  return '';
-});
-
-// Fetch initial family data
-async function fetchFamilies(): Promise<FamilyOptions[] | void> {
-  try {
-    const response = await $fetch('/api/taxonomy');
-
-    // Transform families for v-autocomplete
-    familyOptions.value = response.families.map((family) => ({
-      title: family.name,
-      value: family.name,
-      id: family.id,
-    }));
-  } catch (error) {
-    console.error('Error fetching families:', error);
-  }
+function handleImages(uploadFiles: UploadFile[]): void {
+  imageFormData.value = uploadFiles;
 }
-
-// Fetch genera for selected family
-async function fetchGenera(familyId: number): Promise<GenusOptions[] | void> {
-  try {
-    const response = await $fetch(`/api/taxonomy?familyId=${familyId}`);
-
-    // Transform genera for v-autocomplete
-    genusOptions.value = response.genera.map((genus) => ({
-      title: genus.name,
-      value: genus.name,
-      id: genus.id,
-    }));
-
-    // Clear species when family changes
-    speciesOptions.value = [];
-    plantFormData.value.species_id = undefined;
-  } catch (error) {
-    console.error('Error fetching genera:', error);
-    genusOptions.value = [];
-  }
-}
-
-// Fetch species for selected genus
-async function fetchSpecies(familyId: number, genusId: number): Promise<SpeciesOptions[] | void> {
-  try {
-    const response = await $fetch(`/api/taxonomy?familyId=${familyId}&genusId=${genusId}`);
-
-    // Transform species for v-autocomplete
-    speciesOptions.value = response.species.map((species) => ({
-      title: species.name,
-      value: species.name,
-      id: species.id,
-    }));
-  } catch (error) {
-    console.error('Error fetching species:', error);
-    speciesOptions.value = [];
-  }
-}
-
-// Watch for family selection changes
-watch(
-  () => plantFormData.value.family_id,
-  async (newFamilyId) => {
-    if (newFamilyId) {
-      selectedFamilyId.value = newFamilyId;
-      await fetchGenera(newFamilyId);
-
-      // Clear genus and species when family changes
-      plantFormData.value.genus_id = undefined;
-      plantFormData.value.species_id = undefined;
-      selectedGenusId.value = undefined;
-    } else {
-      // Clear everything when family is cleared
-      selectedFamilyId.value = undefined;
-      selectedGenusId.value = undefined;
-      genusOptions.value = [];
-      speciesOptions.value = [];
-      plantFormData.value.genus_id = undefined;
-      plantFormData.value.species_id = undefined;
-    }
-  }
-);
-
-// Watch for genus selection changes
-watch(
-  () => plantFormData.value.genus_id,
-  (newGenusId) => {
-    if (newGenusId && selectedFamilyId.value) {
-      selectedGenusId.value = newGenusId;
-      fetchSpecies(selectedFamilyId.value, newGenusId);
-
-      // Clear species when genus changes
-      plantFormData.value.species_id = undefined;
-    } else {
-      // Clear species when genus is cleared
-      selectedGenusId.value = undefined;
-      speciesOptions.value = [];
-      plantFormData.value.species_id = undefined;
-    }
-  }
-);
-
 // Save plant to database
 async function savePlant(): Promise<void> {
-  if (!formPlant.value?.validate()) return;
-
-  loading.value = true;
+  // loading.value = true;
 
   try {
     if (!auth.user.value?.id) {
@@ -242,13 +106,16 @@ async function savePlant(): Promise<void> {
       return;
     }
 
-    // Use suggested name if plant name is empty and we have taxonomy selection
-    const finalPlantName = plantFormData.value.name.trim() || suggestedName.value;
-
+    if (formPlant.value?.validate()) {
+      isSaving.value = true;
+    } else {
+      alert('Please fix the errors in the form before saving.');
+      return;
+    }
     // Prepare data for API using the new schema
     const plantData = {
-      user_id: auth.user.value.id,
-      name: finalPlantName,
+      user_id: auth.user.value?.id,
+      name: plantFormData.value.name.trim(),
       species_id: plantFormData.value.species_id,
       family_id: plantFormData.value.family_id,
       genus_id: plantFormData.value.genus_id,
@@ -270,7 +137,7 @@ async function savePlant(): Promise<void> {
       is_petsafe: plantFormData.value.is_petsafe,
       plant_zones: plantFormData.value.plant_zones,
       personal_count: plantFormData.value.personal_count, // Use personal count if provided
-    } as PlantFormData;
+    } as PlantModelPost;
 
     // Save the plant
     const response = await $fetch('/api/plants', {
@@ -307,6 +174,27 @@ async function savePlant(): Promise<void> {
       }
     }
 
+    if (imageFormData.value.length > 0) {
+      for (const file of imageFormData.value) {
+        if (!(file.file instanceof File)) {
+          continue; // Skip if not a valid File object
+        }
+        const formData = new FormData();
+        formData.append('plant_id', plantId.toString());
+        formData.append('image', file.file);
+
+        try {
+          await $fetch(`/api/plant_photos`, {
+            method: 'POST',
+            body: formData,
+          });
+          console.log(`Image ${file.file?.name} uploaded successfully`);
+        } catch (imageError) {
+          console.error(`Error uploading image ${file.file?.name}:`, imageError);
+        }
+      }
+    }
+
     router.push(`/plants/${plantId}`);
   } catch (error) {
     console.error('Error saving plant:', error);
@@ -315,9 +203,4 @@ async function savePlant(): Promise<void> {
     loading.value = false;
   }
 }
-
-// Fetch data when component mounts
-onMounted(() => {
-  fetchFamilies();
-});
 </script>

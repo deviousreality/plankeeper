@@ -48,11 +48,8 @@ const validateTaxonomyIds = (plantModel: PlantModelPost) => {
 };
 
 const mapPlantBodyToDbFields = (body: PlantModelPost) => {
-  // Use the user_id from the body or default to 1
-  const userId = body.user_id || 1;
-
   return {
-    user_id: userId, // Add user_id field
+    user_id: body.user_id,
     name: body.name,
     species_id: body.species_id,
     family_id: body.family_id,

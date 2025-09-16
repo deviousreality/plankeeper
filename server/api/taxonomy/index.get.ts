@@ -6,8 +6,6 @@ type TaxonomyItem = {
 };
 
 type TaxonomyResponse = {
-  family?: TaxonomyItem;
-  genus?: TaxonomyItem;
   families: TaxonomyItem[];
   genera: TaxonomyItem[];
   species: TaxonomyItem[];
@@ -35,7 +33,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         SELECT id, name
         FROM plant_family
         ORDER BY name
-      `
+        `
         )
         .all() as TaxonomyItem[];
 
@@ -53,7 +51,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         SELECT id, name
         FROM plant_family
         WHERE id = ?
-      `
+        `
         )
         .get(familyId) as TaxonomyItem | undefined;
 
@@ -71,7 +69,7 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         SELECT id, name, family_id
         FROM plant_genus
         WHERE id = ? AND family_id = ?
-      `
+        `
         )
         .get(genusId, familyId) as { id: number; name: string; family_id: number } | undefined;
 
@@ -90,12 +88,10 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         FROM plant_species
         WHERE genus_id = ?
         ORDER BY name
-      `
+        `
         )
         .all(genusId) as TaxonomyItem[];
 
-      response.family = family;
-      response.genus = { id: genus.id, name: genus.name };
       response.species = species;
 
       return response;
@@ -135,7 +131,6 @@ export default defineEventHandler(async (event): Promise<TaxonomyResponse> => {
         )
         .all(familyId) as TaxonomyItem[];
 
-      response.family = family;
       response.genera = genera;
 
       return response;

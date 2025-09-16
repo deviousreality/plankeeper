@@ -5,7 +5,7 @@
     <div class="image-list-container">
       <div
         v-for="item in props.files"
-        :key="item.name"
+        :key="item.filename"
         class="image-item">
         <div
           class="thumbnail-container"
@@ -13,10 +13,10 @@
             'error-border': item.filestatus === 'error' || item.filestatus === 'failure',
           }">
           <img
-            :src="item.thumb || ''"
+            :src="item.file64 || item.thumb || ''"
             class="thumbnail"
-            :title="item.name"
-            :alt="item.name" />
+            :title="item.filename"
+            :alt="item.filename" />
 
           <!-- Status indicator chip -->
           <v-chip
@@ -55,7 +55,7 @@
 
           <!-- File info overlay (shown on hover) -->
           <div class="file-info-overlay">
-            <div class="file-name text-truncate">{{ item.name }}</div>
+            <div class="file-name text-truncate">{{ item.filename }}</div>
             <div class="file-size">{{ item.size }}</div>
             <div
               v-if="item.message && (item.filestatus === 'failure' || item.filestatus === 'error')"

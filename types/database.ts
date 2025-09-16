@@ -55,8 +55,8 @@ export interface PlantTableRow {
 }
 
 // Application type (for Vue/frontend with proper booleans)
-export type Plant = {
-  id: number;
+export interface Plant {
+  id: number | undefined;
   user_id: number;
   name: string;
   species_id: number | undefined;
@@ -82,7 +82,7 @@ export type Plant = {
   is_petsafe: boolean; // 0 = false, 1 = true (SQLite boolean)
   plant_zones: number | undefined;
   personal_count: number | undefined;
-};
+}
 
 // =====================================
 // Taxonomy Types
@@ -246,17 +246,28 @@ export interface PlantPhotosTableRow {
   id: number;
   plant_id: number;
   filename: string;
-  image: File;
+  image: Buffer;
   mime_type: string;
   size_type: PlantPhotosSizeType;
   created_at: string;
 }
 
-export type PlantPhotos = Omit<PlantPhotosTableRow, 'id'>;
-export type PlantPhotosPost = {
+export interface PlantPhotos {
+  id: number;
+  plant_id: number;
+  filename: string;
+  image: string;
+  mime_type: string;
+  size_type: PlantPhotosSizeType;
+  created_at?: string;
+}
+export type PlantPhotosTableRowInsert = Omit<PlantPhotosTableRow, 'id' | 'created_at'>;
+
+// export type PlantPhotos = PlantPhotosTableRow;
+export interface PlantPhotosMockFile {
   plant_id: number;
   file: File;
-};
+}
 // =====================================
 // Utility Types
 // =====================================

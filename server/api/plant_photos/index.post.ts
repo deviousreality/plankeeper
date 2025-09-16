@@ -1,7 +1,7 @@
 // server/api/plant_photos/index.post.ts
 import { validatePlantPhotoData } from '~/server/utils/plant_photos.db';
 import { db, handleDataTableTransactionError, validateFieldId } from '~/server/utils/db';
-import { PlantPhotosPost, PlantPhotos } from '~/types/database';
+import { PlantPhotosMockFile, PlantPhotosTableRowInsert } from '~/types/database';
 
 export default defineEventHandler(async (event) => {
   const context = 'plant_photos';
@@ -15,12 +15,9 @@ export default defineEventHandler(async (event) => {
         message: 'No form data provided',
       });
     }
-
-    console.log('Received form data parts:', formData.length);
-
     // Extract plant_id and file from form data
     const plantIdPart = formData.find((part) => part.name === 'plant_id');
-    const filePart = formData.find((part) => part.name === 'file');
+    const filePart = formData.find((part) => part.name === 'image');
 
     // Log what we received
     formData.forEach((part) => {
@@ -29,14 +26,26 @@ export default defineEventHandler(async (event) => {
       );
     });
 
-    if (!plantIdPart || !plantIdPart.data) {
+    console.log(
+      'Raw form data parts:',
+      formData.map((part) => ({
+        name: part.name,
+        filename: part.filename,
+        type: part.type,
+        dataExists: !!part.data,
+        dataLength: part.data?.length || 0,
+        dataBytesHex: part.data ? part.data.slice(0, 10).toString('hex') : 'none',
+      }))
+    );
+
+    if (!plantIdPart) {
       throw createError({
         statusCode: 400,
         message: 'Missing plant_id in form data',
       });
     }
 
-    if (!filePart || !filePart.data) {
+    if (!filePart) {
       throw createError({
         statusCode: 400,
         message: 'Missing file data in form data',
@@ -58,7 +67,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Construct a mock File object that our processing functions can use
-    const body: PlantPhotosPost = {
+    const mockFile: PlantPhotosMockFile = {
       plant_id: plantId,
       file: {
         name: filePart.filename || 'unknown.jpg',
@@ -69,32 +78,49 @@ export default defineEventHandler(async (event) => {
         slice: () => new Blob(),
         stream: () => new ReadableStream(),
         text: async () => Promise.resolve(''),
-      } as unknown as File,
+      } as File,
     };
 
-    console.log('Processed photo data:', {
-      plant_id: body.plant_id,
-      filename: body.file.name,
-      fileSize: body.file.size,
-      fileType: body.file.type,
-    });
+    console.log('Received plant photos:', JSON.stringify(mockFile, null, 2));
 
-    validateFieldId(body.plant_id);
+    validateFieldId(mockFile.plant_id);
 
-    let plantPhotoData = await validatePlantPhotoData(body);
+    const plantPhotoData = await validatePlantPhotoData(mockFile);
+
+    console.log(
+      'Received plant photos:',
+      JSON.stringify(
+        plantPhotoData.map((photo) => {
+          return {
+            plantId: photo.plant_id,
+            filename: photo.filename,
+            file: '[Buffer]',
+            mime_type: photo.mime_type,
+            size_type: photo.size_type,
+            // Exclude the actual image buffer from logs for brevity
+          };
+        }),
+        null,
+        2
+      )
+    );
 
     // Use transaction to ensure tables are updated
     db.exec('BEGIN TRANSACTION;');
 
     const insert = db.prepare(
       `
-      INSERT INTO plant_photos (plant_id, filename, image, mime_type, size_type, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO plant_photos (plant_id, filename, image, mime_type, size_type)
+      VALUES (?, ?, ?, ?, ?)
     `
     );
 
-    const insertMany = db.transaction((photos: PlantPhotos[]) => {
-      for (const photo of photos) insert.run(...Object.values(photo));
+    const insertMany = db.transaction((photos: PlantPhotosTableRowInsert[]) => {
+      for (const photo of photos) {
+        // Extract only the fields we're inserting (excluding created_at which has a default)
+        const values = [photo.plant_id, photo.filename, photo.image, photo.mime_type, photo.size_type];
+        insert.run(...values);
+      }
     });
 
     insertMany(plantPhotoData);
@@ -104,9 +130,8 @@ export default defineEventHandler(async (event) => {
     // Return success response with some basic information
     return {
       success: true,
-      message: 'Plant photos uploaded successfully',
-      count: plantPhotoData.length,
-      plant_id: body.plant_id,
+      message: 'Plant photo uploaded successfully',
+      plant_id: plantIdPart,
     };
   } catch (error: unknown | string) {
     // If we're in a transaction and encounter an error, roll it back

@@ -479,10 +479,4 @@ function formatCareAction(actionType: string): string {
 onMounted(() => {
   fetchPlantData();
 });
-
-// TODO: Implement propagation API later
-// Refresh plant data (called by PropagationWidget)
-// function refreshPlantData(): void {
-//   fetchPlantData();
-// }
 </script>

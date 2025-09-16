@@ -3,12 +3,13 @@
  */
 import type { Plant, PlantPhotos } from '.';
 
-export type PlantModel = Omit<Plant, 'id' | 'user_id' | 'created_at'>;
-export type PlantModelPost = Omit<Plant, 'id' | 'created_at'> & {
-  user_id?: number; // Make user_id explicit and optional
-  personal_count?: number;
-  photos?: PlantPhotos[]; // Make photos optional as well
+// export type PlantModel = Omit<Plant, 'id' | 'user_id' | 'created_at'>;
+export type PlantModelPost = Plant & {
+  id: number | undefined;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
 };
+export type PlantModelAddNew = Omit<PlantModelPost, 'id' | 'user_id'>;
 
 export interface PlantSpecies {
   id: number;

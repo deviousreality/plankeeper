@@ -1,8 +1,9 @@
 // server/api/plants/[id].get.ts
-import { db, nullToUndefined } from '~/server/utils/db';
+import { db, handleDatatableFetchError, nullToUndefined } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
 
 export default defineEventHandler(async (event) => {
+  const context = 'photos';
   const id = event.context.params?.['id'];
 
   if (!id) {
@@ -73,9 +74,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     console.error('Error fetching plant details:', error);
-    throw createError({
-      statusCode: 500,
-      message: 'Server error fetching plant details',
-    });
+    handleDatatableFetchError(context, error as unknown);
   }
 });
