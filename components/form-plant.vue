@@ -1,6 +1,14 @@
 <!-- components/form-plant.vue -->
 <template>
-  <v-form ref="form">
+  <v-card
+    v-if="!plant"
+    class="text-center pa-5">
+    <v-progress-circular indeterminate />
+    <div class="mt-3">Loading plant data...</div>
+  </v-card>
+  <v-form
+    v-else
+    ref="form">
     <v-row>
       <!-- Left Column - Basic Plant Info -->
       <v-col
@@ -308,8 +316,7 @@ import type { PlantModelPost } from '~/types/plant-models';
 // Props
 type Props = {
   isQuickAdd?: boolean;
-  modelValue: PlantModelPost;
-  loading?: boolean;
+  modelValue?: PlantModelPost;
 };
 const lightOptions = [
   'Low Light',
@@ -326,6 +333,7 @@ const waterOptions = ['Low Water', 'Moderate Water', 'High Water', 'Drought Tole
 const props = withDefaults(defineProps<Props>(), {
   isQuickAdd: false,
   loading: false,
+  modelValue: undefined,
 });
 
 // Emits
@@ -333,7 +341,7 @@ const emit = defineEmits<{
   cancel: [];
   images: [images: UploadFile[]];
   submit: [];
-  'update:modelValue': [plant: PlantModelPost];
+  'update:modelValue': [plant: PlantModelPost | undefined];
 }>();
 
 const form = ref();
@@ -379,7 +387,7 @@ const nameValidationRules = computed(() => {
 
 // Format date for display
 const formattedDate = computed(() => {
-  if (!plant.value.acquired_date) return '';
+  if (!plant.value?.acquired_date) return '';
 
   return new Date(plant.value.acquired_date).toLocaleDateString();
 });
@@ -397,82 +405,18 @@ async function fetchExistingPhotos(plantId: number) {
     console.error('Failed to fetch existing photos:', error);
   }
 }
-const processedImages = ref<UploadFile[]>([]);
+
 const handleProcessedImages = (images: UploadFile[]) => {
-  processedImages.value = images;
-  emit('images', processedImages.value);
+  emit('images', images);
 };
-
-// Handle image deletion from the upload component
-// function handleImageDelete(imageData: File) {
-//   // Find the image in the processedImages array by file name
-//   const fileName = imageData.name;
-
-//   // Find the image in the processedImages array
-//   const index = processedImages.value.findIndex((img) => img.name === fileName);
-
-//   if (index !== -1) {
-//     // Remove the image from the processed images array
-//     processedImages.value.splice(index, 1);
-//     console.log(`Removed image ${fileName} from processedImages`);
-
-//     // Also clean up the upload status if it exists
-//     if (uploadStatus.value[fileName]) {
-//       delete uploadStatus.value[fileName];
-//     }
-//   }
-// }
-
-// Track the saving process state
-// const isSaving = ref(false);
-// const uploadStatus = ref<{ [key: string]: string }>({});
-
-// Helper function to determine upload status chip color
-// function getUploadStatusColor(fileName: string): string {
-//   const status = uploadStatus.value[fileName];
-//   if (!status) return 'default';
-
-//   switch (status) {
-//     case 'Complete':
-//       return 'success';
-//     case 'Failed':
-//       return 'error';
-//     case 'Uploading...':
-//       return 'info';
-//     default:
-//       return 'default';
-//   }
-// }
-
-// Function to convert database photos to the format expected by input-file-upload-list
-// function convertToUploadFiles(photos: any[]) {
-//   if (!photos || photos.length === 0) return [];
-
-//   return photos.map((photo) => ({
-//     file: new File([], photo.filename || 'existing-image.jpg'), // Placeholder File object
-//     name: photo.filename,
-//     size: 'From database',
-//     filetype: photo.mime_type || 'image/jpeg',
-//     thumb: photo.image, // Base64 image data
-//     isLoading: false,
-//     filestatus: 'success',
-//     message: 'Existing image',
-//     id: photo.id, // Database ID
-//     isExisting: true, // Mark as existing
-//   }));
-// }
-
-// const finalPlantName = plantFormData.value.name.trim() || suggestedName.value;
-
-// Main function to save the plant and its images
 
 // Fetch data when component mounts
 onMounted(async () => {
   modelValueProxy.value = props.modelValue;
   await fetchFamilies();
-  await fetchGenera(modelValueProxy?.value.family_id);
-  await fetchSpecies(modelValueProxy?.value.family_id, modelValueProxy?.value.genus_id);
-  if (plant.value.id) {
+  await fetchGenera(modelValueProxy?.value?.family_id);
+  await fetchSpecies(modelValueProxy?.value?.family_id, modelValueProxy?.value?.genus_id);
+  if (plant.value?.id) {
     await fetchExistingPhotos(plant.value.id);
   }
 });
@@ -481,6 +425,14 @@ const validate = () => {
   return form.value?.validate() ?? false;
 };
 
+watch(
+  () => props.modelValue,
+  async (newVal, oldVal) => {
+    if (!oldVal && newVal?.id) {
+      await fetchExistingPhotos(newVal.id);
+    }
+  }
+);
 defineExpose({
   validate,
 });

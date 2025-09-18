@@ -26,18 +26,6 @@ export default defineEventHandler(async (event) => {
       );
     });
 
-    console.log(
-      'Raw form data parts:',
-      formData.map((part) => ({
-        name: part.name,
-        filename: part.filename,
-        type: part.type,
-        dataExists: !!part.data,
-        dataLength: part.data?.length || 0,
-        dataBytesHex: part.data ? part.data.slice(0, 10).toString('hex') : 'none',
-      }))
-    );
-
     if (!plantIdPart) {
       throw createError({
         statusCode: 400,
@@ -110,15 +98,15 @@ export default defineEventHandler(async (event) => {
 
     const insert = db.prepare(
       `
-      INSERT INTO plant_photos (plant_id, filename, image, mime_type, size_type)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO plant_photos (plant_id, filename, image, mime_type, size_type, guid)
+      VALUES (?, ?, ?, ?, ?, ?)
     `
     );
 
     const insertMany = db.transaction((photos: PlantPhotosTableRowInsert[]) => {
       for (const photo of photos) {
         // Extract only the fields we're inserting (excluding created_at which has a default)
-        const values = [photo.plant_id, photo.filename, photo.image, photo.mime_type, photo.size_type];
+        const values = [photo.plant_id, photo.filename, photo.image, photo.mime_type, photo.size_type, photo.guid];
         insert.run(...values);
       }
     });

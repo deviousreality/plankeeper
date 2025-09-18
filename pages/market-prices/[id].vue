@@ -22,7 +22,7 @@
           </v-card-subtitle>
 
           <v-img
-            :src="plant?.image_url || '/images/default-plant.jpg'"
+            :src="'/images/default-plant.jpg'"
             height="200"
             cover />
 

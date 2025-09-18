@@ -30,7 +30,7 @@
                 :subtitle="plant.common_name || 'Unknown species'">
                 <template #prepend>
                   <v-avatar color="grey-lighten-1">
-                    <v-img :src="plant.image_url || '/images/default-plant.jpg'" />
+                    <v-img :src="'/images/default-plant.jpg'" />
                   </v-avatar>
                 </template>
 

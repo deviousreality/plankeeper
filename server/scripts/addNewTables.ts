@@ -84,7 +84,6 @@ try {
             family_id INTEGER,
             genus_id INTEGER,
             acquired_date DATE,
-            image_url TEXT,
             notes TEXT,
             is_favorite INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -108,10 +107,10 @@ try {
         if (plantsData.length > 0) {
           const insertPlant = db.prepare(`
             INSERT INTO plants (
-              id, user_id, name, species_id, family_id, genus_id, acquired_date, image_url, notes,
+              id, user_id, name, species_id, family_id, genus_id, acquired_date, notes,
               is_favorite, created_at, updated_at, can_sell, is_personal, common_name,
               flower_color, variety, light_pref, water_pref, soil_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
 
           for (const row of plantsData) {
@@ -125,7 +124,6 @@ try {
               null, // family_id - will need manual migration
               null, // genus_id - will need manual migration
               (row as any).acquired_date,
-              (row as any).image_url,
               (row as any).notes,
               (row as any).is_favorite,
               (row as any).created_at,
@@ -197,7 +195,6 @@ try {
           family_id INTEGER,
           genus_id INTEGER,
           acquired_date DATE,
-          image_url TEXT,
           notes TEXT,
           is_favorite INTEGER DEFAULT 0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -244,7 +241,6 @@ try {
             family_id INTEGER,
             genus_id INTEGER,
             acquired_date DATE,
-            image_url TEXT,
             notes TEXT,
             is_favorite INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -268,10 +264,10 @@ try {
         if (existingPlants.length > 0) {
           const insertPlant = db.prepare(`
             INSERT INTO plants (
-              user_id, name, species_id, family_id, genus_id, acquired_date, image_url, notes,
+              user_id, name, species_id, family_id, genus_id, acquired_date, notes,
               is_favorite, created_at, updated_at, can_sell, is_personal, common_name,
               flower_color, variety, light_pref, water_pref, soil_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
 
           for (const row of existingPlants) {
@@ -282,7 +278,6 @@ try {
               (row as any).family_id || null, // Preserve existing foreign key if present
               (row as any).genus_id || null, // Preserve existing foreign key if present
               (row as any).acquired_date,
-              (row as any).image_url,
               (row as any).notes,
               (row as any).is_favorite,
               (row as any).created_at,

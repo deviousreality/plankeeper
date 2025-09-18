@@ -24,7 +24,6 @@ Core plant information.
 - `name` - TEXT - Plant's name (given by user)
 - `species` - TEXT - Botanical species name
 - `acquired_date` - DATE - When the plant was acquired
-- `image_url` - TEXT - URL or path to plant image
 - `notes` - TEXT - General notes about the plant
 - `is_favorite` - BOOLEAN - Whether the plant is marked as a favorite
 - `can_sell` - BOOLEAN - Whether the plant can be sold

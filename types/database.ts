@@ -33,7 +33,6 @@ export interface PlantTableRow {
   family_id: number | null;
   genus_id: number | null;
   acquired_date: string | null;
-  image_url: string | null;
   notes: string | null;
   is_favorite: number; // 0 = false, 1 = true (SQLite boolean)
   created_at: string;
@@ -63,7 +62,6 @@ export interface Plant {
   family_id: number | undefined;
   genus_id: number | undefined;
   acquired_date: string | undefined;
-  image_url: string | undefined;
   notes: string | undefined;
   is_favorite: boolean; // 0 = false, 1 = true (SQLite boolean)
   created_at: string;
@@ -218,7 +216,6 @@ export interface PlantFormData {
   family_id?: number;
   genus_id?: number;
   acquired_date?: string;
-  image_url?: string;
   notes?: string;
   is_favorite?: boolean;
   can_sell?: boolean;
@@ -250,16 +247,18 @@ export interface PlantPhotosTableRow {
   mime_type: string;
   size_type: PlantPhotosSizeType;
   created_at: string;
+  guid: string;
 }
 
 export interface PlantPhotos {
-  id: number;
+  id?: number;
   plant_id: number;
   filename: string;
   image: string;
   mime_type: string;
   size_type: PlantPhotosSizeType;
   created_at?: string;
+  guid: string;
 }
 export type PlantPhotosTableRowInsert = Omit<PlantPhotosTableRow, 'id' | 'created_at'>;
 

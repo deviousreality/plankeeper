@@ -65,7 +65,7 @@
                   size="80"
                   class="me-4">
                   <v-img
-                    :src="plant?.image_url || '/images/default-plant.jpg'"
+                    :src="'/images/default-plant.jpg'"
                     alt="Plant Image" />
                 </v-avatar>
               </div>

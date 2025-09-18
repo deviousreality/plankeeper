@@ -69,7 +69,7 @@
           md="6">
           <v-card class="mb-4">
             <v-img
-              :src="plant?.image_url || '/images/default-plant.jpg'"
+              :src="'/images/default-plant.jpg'"
               height="300"
               cover
               class="align-end">

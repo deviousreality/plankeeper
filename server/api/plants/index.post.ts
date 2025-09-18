@@ -30,11 +30,11 @@ export default defineEventHandler(async (event) => {
         `
       INSERT INTO plants (
         user_id, name, species_id, family_id, genus_id, common_name, variety, 
-        flower_color, is_personal, is_favorite, acquired_date, image_url, notes,
+        flower_color, is_personal, is_favorite, acquired_date, notes,
         light_pref, water_pref, soil_type, plant_zones, plant_use, has_fragrance,
         fragrance_description, is_petsafe, can_sell
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `
       )
       .run(...values);

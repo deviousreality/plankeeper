@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue';
 import type { PlantModelPost } from '~/types/plant-models';
 import type { FamilyOptions, GenusOptions, SpeciesOptions } from '~/types/taxonomy';
 
-export function useTaxonomy(plantFormData?: Ref<PlantModelPost>) {
+export function useTaxonomy(plantFormData?: Ref<PlantModelPost | undefined>) {
   const familyOptions = ref<FamilyOptions[]>([]);
   const genusOptions = ref<GenusOptions[]>([]);
   const speciesOptions = ref<SpeciesOptions[]>([]);
@@ -13,7 +13,7 @@ export function useTaxonomy(plantFormData?: Ref<PlantModelPost>) {
 
   // Has Current Taxonomy Selection
   const hasTaxonomySelection = computed(() => {
-    return !!(plantFormData?.value.family_id ?? plantFormData?.value.genus_id ?? plantFormData?.value.species_id);
+    return !!(plantFormData?.value?.family_id ?? plantFormData?.value?.genus_id ?? plantFormData?.value?.species_id);
   });
 
   // Fetch initial family data
@@ -64,7 +64,7 @@ export function useTaxonomy(plantFormData?: Ref<PlantModelPost>) {
 
   // Watch for family selection changes
   watch(
-    () => plantFormData?.value.family_id,
+    () => plantFormData?.value?.family_id,
     async (newFamilyId) => {
       if (newFamilyId) {
         selectedFamilyId.value = newFamilyId;
@@ -80,7 +80,7 @@ export function useTaxonomy(plantFormData?: Ref<PlantModelPost>) {
 
   // Watch for genus selection changes
   watch(
-    () => plantFormData?.value.genus_id,
+    () => plantFormData?.value?.genus_id,
     (newGenusId) => {
       if (newGenusId && selectedFamilyId.value) {
         selectedGenusId.value = newGenusId;
@@ -94,9 +94,9 @@ export function useTaxonomy(plantFormData?: Ref<PlantModelPost>) {
 
   // Smart name generation and validation
   const suggestedName = computed(() => {
-    const selectedFamily = familyOptions.value.find((f) => f.id === plantFormData?.value.family_id);
-    const selectedGenus = genusOptions.value.find((g) => g.id === plantFormData?.value.genus_id);
-    const selectedSpecies = speciesOptions.value.find((s) => s.id === plantFormData?.value.species_id);
+    const selectedFamily = familyOptions.value.find((f) => f.id === plantFormData?.value?.family_id);
+    const selectedGenus = genusOptions.value.find((g) => g.id === plantFormData?.value?.genus_id);
+    const selectedSpecies = speciesOptions.value.find((s) => s.id === plantFormData?.value?.species_id);
     if (selectedSpecies) {
       return selectedSpecies.title;
     } else if (selectedGenus) {

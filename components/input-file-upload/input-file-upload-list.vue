@@ -10,7 +10,7 @@
         <div
           class="thumbnail-container"
           :class="{
-            'error-border': item.filestatus === 'error' || item.filestatus === 'failure',
+            'error-border': item.fileState === FileState.error,
           }">
           <img
             :src="item.file64 || item.thumb || ''"
@@ -20,12 +20,12 @@
 
           <!-- Status indicator chip -->
           <v-chip
-            v-if="item.filestatus === 'error'"
+            v-if="item.fileState === FileState.error"
             class="status-chip"
-            :color="getStatusColor(item.filestatus)"
+            :color="getStatusColor(item)"
             size="x-small"
             variant="elevated">
-            {{ item.filestatus }}
+            {{ item.fileState }}
           </v-chip>
 
           <!-- Loading overlay -->
@@ -58,7 +58,7 @@
             <div class="file-name text-truncate">{{ item.filename }}</div>
             <div class="file-size">{{ item.size }}</div>
             <div
-              v-if="item.message && (item.filestatus === 'failure' || item.filestatus === 'error')"
+              v-if="item.message && item.fileState === FileState.error"
               class="error-message">
               {{ item.message }}
             </div>
@@ -84,7 +84,7 @@
 import { defineProps, defineEmits } from 'vue';
 
 // Import the shared interface
-import type { UploadFile } from '../../types/input-file-upload';
+import { FileState, type UploadFile } from '../../types/input-file-upload';
 
 const props = defineProps({
   files: { type: Array as () => UploadFile[], default: () => [] },
@@ -97,20 +97,17 @@ function removeFile(file: UploadFile): void {
   emit('delete', file);
 }
 
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'success':
-      return 'success';
-    case 'error':
-    case 'failure':
-      return 'error';
-    case 'loading':
-    case 'optimizing':
-    case 'queued':
-    case 'processing':
-      return 'info';
-    default:
-      return 'default';
+function getStatusColor(item: UploadFile): string {
+  if (item.fileState === FileState.done) {
+    return 'success';
+  } else if (item.fileState === FileState.progress) {
+    return 'info';
+  } else if (item.fileState === FileState.error) {
+    return 'error';
+  } else if (item.markForDelete) {
+    return 'grey';
+  } else {
+    return 'default';
   }
 }
 </script>

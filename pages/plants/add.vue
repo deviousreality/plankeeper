@@ -67,7 +67,6 @@ const plantFormData = ref<PlantModelPost>({
   family_id: undefined,
   genus_id: undefined,
   acquired_date: new Date().toISOString().split('T')[0],
-  image_url: undefined,
   notes: undefined,
   is_favorite: false,
   can_sell: false,
@@ -89,16 +88,11 @@ const plantFormData = ref<PlantModelPost>({
 });
 const imageFormData = ref<UploadFile[]>([]);
 
-// Personal plant count for the personal table
-const personalCount = ref<number>(1);
-
 function handleImages(uploadFiles: UploadFile[]): void {
   imageFormData.value = uploadFiles;
 }
-// Save plant to database
-async function savePlant(): Promise<void> {
-  // loading.value = true;
 
+async function savePlant(): Promise<void> {
   try {
     if (!auth.user.value?.id) {
       alert('You must be logged in to add a plant.');
@@ -120,7 +114,6 @@ async function savePlant(): Promise<void> {
       family_id: plantFormData.value.family_id,
       genus_id: plantFormData.value.genus_id,
       acquired_date: plantFormData.value.acquired_date,
-      image_url: plantFormData.value.image_url,
       notes: plantFormData.value.notes,
       is_favorite: plantFormData.value.is_favorite,
       is_personal: plantFormData.value.is_personal,
@@ -155,11 +148,11 @@ async function savePlant(): Promise<void> {
     }
 
     // Create personal plant entry if is_personal is checked
-    if (plantFormData.value.is_personal && personalCount.value > 0) {
+    if (plantFormData.value.is_personal && plantFormData?.value?.personal_count) {
       try {
         const personalData = {
           plant_id: plantId,
-          count: personalCount.value,
+          count: plantFormData.value.personal_count,
         };
 
         await $fetch('/api/personal', {
@@ -176,31 +169,33 @@ async function savePlant(): Promise<void> {
 
     if (imageFormData.value.length > 0) {
       for (const file of imageFormData.value) {
-        if (!(file.file instanceof File)) {
-          continue; // Skip if not a valid File object
-        }
-        const formData = new FormData();
-        formData.append('plant_id', plantId.toString());
-        formData.append('image', file.file);
-
         try {
-          await $fetch(`/api/plant_photos`, {
-            method: 'POST',
-            body: formData,
-          });
-          console.log(`Image ${file.file?.name} uploaded successfully`);
+          if (!(file.file instanceof File) && file.guid && file.markForDelete) {
+            await $fetch(`/api/plant_photos/plants/${plantId}/${file.guid}`, {
+              method: 'DELETE',
+            });
+          } else {
+            const formData = new FormData();
+            formData.append('plant_id', plantId.toString());
+            formData.append('image', file.file as File);
+
+            await $fetch(`/api/plant_photos`, {
+              method: 'POST',
+              body: formData,
+            });
+            console.log(`Image ${file.file?.name} uploaded successfully`);
+          }
         } catch (imageError) {
           console.error(`Error uploading image ${file.file?.name}:`, imageError);
         }
       }
     }
-
     router.push(`/plants/${plantId}`);
   } catch (error) {
     console.error('Error saving plant:', error);
     alert('Failed to save plant. Please try again.');
   } finally {
-    loading.value = false;
+    isSaving.value = false;
   }
 }
 </script>

@@ -107,8 +107,6 @@ async function addSampleData() {
     db.prepare('DELETE FROM plant_genus').run(); // Delete genus next (they reference family)
     db.prepare('DELETE FROM plant_family').run(); // Delete family last (no dependencies)
 
-    // Re-enable foreign keys
-    db.pragma('foreign_keys = ON');
     console.log('Cleared existing taxonomy data');
 
     // Insert taxonomy data with proper relationships

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     const plantPhotosRows = db
       .prepare(
         `
-      SELECT *
+      SELECT plant_id, filename, image, mime_type, size_type, guid
       FROM plant_photos
       WHERE plant_id = ? AND size_type = ?
       `

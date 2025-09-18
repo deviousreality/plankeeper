@@ -7,14 +7,11 @@ import type { H3Event } from 'h3';
 export default defineEventHandler(async (event: H3Event) => {
   const context = 'plants';
   const body = (await readBody(event)) as PlantModelPost;
-  const user = event.context;
-  const plantId = body.id;
-
-  console.log('user', JSON.stringify(user, null, 2));
+  const plant_id = parseInt(getRouterParam(event, 'id') as string) as number;
 
   console.log('Received plant data:', JSON.stringify(body, null, 2));
 
-  validateFieldId(plantId);
+  validateFieldId(plant_id);
 
   validateFieldName(body);
 
@@ -30,12 +27,13 @@ export default defineEventHandler(async (event: H3Event) => {
 
     const values = Object.values(plantData);
     // console.log('values for database:', JSON.stringify(values, null, 2));
-    console.log('more data', plantId);
-    console.log('more data user', user.id);
+    console.log('more data', plant_id);
+    console.log('more data user', plantData.user_id);
     db.prepare(
       `
       UPDATE plants 
       SET 
+      user_id = ?,
       name = ?, 
       species_id = ?, 
       family_id = ?, 
@@ -46,7 +44,6 @@ export default defineEventHandler(async (event: H3Event) => {
       is_personal = ?, 
       is_favorite = ?, 
       acquired_date = ?, 
-      image_url = ?, 
       notes = ?, 
       light_pref = ?, 
       water_pref = ?, 
@@ -60,9 +57,9 @@ export default defineEventHandler(async (event: H3Event) => {
       updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
       `
-    ).run(...values, plantId, user.id);
+    ).run(...values, plant_id, plantData.user_id);
 
-    console.log('Updated plant ID:', plantId);
+    console.log('Updated plant ID:', plant_id);
 
     // if (plantData.is_personal) {
     //   const personalData = undefinedToNull({
@@ -80,40 +77,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
     db.exec('COMMIT');
 
-    // Update care schedule if provided
-    // if (
-    //   body.watering_interval !== undefined ||
-    //   body.fertilizing_interval !== undefined ||
-    //   body.last_watered !== undefined ||
-    //   body.last_fertilized !== undefined ||
-    //   body.light_needs !== undefined
-    // ) {
-    //   const careData = undefinedToNull({
-    //     watering_interval: body.watering_interval,
-    //     fertilizing_interval: body.fertilizing_interval,
-    //     last_watered: body.last_watered,
-    //     last_fertilized: body.last_fertilized,
-    //     light_needs: body.light_needs,
-    //   });
-
-    //   db.prepare(
-    //     `
-    //     UPDATE care_schedules
-    //     SET watering_interval = ?, fertilizing_interval = ?, last_watered = ?,
-    //         last_fertilized = ?, light_needs = ?
-    //     WHERE plant_id = ?
-    //   `
-    //   ).run(
-    //     careData.watering_interval,
-    //     careData.fertilizing_interval,
-    //     careData.last_watered,
-    //     careData.last_fertilized,
-    //     careData.light_needs,
-    //     plantId
-    //   );
-    // }
-
-    return { success: true, id: plantId };
+    return { success: true, id: plant_id };
   } catch (error) {
     return handleDataTableTransactionError(db, error, context, body);
   }

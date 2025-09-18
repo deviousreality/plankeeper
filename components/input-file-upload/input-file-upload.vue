@@ -17,9 +17,9 @@
 
       <!-- Use the list component to display uploaded files -->
       <input-file-upload-list
-        v-if="uploadedFiles.length > 0"
+        v-if="displayFiles.length > 0"
         class="mt-4"
-        :files="uploadedFiles"
+        :files="displayFiles"
         @delete="handleDelete" />
     </v-card-text>
   </v-card>
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import InputFileUploadList from './input-file-upload-list.vue';
-import type { UploadFile, ProcessedImageResult } from '../../types/input-file-upload';
+import { type UploadFile, type ProcessedImageResult, FileState } from '../../types/input-file-upload';
 import type { PlantPhotos } from '~/types';
 
 type SelectedFiles = File | File[] | Blob | Blob[] | null;
@@ -57,7 +57,9 @@ const emit = defineEmits<{
 
 const processingStatus = ref<ProcessingStatus>({});
 const uploadedFiles = ref<UploadFile[]>([]);
-
+const displayFiles = computed<UploadFile[]>(() => {
+  return uploadedFiles.value.filter((file) => !file.markForDelete);
+});
 const modelValueFill = ref<undefined>();
 
 const fileRules = computed(() => [
@@ -97,9 +99,7 @@ function processFiles() {
   processingStatus.value = {};
 
   // Process all files that are in the uploadedFiles array and marked as queued or need processing
-  const filesToProcess = uploadedFiles.value.filter(
-    (item) => item.filestatus === 'queued' || item.filestatus === 'processing'
-  ) as UploadFile[];
+  const filesToProcess = uploadedFiles.value.filter((item) => item.fileState === FileState.progress) as UploadFile[];
 
   if (filesToProcess.length === 0) {
     return;
@@ -110,7 +110,7 @@ function processFiles() {
     const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
     if (fileIndex !== -1) {
       uploadedFiles.value[fileIndex].isLoading = true;
-      uploadedFiles.value[fileIndex].filestatus = 'processing';
+      uploadedFiles.value[fileIndex].fileState = FileState.progress;
       uploadedFiles.value[fileIndex].message = 'Waiting to process...';
     }
   }
@@ -130,7 +130,7 @@ function processFiles() {
       const fileIndex = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
       if (fileIndex !== -1) {
         uploadedFiles.value[fileIndex].isLoading = false;
-        uploadedFiles.value[fileIndex].filestatus = 'error';
+        uploadedFiles.value[fileIndex].fileState = FileState.error;
         uploadedFiles.value[fileIndex].message =
           `Error: ${error instanceof Error ? error.message : 'Processing failed'}`;
       }
@@ -178,10 +178,10 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
 
       // Update status and message but don't change loading state yet
       if (validationResult.status === 'success') {
-        uploadedFiles.value[existingFileIndex].filestatus = 'optimizing';
+        uploadedFiles.value[existingFileIndex].fileState = FileState.progress;
         uploadedFiles.value[existingFileIndex].message = 'Almost done...';
       } else {
-        uploadedFiles.value[existingFileIndex].filestatus = validationResult.status;
+        uploadedFiles.value[existingFileIndex].fileState = FileState.done;
         uploadedFiles.value[existingFileIndex].message = validationResult.message;
       }
     } else {
@@ -193,7 +193,8 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
         filetype: file.type,
         thumb: processedFile.thumbnail.base64,
         isLoading: true,
-        filestatus: 'optimizing',
+        fileState: FileState.progress,
+        markForDelete: false,
         message: validationResult.status === 'success' ? 'Processing...' : validationResult.message,
       };
 
@@ -209,7 +210,7 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
         if (fileIndex !== -1) {
           // Update loading state and final status together
           uploadedFiles.value[fileIndex].isLoading = false;
-          uploadedFiles.value[fileIndex].filestatus = validationResult.status;
+          uploadedFiles.value[fileIndex].fileState = FileState.done;
           uploadedFiles.value[fileIndex].message = validationResult.message;
         }
       }, 1200); // Slightly longer delay for better UX feedback
@@ -219,10 +220,9 @@ function handleProcessedImages(processedFiles: ProcessedImageResult[]): void {
 
 function handleDelete(file: UploadFile): void {
   // Remove file from local array
-  const index = uploadedFiles.value.findIndex((f) => f.filename === file.filename);
+  const index = uploadedFiles.value.findIndex((f) => f.guid === file.guid);
   if (index !== -1) {
-    uploadedFiles.value.splice(index, 1);
-
+    uploadedFiles.value[index].markForDelete = true;
     // Update processed files list
     emit('processed', uploadedFiles.value);
   }
@@ -364,7 +364,7 @@ async function processModelValueFiles(files: SelectedFiles): Promise<void> {
   let previewsGenerated = 0;
   const totalFiles = fileArray.length;
 
-  function addFileToUploadList(file: File, thumb: string, status: string, message: string, isLoading: boolean) {
+  function addFileToUploadList(file: File, thumb: string, fileState: FileState, message: string, isLoading: boolean) {
     uploadedFiles.value.push({
       file,
       filename: file.name,
@@ -372,7 +372,8 @@ async function processModelValueFiles(files: SelectedFiles): Promise<void> {
       filetype: file.type,
       thumb,
       isLoading,
-      filestatus: status,
+      fileState: fileState,
+      markForDelete: false,
       message,
     });
   }
@@ -392,21 +393,21 @@ async function processModelValueFiles(files: SelectedFiles): Promise<void> {
     }
     const validationResult = validateFile(file);
     if (validationResult.status !== 'success') {
-      addFileToUploadList(file, '', 'error', validationResult.message ?? 'Invalid file', false);
+      addFileToUploadList(file, '', FileState.error, validationResult.message ?? 'Invalid file', false);
       previewDone();
       continue;
     }
     const reader = new FileReader();
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
-        addFileToUploadList(file, e.target.result, 'queued', 'Preparing for optimization...', true);
+        addFileToUploadList(file, e.target.result, FileState.progress, 'Preparing for optimization...', true);
       } else {
-        addFileToUploadList(file, '', 'error', 'Failed to generate preview', false);
+        addFileToUploadList(file, '', FileState.error, 'Failed to generate preview', false);
       }
       previewDone();
     };
     reader.onerror = () => {
-      addFileToUploadList(file, '', 'error', 'Failed to generate preview', false);
+      addFileToUploadList(file, '', FileState.error, 'Failed to generate preview', false);
       previewDone();
     };
     reader.readAsDataURL(file);
@@ -427,14 +428,16 @@ async function processModelValueFiles(files: SelectedFiles): Promise<void> {
 async function processModelValuePlantPhotos(plantPhotos: PlantPhotos[]): Promise<UploadFile[]> {
   return plantPhotos.map((photo) => {
     return {
+      id: photo.id,
       file64: photo.image,
       filename: photo.filename,
       size: formatFileSize(photo.size_type),
       filetype: photo.mime_type,
       thumb: '', // No preview available
       isLoading: false,
-      filestatus: 'queued',
+      fileState: FileState.done,
       message: 'Preparing for upload...',
+      guid: photo.guid,
     } as UploadFile;
   });
 }

@@ -7,6 +7,7 @@ import {
   PlantPhotosTableRow,
 } from '~/types';
 import { undefinedToNull } from '~/server/utils/db';
+import { generateGuid } from '~/utils/crypto';
 
 type SizeOptions = {
   name: PlantPhotosSizeType;
@@ -70,6 +71,7 @@ const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; si
 
 // Process Plant Photos Data
 const plantPhotosDataObject = async (photo: PlantPhotosMockFile): Promise<PlantPhotosTableRowInsert[]> => {
+  const guid = generateGuid();
   const buffers = await resizeImageFilesToSizes(photo.file);
   return buffers.map((bufferObj, index: number) => {
     // Don't use undefinedToNull on the Buffer as it corrupts it
@@ -86,6 +88,7 @@ const plantPhotosDataObject = async (photo: PlantPhotosMockFile): Promise<PlantP
           : index === 1
             ? PlantPhotosSizeType.Medium
             : PlantPhotosSizeType.Original,
+      guid: guid,
     } as PlantPhotosTableRowInsert;
 
     // Only apply undefinedToNull to non-Buffer fields
@@ -118,6 +121,7 @@ const plantPhotosTableRowsToPlantPhotos = (rows: PlantPhotosTableRow[]): PlantPh
       mime_type: row.mime_type,
       size_type: row.size_type,
       created_at: row.created_at,
+      guid: row.guid,
     };
   });
 };

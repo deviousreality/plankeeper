@@ -5,18 +5,8 @@ enum FileState {
   done = 3,
 }
 
-type Image = {
-  blob: File;
-  id: string;
-  lastModifiedDate: number;
-  name: string;
-  size: number;
-  state: FileState | number;
-  type: string;
-  error: string;
-};
-
 interface UploadFile {
+  id?: number;
   file?: File;
   file64?: string;
   filename: string;
@@ -24,8 +14,10 @@ interface UploadFile {
   filetype: string;
   thumb: string;
   isLoading: boolean;
-  filestatus: string;
+  fileState: FileState;
+  markForDelete: boolean;
   message?: string;
+  guid?: string;
 }
 
 interface ProcessedImageResult {
@@ -40,4 +32,5 @@ interface ProcessedImageResult {
   };
 }
 
-export { FileState, type Image, type UploadFile, type ProcessedImageResult };
+export type { UploadFile, ProcessedImageResult };
+export { FileState };

@@ -12,36 +12,32 @@
       </v-btn>
     </div>
 
-    <v-card
-      v-if="loading"
-      class="text-center pa-5">
-      <v-progress-circular indeterminate />
-      <div class="mt-3">Loading plant data...</div>
+    <v-card>
+      <v-card-text>
+        <FormPlant
+          ref="formPlant"
+          v-model="plantFormData"
+          @images="handleImages" />
+      </v-card-text>
+
+      <v-divider />
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          color="primary"
+          :disabled="isSaving"
+          @click="$emit('cancel')">
+          Cancel
+        </v-btn>
+        <v-btn
+          color="success"
+          type="submit"
+          :loading="isLoading || isSaving"
+          @click="savePlant">
+          {{ isSaving ? 'Saving...' : 'Save Plant' }}
+        </v-btn>
+      </v-card-actions>
     </v-card>
-
-    <div
-      v-else-if="error"
-      class="text-center pa-5">
-      <v-alert
-        type="error"
-        title="Error Loading Plant">
-        {{ error }}
-      </v-alert>
-      <v-btn
-        class="mt-4"
-        color="primary"
-        to="/plants">
-        Back to Plants
-      </v-btn>
-    </div>
-
-    <FormPlant
-      v-else
-      ref="formPlant"
-      v-model="plantFormData"
-      @submit="savePlant"
-      @images="handleUpdateProcessedImages"
-      @cancel="$router.push('/plants')" />
   </div>
 </template>
 
@@ -66,35 +62,35 @@ function getRouteParam(param: LocationQueryValue | LocationQueryValue[] | undefi
 const router = useRouter();
 const route = useRoute();
 const auth = useAuth();
-const loading = ref(true);
+const isLoading = ref(true);
+const isSaving = ref(false);
+const formPlant = ref<InstanceType<typeof FormPlant>>();
 
 const plantId = getRouteParam(route.params['id']);
-const saving = ref(false);
-const error = ref<string | null>(null);
 
 // Form reference and data
 const plantFormData = ref<PlantModelPost | undefined>(undefined);
-const plantImages = ref<UploadFile[]>([]);
+const imageFormData = ref<UploadFile[]>([]);
 
 // Fetch plant data
 async function fetchPlant(): Promise<void> {
-  loading.value = true;
-  error.value = null;
+  isLoading.value = true;
 
   try {
     const plantData = await $fetch(`/api/plants/${plantId}`);
     plantFormData.value = plantData as PlantModelPost;
   } catch (err: unknown) {
     console.error('Error fetching plant:', err);
-    error.value = err instanceof Error ? err.message : 'Failed to load plant data';
   } finally {
-    loading.value = false;
+    isLoading.value = false;
   }
 }
 
-async function savePlant(): Promise<void> {
-  // saving.value = true;
+function handleImages(uploadFiles: UploadFile[]): void {
+  imageFormData.value = uploadFiles;
+}
 
+async function savePlant(): Promise<void> {
   try {
     if (!auth.user.value?.id) {
       alert('You must be logged in to edit a plant.');
@@ -102,19 +98,20 @@ async function savePlant(): Promise<void> {
       return;
     }
 
-    // Use suggested name if plant name is empty and we have taxonomy selection
-    // const finalPlantName = plantFormData.value.name.trim() || suggestedName.value;
-
+    if (formPlant.value?.validate()) {
+      isSaving.value = true;
+    } else {
+      alert('Please fix the errors in the form before saving.');
+      return;
+    }
     // Prepare data for API using the new schema
     const plantData = {
-      id: Number(plantId),
       user_id: auth.user.value?.id,
-      name: plantFormData?.value?.name,
+      name: plantFormData?.value?.name.trim(),
       species_id: plantFormData?.value?.species_id,
       family_id: plantFormData?.value?.family_id,
       genus_id: plantFormData?.value?.genus_id,
       acquired_date: plantFormData?.value?.acquired_date,
-      image_url: plantFormData?.value?.image_url,
       notes: plantFormData?.value?.notes,
       is_favorite: plantFormData?.value?.is_favorite,
       is_personal: plantFormData?.value?.is_personal,
@@ -139,8 +136,48 @@ async function savePlant(): Promise<void> {
       body: plantData,
     });
 
-    if (plantImages.value.length > 0) {
-      await uploadAllImages(Number(plantId));
+    // Create personal plant entry if is_personal is checked
+    if (plantFormData.value?.is_personal && plantFormData?.value?.personal_count) {
+      try {
+        const personalData = {
+          plant_id: plantId,
+          count: plantFormData.value.personal_count,
+        };
+
+        await $fetch('/api/personal', {
+          method: 'POST',
+          body: personalData,
+        });
+
+        console.log('Personal plant entry created successfully');
+      } catch (personalError) {
+        console.error('Error creating personal plant entry:', personalError);
+        // Don't fail the whole operation, just log the error
+      }
+    }
+
+    if (imageFormData.value.length > 0) {
+      for (const file of imageFormData.value) {
+        try {
+          if (!(file.file instanceof File) && file.guid && file.markForDelete) {
+            await $fetch(`/api/plant_photos/plants/${plantId}/${file.guid}`, {
+              method: 'DELETE',
+            });
+          } else {
+            const formData = new FormData();
+            formData.append('plant_id', plantId.toString());
+            formData.append('image', file.file as File);
+
+            await $fetch(`/api/plant_photos`, {
+              method: 'POST',
+              body: formData,
+            });
+            console.log(`Image ${file.file?.name} uploaded successfully`);
+          }
+        } catch (imageError) {
+          console.error(`Error uploading image ${file.file?.name}:`, imageError);
+        }
+      }
     }
 
     // Navigate back to plant detail page
@@ -149,82 +186,7 @@ async function savePlant(): Promise<void> {
     console.error('Error updating plant:', error);
     alert('Failed to update plant. Please try again.');
   } finally {
-    saving.value = false;
-  }
-}
-
-function handleUpdateProcessedImages(images: UploadFile[]) {
-  plantImages.value = images;
-}
-
-// Function to upload all images
-async function uploadAllImages(plantId: number) {
-  const errors = [];
-
-  // Upload each image one by one, collecting results
-  for (const [index, image] of plantImages.value.entries()) {
-    try {
-      const imageObject = image as UploadFile;
-      await uploadSingleImage(imageObject, plantId, index + 1);
-    } catch (error) {
-      errors.push(error);
-      console.error(`Error uploading image ${index + 1}:`, error);
-    }
-  }
-
-  // If any uploads failed, throw an error to prevent redirect
-  if (errors.length > 0) {
-    throw new Error(`Failed to upload ${errors.length} images. Please check the upload status and try again.`);
-  }
-}
-
-// Function to upload a single image
-async function uploadSingleImage(imageObject: UploadFile, plantId: number, position: number) {
-  // Get the file name safely, with fallbacks
-  let fileName = '';
-
-  if (imageObject.filename) {
-    fileName = imageObject.filename;
-  } else {
-    // Generate a fallback name if no name can be found
-    fileName = `image-${position}.jpg`;
-  }
-
-  try {
-    if (!imageObject.file) return;
-
-    // Update status
-    imageObject.filestatus = 'Uploading...';
-
-    console.log(`Uploading image ${fileName} for plant ${plantId}`);
-
-    // Create a FormData object
-    const formData = new FormData();
-    formData.append('plant_id', plantId.toString());
-
-    // Add the file - either from base64 data or original file
-    formData.append('file', imageObject.file);
-
-    // Debug the form data
-    console.log('FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value instanceof File ? `File(${value.name}, ${value.type}, ${value.size}B)` : value}`);
-    }
-
-    // POST to the plant_photos endpoint
-    const response = await $fetch('/api/plant_photos', {
-      method: 'POST',
-      body: formData,
-    });
-
-    imageObject.filestatus = 'Complete';
-    console.log(`Image ${fileName} uploaded successfully:`, response);
-
-    return response;
-  } catch (error) {
-    imageObject.filestatus = 'Failed';
-    console.error(`Error uploading image ${fileName}:`, error);
-    throw error;
+    isSaving.value = false;
   }
 }
 
