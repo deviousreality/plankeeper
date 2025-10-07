@@ -109,4 +109,19 @@ const plantTableRowToPlant = (row: PlantTableRow): Plant => {
   };
 };
 
-export { mapPlantBodyToDbFields, plantTableRowToPlant, validateFieldName, validateTaxonomyIds };
+const plantTableRowToPlantTableRowForSearch = (row: PlantTableRow) => {
+  return {
+    ...plantTableRowToPlant(row),
+    species: '',
+    family: '',
+    genus: '',
+  };
+};
+
+export {
+  mapPlantBodyToDbFields,
+  plantTableRowToPlant,
+  plantTableRowToPlantTableRowForSearch,
+  validateFieldName,
+  validateTaxonomyIds,
+};
