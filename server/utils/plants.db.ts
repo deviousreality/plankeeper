@@ -3,9 +3,9 @@ import { PlantModelPost } from '~/types/plant-models';
 
 const validateFieldName = (plantModel: PlantModelPost) => {
   if (!plantModel.name || plantModel.name.trim().length === 0) {
-    console.error('Validation failed - missing or empty name:', plantModel.name);
+    // console.error('Validation failed - missing or empty name:', plantModel.name);
     throw createError({
-      statusCode: 400,
+      statusCode: 500,
       message: 'Plant name is required and cannot be empty',
     });
   }
@@ -16,9 +16,9 @@ const validateTaxonomyIds = (plantModel: PlantModelPost) => {
   if (plantModel.family_id && plantModel.family_id > 0) {
     const family = db.prepare('SELECT id FROM plant_family WHERE id = ?').get(plantModel.family_id);
     if (!family) {
-      console.error('Validation failed - family_id not found:', plantModel.family_id);
+      // console.error('Validation failed - family_id not found:', plantModel.family_id);
       throw createError({
-        statusCode: 400,
+        statusCode: 500,
         message: `Family with ID ${plantModel.family_id} does not exist`,
       });
     }
@@ -27,9 +27,9 @@ const validateTaxonomyIds = (plantModel: PlantModelPost) => {
   if (plantModel.genus_id && plantModel.genus_id > 0) {
     const genus = db.prepare('SELECT id FROM plant_genus WHERE id = ?').get(plantModel.genus_id);
     if (!genus) {
-      console.error('Validation failed - genus_id not found:', plantModel.genus_id);
+      // console.error('Validation failed - genus_id not found:', plantModel.genus_id);
       throw createError({
-        statusCode: 400,
+        statusCode: 500,
         message: `Genus with ID ${plantModel.genus_id} does not exist`,
       });
     }
@@ -38,9 +38,9 @@ const validateTaxonomyIds = (plantModel: PlantModelPost) => {
   if (plantModel.species_id && plantModel.species_id > 0) {
     const species = db.prepare('SELECT id FROM plant_species WHERE id = ?').get(plantModel.species_id);
     if (!species) {
-      console.error('Validation failed - species_id not found:', plantModel.species_id);
+      // console.error('Validation failed - species_id not found:', plantModel.species_id);
       throw createError({
-        statusCode: 400,
+        statusCode: 500,
         message: `Species with ID ${plantModel.species_id} does not exist`,
       });
     }

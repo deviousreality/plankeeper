@@ -1,15 +1,17 @@
 // server/api/plants/index.get.ts
 import { db } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
+import { plantTableRowToPlant } from '~/server/utils/plants.db';
 
 export default defineEventHandler(async (event) => {
+  const context = 'photos';
   // In a real app, you'd get the user id from session/token validation
   const query = getQuery(event);
   const userId = parseInt(query['userId'] as string);
 
   if (!userId) {
     throw createError({
-      statusCode: 400,
+      statusCode: 500,
       message: 'User ID is required',
     });
   }
@@ -36,10 +38,7 @@ export default defineEventHandler(async (event) => {
 
     return plants;
   } catch (error) {
-    console.error('Error fetching plants:', error);
-    throw createError({
-      statusCode: 500,
-      message: 'Server error fetching plants',
-    });
+    // console.error('Error fetching plants:', error);
+    handleDatatableFetchError(context, error as unknown);
   }
 });

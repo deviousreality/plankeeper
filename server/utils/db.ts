@@ -8,6 +8,8 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
+import type { H3Error } from 'h3';
+import { createError } from 'h3';
 
 // Configuration
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -32,7 +34,7 @@ try {
   db = new Database(dbPath);
   // Enable foreign key constraints
   db.pragma('foreign_keys = ON');
-  console.log(`Connected to database at: ${dbPath}`);
+  // console.log(`Connected to database at: ${dbPath}`);
 } catch (error) {
   console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
   throw new Error('Failed to connect to database');
@@ -48,9 +50,9 @@ try {
  * - care_logs: For tracking care activities
  * - care_tips: For storing species-specific care tips
  */
-const initDb = (): void => {
+const initDb = (dbInstance = db): void => {
   // Users table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -62,7 +64,7 @@ const initDb = (): void => {
   `);
 
   // Plants table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -97,7 +99,7 @@ const initDb = (): void => {
   `);
 
   // Plant Species table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_species (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
@@ -110,7 +112,7 @@ const initDb = (): void => {
   `);
 
   // Plant Genus table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_genus (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
@@ -122,7 +124,7 @@ const initDb = (): void => {
   `);
 
   // Plant Family table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_family (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
@@ -132,7 +134,7 @@ const initDb = (): void => {
   `);
 
   // Market Price table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS market_price (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -143,7 +145,7 @@ const initDb = (): void => {
   `);
 
   // Plant Propagation table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_propagation (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -161,7 +163,7 @@ const initDb = (): void => {
   `);
 
   // Plant Inventory table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_inventory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -183,7 +185,7 @@ const initDb = (): void => {
   `);
 
   // Care schedule table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS care_schedules (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -198,7 +200,7 @@ const initDb = (): void => {
   `);
 
   // Care logs table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS care_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -210,7 +212,7 @@ const initDb = (): void => {
   `);
 
   // Care tips table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS care_tips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       species TEXT NOT NULL,
@@ -221,7 +223,7 @@ const initDb = (): void => {
   `);
 
   // Personal Plants table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS personal_plants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -235,7 +237,7 @@ const initDb = (): void => {
   `);
 
   // Plant Photos table
-  db.exec(`
+  dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS plant_photos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plant_id INTEGER NOT NULL,
@@ -250,7 +252,7 @@ const initDb = (): void => {
   // Note: Removed duplicate table creation
   // Using plant_species, plant_genus, plant_family, market_price, plant_propagation, and plant_inventory instead
 
-  console.log('Database schema initialized successfully');
+  // console.log('Database schema initialized successfully');
 };
 
 /**
@@ -346,17 +348,17 @@ export const handleDataTableTransactionError = (
     console.log('Transaction was already rolled back');
   }
 
-  console.error(`Error creating ${context}:`, error);
-  console.error('Original request body:', JSON.stringify(body, null, 2));
-  console.error('Full error details:', error);
+  // console.error(`Error creating ${context}:`, error);
+  // console.error('Original request body:', JSON.stringify(body, null, 2));
+  // console.error('Full error details:', error);
   throw createError({
     statusCode: 500,
     message: `Server error creating ${context}: ${error instanceof Error ? error.message : String(error)}`,
   });
 };
 
-export const handleDatatableFetchError = (context: string, error: unknown) => {
-  console.error(`Error fetching ${context}:`, error);
+export const handleDatatableFetchError = (context: string, error: unknown): H3Error => {
+  // console.error(`Error fetching ${context}:`, error);
   throw createError({
     statusCode: 500,
     message: `Server error fetching ${context}: ${error instanceof Error ? error.message : String(error)}`,
@@ -365,12 +367,26 @@ export const handleDatatableFetchError = (context: string, error: unknown) => {
 
 export const validateFieldId = (id?: number) => {
   if (!id) {
-    console.error('Validation failed - invalid id:', id);
+    // console.error('Validation failed - invalid id:', id);
     throw createError({
-      statusCode: 400,
+      statusCode: 500,
       message: 'Valid plant ID is required',
     });
   }
+};
+
+export const generateUserTestData = (db: Database.Database): void => {
+  db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(
+    'testuser',
+    'password',
+    'test@example.com'
+  );
+};
+
+export const generateForeignKeySeedTestData = (db: Database.Database): void => {
+  db.prepare('INSERT INTO plant_family (id, name) VALUES (?, ?)').run(1, 'Araceae');
+  db.prepare('INSERT INTO plant_genus (id, name, family_id) VALUES (?, ?, ?)').run(1, 'Monstera', 1);
+  db.prepare('INSERT INTO plant_species (id, name, genus_id) VALUES (?, ?, ?)').run(1, 'Monstera deliciosa', 1);
 };
 
 // Initialize the database

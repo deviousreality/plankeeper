@@ -1,15 +1,16 @@
 // server/api/plants/index.post.ts
-import { db, handleDataTableTransactionError } from '~/server/utils/db';
+import { db, handleDataTableTransactionError, undefinedToNull } from '~/server/utils/db';
 import { mapPlantBodyToDbFields, validateFieldName, validateTaxonomyIds } from '~/server/utils/plants.db';
 import type { PlantTableRow } from '~/types/database';
 import type { PlantModelPost } from '~/types/plant-models';
+import { plantTableRowToPlant } from '~/server/utils/plants.db';
 
 export default defineEventHandler(async (event) => {
   const context = 'plants';
   const body = (await readBody(event)) as PlantModelPost;
   // const user = event.context.user;
 
-  console.log('Received plant data:', JSON.stringify(body, null, 2));
+  // console.log('Received plant data:', JSON.stringify(body, null, 2));
 
   validateFieldName(body);
 
@@ -21,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
     const plantData = mapPlantBodyToDbFields(body);
 
-    console.log('Processed plant data for database:', JSON.stringify(plantData, null, 2));
+    // console.log('Processed plant data for database:', JSON.stringify(plantData, null, 2));
 
     const values = Object.values(plantData);
     // Add plant using new schema with foreign key IDs
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
       .run(...values);
 
     const plantId = plantResult.lastInsertRowid;
-    console.log('Inserted plant ID:', plantId);
+    // console.log('Inserted plant ID:', plantId);
 
     // If the plant is personal, add personal plant entry
     if (plantData.is_personal) {
@@ -115,7 +116,7 @@ export default defineEventHandler(async (event) => {
       )
       .get(plantId);
 
-    console.log('Retrieved plant row:', PlantTableRow);
+    // console.log('Retrieved plant row:', PlantTableRow);
 
     if (!PlantTableRow) {
       throw new Error(`Plant with ID ${plantId} not found after insertion`);
@@ -123,7 +124,7 @@ export default defineEventHandler(async (event) => {
 
     // Convert the plant row to proper application type and ensure we return the plant with id
     const plant = plantTableRowToPlant(PlantTableRow as PlantTableRow);
-    console.log('Returning plant with ID:', plant.id);
+    // console.log('Returning plant with ID:', plant.id);
 
     return plant;
   } catch (error) {

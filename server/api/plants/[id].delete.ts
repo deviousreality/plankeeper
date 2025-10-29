@@ -28,7 +28,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting plant:', error);
     throw createError({
       statusCode: 500,
       statusMessage: 'Failed to delete plant.',

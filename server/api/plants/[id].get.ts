@@ -1,6 +1,7 @@
 // server/api/plants/[id].get.ts
 import { db, handleDatatableFetchError, nullToUndefined } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
+import { plantTableRowToPlant } from '~/server/utils/plants.db';
 
 export default defineEventHandler(async (event) => {
   const context = 'photos';
@@ -8,7 +9,7 @@ export default defineEventHandler(async (event) => {
 
   if (!id) {
     throw createError({
-      statusCode: 400,
+      statusCode: 500,
       message: 'Plant ID is required',
     });
   }
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
     // Convert to application type
     const plant = plantTableRowToPlant(PlantTableRow);
 
-    console.log('Read Plant from database:', JSON.stringify(plant, null, 2));
+    // console.log('Read Plant from database:', JSON.stringify(plant, null, 2));
 
     // Get care logs for this plant
     const careLogsRaw = db
@@ -73,7 +74,6 @@ export default defineEventHandler(async (event) => {
       careTips,
     };
   } catch (error) {
-    console.error('Error fetching plant details:', error);
     handleDatatableFetchError(context, error as unknown);
   }
 });
