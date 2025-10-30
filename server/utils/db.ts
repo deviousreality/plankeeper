@@ -27,9 +27,11 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 // Database connection
-const dbPath = path.join(DATA_DIR, DB_FILENAME);
-let db: Database.Database;
+const isTest = process.env['NODE_ENV'] === 'test' || process.env['VITEST'];
 
+const dbPath = isTest ? ':memory:' : path.join(DATA_DIR, DB_FILENAME);
+
+let db: Database.Database;
 try {
   db = new Database(dbPath);
   // Enable foreign key constraints
@@ -245,7 +247,8 @@ const initDb = (dbInstance = db): void => {
       image BLOB,
       mime_type VARCHAR(100) NOT NULL,
       size_type INTEGER, 
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      guid VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -391,7 +394,7 @@ export const generateForeignKeySeedTestData = (db: Database.Database): void => {
 
 // Initialize the database
 try {
-  initDb();
+  initDb(db);
 } catch (error) {
   console.error(`Critical database initialization error: ${error instanceof Error ? error.message : String(error)}`);
   throw new Error('Failed to initialize database schema');

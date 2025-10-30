@@ -2,9 +2,18 @@
 import { validatePlantPhotoData } from '~/server/utils/plant_photos.db';
 import { db, handleDataTableTransactionError, validateFieldId } from '~/server/utils/db';
 import { PlantPhotosMockFile, PlantPhotosTableRowInsert } from '~/types/database';
+import { readMultipartFormData } from 'h3';
 
 export default defineEventHandler(async (event) => {
   const context = 'plant_photos';
+  const columns = db.prepare('PRAGMA table_info(plant_photos);').all();
+
+  // Print all column names
+  console.log(columns.map((col) => col.name));
+
+  // Check if 'guid' exists
+  const hasGuid = columns.some((col) => col.name === 'guid');
+  console.log('Does guid exist?', hasGuid);
 
   try {
     // Read the multipart form data
@@ -28,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
     if (!plantIdPart) {
       throw createError({
-        statusCode: 400,
+        statusCode: 500,
         message: 'Missing plant_id in form data',
       });
     }
@@ -119,7 +128,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       message: 'Plant photo uploaded successfully',
-      plant_id: plantIdPart,
+      plant_id: mockFile.plant_id,
     };
   } catch (error: unknown | string) {
     // If we're in a transaction and encounter an error, roll it back

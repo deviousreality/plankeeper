@@ -3,14 +3,18 @@ import type { H3Event } from 'h3';
 export const createMockH3Event = (
   partialEvent: Partial<H3Event> & {
     body?: Record<string, any>;
+    headers?: Record<string, string>;
     params?: Record<string, any>;
     query?: Record<string, any>;
   }
 ): H3Event => {
+  const defaultHeaders = { 'content-type': 'application/json' };
+  const mergedHeaders = { ...defaultHeaders, ...(partialEvent.headers || {}) };
+
   const event = {
     node: {
       req: {
-        headers: { 'content-type': 'application/json' },
+        headers: mergedHeaders,
         method: 'POST',
       },
     },

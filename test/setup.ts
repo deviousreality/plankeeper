@@ -48,6 +48,7 @@ function useH3TestUtils() {
     }),
     getRouterParams: vi.fn((event: H3Event) => event.context?.params || {}),
     getQuery: vi.fn((event: H3Event) => event.context?.query || {}),
+    readMultipartFormData: vi.fn(),
   }));
 
   vi.stubGlobal('defineEventHandler', h3.defineEventHandler);
@@ -55,6 +56,7 @@ function useH3TestUtils() {
   vi.stubGlobal('getRouterParam', h3.getRouterParams);
   vi.stubGlobal('getQuery', h3.getQuery);
   vi.stubGlobal('createError', h3.createError);
+  vi.stubGlobal('readMultipartFormData', h3.readMultipartFormData);
   return h3;
 }
 

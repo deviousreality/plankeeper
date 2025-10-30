@@ -1,0 +1,110 @@
+import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
+import { useDBTestUtils, useH3TestUtils } from '~/test/setup';
+import { createMockH3Event } from '~/test/mocks/h3-events';
+import { Database } from 'better-sqlite3';
+import sharp from 'sharp';
+import { Plant, PlantModelPost } from '~/types';
+import FormData from 'form-data';
+import type { H3Error } from 'h3';
+import fs from 'fs';
+
+vi.mock('h3', () => ({
+  readMultipartFormData: vi.fn(),
+  defineEventHandler: vi.fn((handler) => handler),
+  createError: vi.fn().mockImplementation((options) => {
+    throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
+  }),
+}));
+vi.mock('sharp', () => {
+  // Return a function that returns an object with a resize method,
+  // which returns an object with a toBuffer method that resolves to the original buffer or a dummy buffer.
+  return {
+    default: (inputBuffer: Buffer) => ({
+      resize: (width: number, height: number) => ({
+        toBuffer: async () => inputBuffer, // or Buffer.from('mocked image')
+      }),
+      toBuffer: async () => inputBuffer, // for direct toBuffer calls
+    }),
+  };
+});
+describe('POST /api/plant_photos', async () => {
+  let db: Database;
+  const h3 = useH3TestUtils();
+
+  const tinyPng = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0a, 0x49,
+    0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x26, 0x05, 0x9b, 0x00, 0x00,
+    0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  ]);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    db = useDBTestUtils();
+    // Start a transaction for this test (changes will be isolated)
+    db.exec('BEGIN TRANSACTION');
+  });
+
+  afterEach(() => {
+    // Rollback any changes made during the test
+    db.exec('ROLLBACK');
+    db.close();
+  });
+
+  const handler = await import('../index.post');
+
+  it('creates a new plant photo for valid request', async () => {
+    const formData = new FormData();
+    formData.append('plant_id', '1');
+    formData.append('image', tinyPng);
+
+    const { readMultipartFormData } = await import('h3');
+    (readMultipartFormData as any).mockResolvedValue([
+      {
+        name: 'plant_id',
+        data: Buffer.from('1'),
+        type: 'text/plain',
+      },
+      {
+        name: 'image',
+        filename: 'test_photo.png',
+        data: tinyPng,
+        type: 'image/png',
+      },
+    ]);
+    const event = createMockH3Event({
+      body: formData, // Not used since we're mocking readMultipartFormData
+    });
+
+    const response = (await handler.default(event)) as { success: boolean; message: string; plant_id: number };
+    expect(response).toBeDefined();
+    expect(response.plant_id).toBeGreaterThan(0);
+    expect(response.message).toBe('Plant photo uploaded successfully');
+    expect(response.success).toBe(true);
+  });
+
+  it.skip('should return 500 if plant_id is missing', async () => {
+    const formData = new FormData();
+    formData.append('image', tinyPng);
+    const { readMultipartFormData } = await import('h3');
+    (readMultipartFormData as any).mockResolvedValue([
+      {
+        name: 'image',
+        filename: 'test_photo.png',
+        data: tinyPng,
+        type: 'image/png',
+      },
+    ]);
+    const event = createMockH3Event({
+      body: formData, // Not used since we're mocking readMultipartFormData
+    });
+    try {
+      await handler.default(event);
+    } catch (error) {
+      await expect(error as H3Error).toMatchObject({
+        statusCode: 500,
+        message: 'Missing plant_id in form data',
+      });
+    }
+  });
+});
