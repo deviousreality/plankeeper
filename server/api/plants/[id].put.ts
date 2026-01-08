@@ -4,7 +4,7 @@ import { mapPlantBodyToDbFields, validateFieldName, validateTaxonomyIds } from '
 import type { PlantModelPost } from '~/types/plant-models';
 import { getRouterParams, type H3Event } from 'h3';
 
-export default defineEventHandler(async (event: H3Event) => {
+const handler = async (event: H3Event, dbInstance = db) => {
   const context = 'plants';
   const body = (await readBody(event)) as PlantModelPost;
   const params = getRouterParams(event);
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
   try {
     // Use transaction to ensure both tables are updated
-    db.exec('BEGIN TRANSACTION');
+    dbInstance.exec('BEGIN TRANSACTION');
 
     const plantData = mapPlantBodyToDbFields(body);
 
@@ -28,8 +28,9 @@ export default defineEventHandler(async (event: H3Event) => {
 
     const values = Object.values(plantData);
     // console.log('values for database:', JSON.stringify(values, null, 2));
-    db.prepare(
-      `
+    dbInstance
+      .prepare(
+        `
       UPDATE plants 
       SET 
       user_id = ?,
@@ -56,7 +57,8 @@ export default defineEventHandler(async (event: H3Event) => {
       updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
       `
-    ).run(...values, plant_id, plantData.user_id);
+      )
+      .run(...values, plant_id, plantData.user_id);
 
     // console.log('Updated plant ID:', plant_id);
 
@@ -65,7 +67,7 @@ export default defineEventHandler(async (event: H3Event) => {
     //     plant_id: plantId,
     //     count: body.personal_count,
     //   });
-    //   db.prepare(
+    //   dbInstance.prepare(
     //     `
     //   UPDATE personal_plants
     //   set count = ?
@@ -74,10 +76,14 @@ export default defineEventHandler(async (event: H3Event) => {
     //   ).run(personalData.count, personalData.plant_id);
     // }
 
-    db.exec('COMMIT');
+    dbInstance.exec('COMMIT');
 
     return { success: true, id: plant_id };
   } catch (error) {
     return handleDataTableTransactionError(db, error, context, body);
   }
-});
+};
+
+export default defineEventHandler((event) => handler(event));
+
+export { handler };

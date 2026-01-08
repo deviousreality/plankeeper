@@ -28,4 +28,23 @@ export default defineNuxtConfig({
       weatherApiKey: process.env.WEATHER_API_KEY || 'your-weather-api-key', // Use environment variable in production
     },
   },
+  nitro: {
+    preset: 'node',
+    output: {
+      dir: '.dist',
+      serverDir: '.dist/server',
+      publicDir: '.dist/public',
+    },
+    routeRules: {
+      '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      '/api/**': { cors: true },
+    },
+  },
+  vite: {
+    server: {
+      fs: {
+        allow: ['..'],
+      },
+    },
+  },
 });

@@ -15,33 +15,6 @@ import { createError } from 'h3';
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILENAME = 'plant-keeper.db';
 
-// Ensure the data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    console.log(`Created data directory at: ${DATA_DIR}`);
-  } catch (error) {
-    console.error(`Failed to create data directory: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error('Failed to initialize database storage directory');
-  }
-}
-
-// Database connection
-const isTest = process.env['NODE_ENV'] === 'test' || process.env['VITEST'];
-
-const dbPath = isTest ? ':memory:' : path.join(DATA_DIR, DB_FILENAME);
-
-let db: Database.Database;
-try {
-  db = new Database(dbPath);
-  // Enable foreign key constraints
-  db.pragma('foreign_keys = ON');
-  // console.log(`Connected to database at: ${dbPath}`);
-} catch (error) {
-  console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error('Failed to connect to database');
-}
-
 /**
  * Initializes the database schema by creating tables if they don't exist
  *
@@ -53,6 +26,15 @@ try {
  * - care_tips: For storing species-specific care tips
  */
 const initDb = (dbInstance = db): void => {
+  // Migrations tracking table
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Users table
   dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -392,12 +374,58 @@ export const generateForeignKeySeedTestData = (db: Database.Database): void => {
   db.prepare('INSERT INTO plant_species (id, name, genus_id) VALUES (?, ?, ?)').run(1, 'Monstera deliciosa', 1);
 };
 
-// Initialize the database
-try {
-  initDb(db);
-} catch (error) {
-  console.error(`Critical database initialization error: ${error instanceof Error ? error.message : String(error)}`);
-  throw new Error('Failed to initialize database schema');
+// Determine DB path based on environment
+const getDbPath = (): string => {
+  const env = process.env['NODE_ENV'] || 'development';
+
+  if (env === 'test' || process.env['VITEST']) {
+    return ':memory:';
+  }
+
+  // For development/production, check DATABASE_URL first
+  const databaseUrl = process.env['DATABASE_URL'];
+  if (databaseUrl) {
+    if (databaseUrl.startsWith('file:')) {
+      const dbPath = databaseUrl.slice(5); // Remove 'file:' prefix
+      return path.resolve(dbPath); // Resolve to absolute path
+    }
+    throw new Error('Invalid DATABASE_URL format. Expected: file:./path/to/db');
+  }
+
+  // Fallback to default file-based DB if DATABASE_URL is not set
+  const dataDir = path.join(process.cwd(), 'data');
+  return path.join(dataDir, DB_FILENAME);
+};
+
+const dbPath = getDbPath();
+if (dbPath !== ':memory:' && !fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log(`Created data directory at: ${DATA_DIR}`);
+  } catch (error) {
+    console.error(`Failed to create data directory: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error('Failed to initialize database storage directory');
+  }
 }
 
+let db: Database.Database;
+if (process.env['NODE_ENV'] !== 'test' && !process.env['VITEST']) {
+  try {
+    db = new Database(dbPath);
+    // Enable foreign key constraints
+    db.pragma('foreign_keys = ON');
+    // console.log(`Connected to database at: ${dbPath}`);
+  } catch (error) {
+    console.error(`Database connection error: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error('Failed to connect to database');
+  }
+
+  // Initialize the database
+  try {
+    initDb(db);
+  } catch (error) {
+    console.error(`Critical database initialization error: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error('Failed to initialize database schema');
+  }
+}
 export { db, initDb };

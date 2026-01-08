@@ -1,20 +1,10 @@
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest';
 import { useDBTestUtils, useH3TestUtils } from '~/test/setup';
 import { createMockH3Event } from '~/test/mocks/h3-events';
-import { Database } from 'better-sqlite3';
-import sharp from 'sharp';
-import { Plant, PlantModelPost } from '~/types';
+import { type Database } from 'better-sqlite3';
 import FormData from 'form-data';
 import type { H3Error } from 'h3';
-import fs from 'fs';
 
-vi.mock('h3', () => ({
-  readMultipartFormData: vi.fn(),
-  defineEventHandler: vi.fn((handler) => handler),
-  createError: vi.fn().mockImplementation((options) => {
-    throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-  }),
-}));
 vi.mock('sharp', () => {
   // Return a function that returns an object with a resize method,
   // which returns an object with a toBuffer method that resolves to the original buffer or a dummy buffer.
@@ -27,8 +17,9 @@ vi.mock('sharp', () => {
     }),
   };
 });
+
 describe('POST /api/plant_photos', async () => {
-  let db: Database;
+  let dbInstance: Database;
   const h3 = useH3TestUtils();
 
   const tinyPng = Buffer.from([
@@ -40,15 +31,11 @@ describe('POST /api/plant_photos', async () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    db = useDBTestUtils();
-    // Start a transaction for this test (changes will be isolated)
-    db.exec('BEGIN TRANSACTION');
+    dbInstance = useDBTestUtils();
   });
 
   afterEach(() => {
-    // Rollback any changes made during the test
-    db.exec('ROLLBACK');
-    db.close();
+    dbInstance.close();
   });
 
   const handler = await import('../index.post');
@@ -58,8 +45,7 @@ describe('POST /api/plant_photos', async () => {
     formData.append('plant_id', '1');
     formData.append('image', tinyPng);
 
-    const { readMultipartFormData } = await import('h3');
-    (readMultipartFormData as any).mockResolvedValue([
+    h3.readMultipartFormData.mockResolvedValue([
       {
         name: 'plant_id',
         data: Buffer.from('1'),
@@ -72,22 +58,31 @@ describe('POST /api/plant_photos', async () => {
         type: 'image/png',
       },
     ]);
+
     const event = createMockH3Event({
       body: formData, // Not used since we're mocking readMultipartFormData
+      requestHeaders: {
+        'content-type': `multipart/form-data; boundary=${(formData as any)._boundary}`,
+        'content-length': formData.getLengthSync().toString(),
+      },
     });
 
-    const response = (await handler.default(event)) as { success: boolean; message: string; plant_id: number };
+    const response = (await handler.handler(event, dbInstance)) as {
+      success: boolean;
+      message: string;
+      plant_id: number;
+    };
     expect(response).toBeDefined();
     expect(response.plant_id).toBeGreaterThan(0);
     expect(response.message).toBe('Plant photo uploaded successfully');
     expect(response.success).toBe(true);
   });
 
-  it.skip('should return 500 if plant_id is missing', async () => {
+  it('should return 500 if plant_id is missing', async () => {
     const formData = new FormData();
     formData.append('image', tinyPng);
-    const { readMultipartFormData } = await import('h3');
-    (readMultipartFormData as any).mockResolvedValue([
+
+    h3.readMultipartFormData.mockResolvedValue([
       {
         name: 'image',
         filename: 'test_photo.png',
@@ -95,15 +90,21 @@ describe('POST /api/plant_photos', async () => {
         type: 'image/png',
       },
     ]);
+
     const event = createMockH3Event({
       body: formData, // Not used since we're mocking readMultipartFormData
+      requestHeaders: {
+        'content-type': `multipart/form-data; boundary=${(formData as any)._boundary}`,
+        'content-length': formData.getLengthSync().toString(),
+      },
     });
+
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,
-        message: 'Missing plant_id in form data',
+        message: 'Valid plant ID is required',
       });
     }
   });

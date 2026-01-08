@@ -72,6 +72,7 @@ A web application for plant enthusiasts to track care schedules, record history,
    ```
 
    This will create:
+
    - A sample admin user (username: `admin`, password: `password123`)
    - Plant care tips for common houseplants
 
@@ -217,3 +218,27 @@ This project is open source and available under the [MIT License](LICENSE).
 - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) for database functionality
 - [Nuxt](https://nuxt.com/) for the Vue framework
 - All the plant enthusiasts whose passion inspired this project
+
+## Migrations
+
+Added migration script to rollup or rollback changes
+
+> npm run migrate
+> \# Apply new migrations
+> npm run migrate:down # Rollback last migration
+
+Integrate with Deployment
+On deploy: Run npm run migrate after code deployment to apply schema changes.
+Back up your DB first: Always back up plant-keeper.db before running migrations.
+Test locally: Run migrations on a copy of your DB to verify.
+
+Naming: Use timestamps or numbers (e.g., 001*, 002*) for migration files to ensure order.
+Transactions: Wrap each migration in a transaction for safety.
+Down Migrations: Always provide a down function to rollback.
+Version Control: Commit migration files to your repo.
+Environment Awareness: In db.ts, ensure you use the file-based DB in production (not :memory:).
+Error Handling: Add try/catch in the runner for better error messages.
+Summary
+This custom system is lightweight, uses your existing better-sqlite3 setup, and integrates with your Nuxt project. It tracks applied migrations, supports up/down, and is safe for production when combined with backups. If you need more features (e.g., SQL file support), you can extend the loader.
+
+If you run into issues or need help with a specific migration, share more details!

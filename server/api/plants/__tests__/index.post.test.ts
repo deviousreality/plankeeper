@@ -6,20 +6,16 @@ import { Plant, PlantModelPost } from '~/types';
 import type { H3Error } from 'h3';
 
 describe('POST /api/plants', async () => {
-  let db: Database;
-  const h3 = useH3TestUtils();
+  let dbInstance: Database;
+  useH3TestUtils();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    db = useDBTestUtils();
-    // Start a transaction for this test (changes will be isolated)
-    db.exec('BEGIN TRANSACTION');
+    dbInstance = useDBTestUtils();
   });
 
   afterEach(() => {
-    // Rollback any changes made during the test
-    db.exec('ROLLBACK');
-    db.close();
+    dbInstance.close();
   });
 
   const handler = await import('../index.post');
@@ -52,7 +48,7 @@ describe('POST /api/plants', async () => {
       body: newPlantData,
     });
 
-    const response = (await handler.default(event)) as Plant;
+    const response = (await handler.handler(event, dbInstance)) as Plant;
     expect(response).toBeDefined();
     expect(response.id).toBeGreaterThan(0);
     expect(response.name).toBeDefined();
@@ -74,15 +70,11 @@ describe('POST /api/plants', async () => {
   });
 
   it('should return 500 if plant name is missing', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
       body: {},
     });
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,

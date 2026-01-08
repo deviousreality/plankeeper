@@ -1,21 +1,18 @@
 // server/api/plants/[id].get.ts
-import { db, handleDatatableFetchError, nullToUndefined } from '~/server/utils/db';
+import { db, handleDatatableFetchError, nullToUndefined, validateFieldId } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
 import { plantTableRowToPlant } from '~/server/utils/plants.db';
+import { getRouterParams, type H3Event } from 'h3';
 
-export default defineEventHandler(async (event) => {
+const handler = async (event: H3Event, dbInstance = db) => {
   const context = 'photos';
-  const id = event.context.params?.['id'];
+  const params = getRouterParams(event);
+  const plant_id = parseInt(params['id'] as string);
 
-  if (!id) {
-    throw createError({
-      statusCode: 500,
-      message: 'Plant ID is required',
-    });
-  }
+  validateFieldId(plant_id);
 
   try {
-    const PlantTableRow = db
+    const PlantTableRow = dbInstance
       .prepare(
         `
       SELECT p.*, 
@@ -28,7 +25,7 @@ export default defineEventHandler(async (event) => {
       WHERE p.id = ?
     `
       )
-      .get(id) as PlantTableRow;
+      .get(plant_id) as PlantTableRow;
 
     if (!PlantTableRow) {
       throw createError({
@@ -43,7 +40,7 @@ export default defineEventHandler(async (event) => {
     // console.log('Read Plant from database:', JSON.stringify(plant, null, 2));
 
     // Get care logs for this plant
-    const careLogsRaw = db
+    const careLogsRaw = dbInstance
       .prepare(
         `
       SELECT * FROM care_logs
@@ -51,10 +48,10 @@ export default defineEventHandler(async (event) => {
       ORDER BY action_date DESC
     `
       )
-      .all(id);
+      .all(plant_id);
 
     // Get care tips for this plant species
-    const careTipsRaw = db
+    const careTipsRaw = dbInstance
       .prepare(
         `
       SELECT * FROM care_tips
@@ -76,4 +73,9 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     handleDatatableFetchError(context, error as unknown);
   }
-});
+  return null;
+};
+
+export default defineEventHandler((event) => handler(event));
+
+export { handler };

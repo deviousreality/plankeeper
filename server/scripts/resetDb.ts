@@ -1,4 +1,5 @@
 // server/scripts/resetDb.ts
+import 'dotenv/config';
 import { db, initDb } from '../utils/db';
 import bcrypt from 'bcryptjs';
 
@@ -14,9 +15,13 @@ console.log('Foreign key constraints disabled for reset');
 
 // Add sample data if needed
 async function addSampleData() {
+  const defaultPassword = process.env['ADMIN_PASSWORD'];
+  if (!defaultPassword) {
+    console.error('Error: ADMIN_PASSWORD environment variable is not set.');
+    process.exit(1);
+  }
   try {
     // Hash a default password for the admin user
-    const defaultPassword = 'admin123';
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 

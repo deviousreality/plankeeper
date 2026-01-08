@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation\" nuxt build",
-    "dev": "cross-env NODE_OPTIONS=\"--no-deprecation\" nuxt dev",
+    "dev": "cross-env NODE_OPTIONS=\"--no-deprecation\" NODE_TLS_REJECT_UNAUTHORIZED=0 nuxi dev --show-config",
     "generate": "cross-env NODE_OPTIONS=\"--no-deprecation\" nuxt generate",
+    "migrate": "tsx server/scripts/migrate.ts up",
+    "migrate:down": "tsx server/scripts/migrate.ts down",
     "preview": "cross-env NODE_OPTIONS=\"--no-deprecation\" nuxt preview",
     "postinstall": "nuxt prepare",
     "reset-db": "tsx server/scripts/resetDb.ts",

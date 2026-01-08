@@ -1,4 +1,5 @@
 // server/scripts/updateAdminPassword.ts
+import 'dotenv/config';
 import { db } from '../utils/db';
 import bcrypt from 'bcryptjs';
 

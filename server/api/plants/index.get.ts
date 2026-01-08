@@ -1,9 +1,10 @@
 // server/api/plants/index.get.ts
-import { db } from '~/server/utils/db';
+import { db, handleDatatableFetchError } from '~/server/utils/db';
 import type { PlantTableRow } from '~/types/database';
 import { plantTableRowToPlant } from '~/server/utils/plants.db';
+import type { H3Event } from 'h3';
 
-export default defineEventHandler(async (event) => {
+export async function handler(event: H3Event, dbInstance = db) {
   const context = 'photos';
   // In a real app, you'd get the user id from session/token validation
   const query = getQuery(event);
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const PlantTableRows = db
+    const PlantTableRows = dbInstance
       .prepare(
         `
       SELECT p.*, 
@@ -40,5 +41,8 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     // console.error('Error fetching plants:', error);
     handleDatatableFetchError(context, error as unknown);
+    return null;
   }
-});
+}
+
+export default defineEventHandler((event) => handler(event));

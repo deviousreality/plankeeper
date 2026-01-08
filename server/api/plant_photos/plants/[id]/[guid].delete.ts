@@ -1,4 +1,4 @@
-import { db } from '~/server/utils/db';
+import { db, validateFieldId } from '~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const context = 'plant_photos';

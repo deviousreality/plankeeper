@@ -2,30 +2,18 @@ import { vi } from 'vitest';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import Database from 'better-sqlite3';
 import { generateForeignKeySeedTestData, generateUserTestData, initDb } from '~/server/utils/db';
-// // Mock Nuxt auto-imports
-// (globalThis as any).defineNuxtConfig = vi.fn();
-// (globalThis as any).useRuntimeConfig = vi.fn();
-// (globalThis as any).navigateTo = vi.fn();
-// (globalThis as any).useFetch = vi.fn();
-// (globalThis as any).useAsyncData = vi.fn();
+import { createRequire } from 'module';
+import { db } from '~/server/utils/db';
 
 type Handler = (event: H3Event<EventHandlerRequest>) => Promise<unknown>;
 
 function useDBTestUtils() {
-  // Use an in-memory DB for tests (starts empty each run)
   const db = new Database(':memory:');
-
   db.pragma('foreign_keys = ON');
-
-  // Optionally, run initial schema setup here if needed (e.g., create tables)
-  // db.exec(`CREATE TABLE plants (...);`);  // Add your schema SQL
-  initDb(db); // or just initDb() if it uses the global db
-
+  initDb(db);
   generateUserTestData(db);
   generateForeignKeySeedTestData(db);
-  // Stub it globally so your code can import/use it
   vi.stubGlobal('db', db);
-
   return db;
 }
 

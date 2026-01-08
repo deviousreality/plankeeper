@@ -6,26 +6,22 @@ import { Plant, PlantModelPost } from '~/types';
 import type { H3Error } from 'h3';
 
 describe('PUT /api/plants/:id', async () => {
-  let db: Database;
-  const h3 = useH3TestUtils();
+  let dbInstance: Database;
+  useH3TestUtils();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    db = useDBTestUtils();
-    // Start a transaction for this test (changes will be isolated)
-    db.exec('BEGIN TRANSACTION');
+    dbInstance = useDBTestUtils();
   });
 
   afterEach(() => {
-    // Rollback any changes made during the test
-    db.exec('ROLLBACK');
-    db.close();
+    dbInstance.close();
   });
   const handler = await import('../[id].put');
 
   it('updates an existing plant for valid request', async () => {
     // Insert a plant to update
-    const insertStmt = db.prepare(
+    const insertStmt = dbInstance.prepare(
       `INSERT INTO plants (user_id, name, species_id, family_id, genus_id, common_name, variety, flower_color, is_personal, is_favorite, acquired_date, notes, light_pref, water_pref, soil_type, plant_zones, plant_use, has_fragrance, fragrance_description, is_petsafe, can_sell) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     insertStmt.run(
@@ -52,7 +48,7 @@ describe('PUT /api/plants/:id', async () => {
       1
     );
     // Get the inserted plant's ID
-    const plantId = (db.prepare('SELECT last_insert_rowid() as id').get() as Plant).id;
+    const plantId = (dbInstance.prepare('SELECT last_insert_rowid() as id').get() as Plant).id;
 
     const newPlantData = {
       user_id: 1,
@@ -79,25 +75,21 @@ describe('PUT /api/plants/:id', async () => {
     } as unknown as PlantModelPost;
     const event = createMockH3Event({
       body: newPlantData,
-      context: { params: { id: plantId?.toString() ?? '' } },
+      params: { id: plantId?.toString() ?? '' },
     });
 
-    const response = await handler.default(event);
+    const response = (await handler.handler(event, dbInstance)) as { success: boolean; id: number };
 
     expect(response).toBeDefined();
   });
 
   it('should return 500 if plantId is missing', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
-      context: { params: { id: '' } },
+      params: { id: '' },
     });
 
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,
@@ -107,12 +99,8 @@ describe('PUT /api/plants/:id', async () => {
   });
 
   it('should return 500 if invalid name field', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
-      context: { params: { id: '1' } },
+      params: { id: '1' },
     });
 
     try {
@@ -126,20 +114,16 @@ describe('PUT /api/plants/:id', async () => {
   });
 
   it('should return 500 if invalid family_id name field', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
       body: {
         name: 'Valid Name',
         family_id: 0,
       },
-      context: { params: { id: '1' } },
+      params: { id: '1' },
     });
 
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,
@@ -149,21 +133,17 @@ describe('PUT /api/plants/:id', async () => {
   });
 
   it('should return 500 if invalid genus_id name field', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
       body: {
         name: 'Valid Name',
         family_id: 1,
         genus_id: 0,
       },
-      context: { params: { id: '1' } },
+      params: { id: '1' },
     });
 
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,
@@ -173,10 +153,6 @@ describe('PUT /api/plants/:id', async () => {
   });
 
   it('should return 500 if invalid species_id name field', async () => {
-    vi.spyOn(h3, 'createError').mockImplementation((options) => {
-      throw new Error(JSON.stringify({ statusCode: options.statusCode, message: options.message }));
-    });
-
     const event = createMockH3Event({
       body: {
         name: 'Valid Name',
@@ -184,11 +160,11 @@ describe('PUT /api/plants/:id', async () => {
         genus_id: 1,
         species_id: 0,
       },
-      context: { params: { id: '1' } },
+      params: { id: '1' },
     });
 
     try {
-      await handler.default(event);
+      await handler.handler(event, dbInstance);
     } catch (error) {
       await expect(error as H3Error).toMatchObject({
         statusCode: 500,

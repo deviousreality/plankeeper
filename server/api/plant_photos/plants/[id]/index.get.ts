@@ -1,5 +1,5 @@
 // server/api/plants/[id].get.ts
-import { db, handleDatatableFetchError } from '~/server/utils/db';
+import { db, handleDatatableFetchError, validateFieldId } from '~/server/utils/db';
 import { plantPhotosTableRowsToPlantPhotos } from '~/server/utils/plant_photos.db';
 import { PlantPhotosSizeType, PlantPhotosTableRow } from '~/types/database';
 

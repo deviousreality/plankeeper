@@ -33,8 +33,6 @@ const resizeImage = async (
 // Resize image files to multiple sizes
 const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; sizeType: PlantPhotosSizeType }[]> => {
   try {
-    console.log('Processing file:', file.name, file.type);
-
     // Get ArrayBuffer from file
     let arrayBuffer: ArrayBuffer;
     if (file.arrayBuffer) {
@@ -48,7 +46,6 @@ const resizeImageFilesToSizes = async (file: File): Promise<{ buffer: Buffer; si
 
     // Convert to Buffer that sharp can use
     const buffer = Buffer.from(arrayBuffer);
-    console.log(`Buffer created, size: ${buffer.length} bytes`);
 
     // Process with sharp
     const resizedImages = await Promise.all(
@@ -128,19 +125,7 @@ const plantPhotosTableRowsToPlantPhotos = (rows: PlantPhotosTableRow[]): PlantPh
 
 const validatePlantPhotoData = async (body: PlantPhotosMockFile): Promise<PlantPhotosTableRowInsert[]> => {
   try {
-    console.log('Validating plant photo data:', {
-      plant_id: body.plant_id,
-      file: body.file
-        ? {
-            name: body.file.name,
-            type: body.file.type,
-            hasArrayBuffer: !!body.file.arrayBuffer,
-          }
-        : 'No file',
-    });
-
     if (!body.file) {
-      console.error('Missing file in request body');
       throw createError({
         statusCode: 400,
         message: 'Missing file in request body',
@@ -150,18 +135,14 @@ const validatePlantPhotoData = async (body: PlantPhotosMockFile): Promise<PlantP
     const data = await plantPhotosDataObject(body);
 
     if (!data || data.length === 0) {
-      console.error('No valid plant photos to insert');
       throw createError({
         statusCode: 500,
         message: 'No valid plant photos provided',
       });
     }
 
-    console.log(`Processed ${data.length} photo sizes successfully`);
     return data;
   } catch (error: unknown) {
-    console.error('Error processing plant photos:', error);
-
     // Type-check for error object with statusCode
     if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error; // Re-throw if it's already a formatted error

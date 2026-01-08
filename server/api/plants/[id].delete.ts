@@ -1,36 +1,36 @@
 // server/api/plants/[id].delete.ts
-import { db } from '../../utils/db';
+import { db, handleDataTableTransactionError, validateFieldId } from '~/server/utils/db';
+import { getRouterParams, type H3Event } from 'h3';
 
-export default defineEventHandler(async (event) => {
-  const plantId = getRouterParam(event, 'id');
+const handler = async (event: H3Event, dbInstance = db) => {
+  const context = 'plants';
+  const params = getRouterParams(event);
+  const plant_id = parseInt(params['id'] as string);
 
-  if (!plantId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Plant ID is required.',
-    });
-  }
+  validateFieldId(plant_id);
 
   try {
     // Start a transaction to delete related records first
-    const transaction = db.transaction(() => {
+    const transaction = dbInstance.transaction(() => {
       // Delete care logs
-      db.prepare('DELETE FROM care_logs WHERE plant_id = ?').run(plantId);
+      dbInstance.prepare('DELETE FROM care_logs WHERE plant_id = ?').run(plant_id);
 
       // Delete care schedule
-      db.prepare('DELETE FROM care_schedules WHERE plant_id = ?').run(plantId);
+      dbInstance.prepare('DELETE FROM care_schedules WHERE plant_id = ?').run(plant_id);
 
       // Delete plant
-      db.prepare('DELETE FROM plants WHERE id = ?').run(plantId);
+      dbInstance.prepare('DELETE FROM plants WHERE id = ?').run(plant_id);
     });
 
     transaction();
 
     return { success: true };
   } catch (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to delete plant.',
-    });
+    handleDataTableTransactionError(dbInstance, error, context, '');
+    return null;
   }
-});
+};
+
+export default defineEventHandler((event) => handler(event));
+
+export { handler };
