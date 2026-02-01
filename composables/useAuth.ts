@@ -18,7 +18,7 @@ export const useAuth = () => {
   // Check if user is already logged in (from storage)
   const initAuth = () => {
     if (process.client && !user.value) {
-      const storedUser = localStorage.getItem('plankeeper_user');
+      const storedUser = localStorage.getItem('plantkeeper_user');
 
       if (storedUser) {
         try {
@@ -27,8 +27,8 @@ export const useAuth = () => {
           console.log('User auto-authenticated from storage:', parsed);
         } catch (e) {
           console.error('Error parsing stored user:', e);
-          localStorage.removeItem('plankeeper_user');
-          localStorage.removeItem('plankeeper_token');
+          localStorage.removeItem('plantkeeper_user');
+          localStorage.removeItem('plantkeeper_token');
         }
       }
     }
@@ -49,9 +49,9 @@ export const useAuth = () => {
 
       // Store authentication data
       if (process.client) {
-        localStorage.setItem('plankeeper_user', JSON.stringify(user.value));
+        localStorage.setItem('plantkeeper_user', JSON.stringify(user.value));
         // Note: If your API returns a token, store it too
-        // localStorage.setItem('plankeeper_token', response.token);
+        // localStorage.setItem('plantkeeper_token', response.token);
       }
 
       console.log('User logged in and stored:', user.value);
@@ -79,7 +79,7 @@ export const useAuth = () => {
 
       // Store authentication data
       if (process.client) {
-        localStorage.setItem('plankeeper_user', JSON.stringify(user.value));
+        localStorage.setItem('plantkeeper_user', JSON.stringify(user.value));
       }
 
       return { success: true };
@@ -102,8 +102,8 @@ export const useAuth = () => {
 
       // Clear stored authentication data
       if (process.client) {
-        localStorage.removeItem('plankeeper_user');
-        localStorage.removeItem('plankeeper_token');
+        localStorage.removeItem('plantkeeper_user');
+        localStorage.removeItem('plantkeeper_token');
       }
 
       await navigateTo('/login');

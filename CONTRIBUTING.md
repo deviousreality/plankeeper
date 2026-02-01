@@ -18,14 +18,14 @@ By participating in this project, you agree to:
 2. **Clone your fork**:
 
    ```bash
-   git clone https://github.com/your-username/plankeeper.git
-   cd plankeeper
+   git clone https://github.com/your-username/plantkeeper.git
+   cd plantkeeper
    ```
 
 3. **Set up the upstream remote**:
 
    ```bash
-   git remote add upstream https://github.com/original-owner/plankeeper.git
+   git remote add upstream https://github.com/original-owner/plantkeeper.git
    ```
 
 4. **Install dependencies**:
@@ -72,6 +72,7 @@ By participating in this project, you agree to:
    ```
 
    We follow [Conventional Commits](https://www.conventionalcommits.org/) format:
+
    - `feat:` for new features
    - `fix:` for bug fixes
    - `docs:` for documentation changes

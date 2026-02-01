@@ -45,8 +45,8 @@ A web application for plant enthusiasts to track care schedules, record history,
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/plankeeper.git
-   cd plankeeper
+   git clone https://github.com/yourusername/plantkeeper.git
+   cd plantkeeper
    ```
 
 2. Install dependencies:
@@ -168,7 +168,7 @@ To use these tasks in VS Code, press `Ctrl+Shift+P` and select "Tasks: Run Task"
 ## 📂 Project Structure
 
 ```
-plankeeper/
+plantkeeper/
 ├── .vscode/              # VS Code configuration
 ├── composables/          # Vue composable functions
 │   └── useAuth.ts        # Authentication composable

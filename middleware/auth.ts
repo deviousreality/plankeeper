@@ -14,7 +14,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // Double check with localStorage as fallback
   if (!auth.isAuthenticated.value) {
-    const storedUser = localStorage.getItem('plankeeper_user');
+    const storedUser = localStorage.getItem('plantkeeper_user');
     if (storedUser) {
       try {
         auth.initAuth();
