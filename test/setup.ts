@@ -1,16 +1,15 @@
 import { vi } from 'vitest';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import Database from 'better-sqlite3';
-import { generateForeignKeySeedTestData, generateUserTestData, initDb } from '~/server/utils/db';
-import { createRequire } from 'module';
-import { db } from '~/server/utils/db';
+import { generateForeignKeySeedTestData, generateUserTestData } from '~/server/utils/db';
+import { buildTables } from '~/server/utils/db_build';
 
 type Handler = (event: H3Event<EventHandlerRequest>) => Promise<unknown>;
 
 function useDBTestUtils() {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  initDb(db);
+  buildTables(db);
   generateUserTestData(db);
   generateForeignKeySeedTestData(db);
   vi.stubGlobal('db', db);

@@ -1,4 +1,6 @@
-import { db } from '~/server/utils/db';
+import bcrypt from 'bcryptjs';
+import Database from 'better-sqlite3';
+import 'dotenv/config';
 
 // Replace with your actual admin user seed data
 const adminUser = {
@@ -7,12 +9,15 @@ const adminUser = {
   email: process.env['ADMIN_EMAIL'],
 };
 
-export function up() {
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+export function up(db: Database.Database) {
+  const userCount = db.prepare<unknown[], { count: number }>('SELECT COUNT(*) as count FROM users').get()?.count;
   if (userCount === 0) {
+    const saltRounds = 10;
+    const passwordHash = bcrypt.hashSync(adminUser.password as string, saltRounds);
+
     db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(
       adminUser.username,
-      adminUser.password,
+      passwordHash,
       adminUser.email
     );
     console.log('Seeded admin user.');
@@ -21,7 +26,7 @@ export function up() {
   }
 }
 
-export function down() {
+export function down(db: Database.Database) {
   // Optionally remove the seeded admin user
   db.prepare('DELETE FROM users WHERE username = ?').run(adminUser.username);
   console.log('Removed seeded admin user.');

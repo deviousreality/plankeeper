@@ -1,8 +1,8 @@
 // server/api/auth/login.post.ts
 import { db } from '~/server/utils/db';
-import type { User } from '~/server/utils/db';
 import { isApiError } from '~/server/utils/errors';
 import bcrypt from 'bcryptjs';
+import { User } from '~/types';
 
 type LoginCredentials = {
   username: string;
@@ -15,7 +15,7 @@ type UserResponse = {
   email: string | null;
 };
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event, dbInstance = db) => {
   const body = await readBody(event);
   const { username, password } = body as LoginCredentials;
 
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as User | undefined;
+    const user = dbInstance.prepare('SELECT * FROM users WHERE username = ?').get(username) as User | undefined;
 
     if (!user) {
       throw createError({

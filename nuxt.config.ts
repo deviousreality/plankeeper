@@ -1,7 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import { no } from 'vuetify/locale';
+
+const isDevMode = process.env.NODE_ENV !== 'production';
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
-  devtools: { enabled: true },
+  devtools: { enabled: isDevMode },
   typescript: {
     strict: true,
     typeCheck: false, // Disable during build to avoid conflicts
@@ -11,7 +16,7 @@ export default defineNuxtConfig({
   build: {
     transpile: ['vuetify'],
   },
-  modules: ['@nuxtjs/color-mode'],
+  modules: ['@nuxtjs/color-mode', '@vuetify/nuxt'],
   colorMode: {
     preference: 'system', // Default to system preference
     dataValue: 'theme', // activate data-theme in <html> tag
@@ -24,16 +29,17 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    isDevMode: isDevMode,
     public: {
       weatherApiKey: process.env.WEATHER_API_KEY || 'your-weather-api-key', // Use environment variable in production
     },
   },
   nitro: {
-    preset: 'node',
+    preset: 'node-server',
     output: {
-      dir: '.dist',
-      serverDir: '.dist/server',
-      publicDir: '.dist/public',
+      dir: process.env.NUXT_OUTPUT_DIR || '.dist',
+      serverDir: process.env.NUXT_PUBLIC_SERVER || '.dist/server',
+      publicDir: process.env.NUXT_PUBLIC_DIR || '.dist/public',
     },
     routeRules: {
       '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
@@ -45,6 +51,9 @@ export default defineNuxtConfig({
       fs: {
         allow: ['..'],
       },
+    },
+    ssr: {
+      noExternal: ['vuetify'],
     },
   },
 });

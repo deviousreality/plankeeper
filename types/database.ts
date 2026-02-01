@@ -280,3 +280,9 @@ export type CreatePlantSpecies = Omit<Species, 'id' | 'created_at' | 'updated_at
 
 export type CreatePersonalPlant = Omit<PersonalPlant, 'id' | 'created_at' | 'updated_at'>;
 export type UpdatePersonalPlant = Partial<Omit<PersonalPlant, 'id' | 'created_at' | 'updated_at'>>;
+
+export interface Migrations {
+  id: number;
+  name: string;
+  applied_at: string;
+}
